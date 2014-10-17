@@ -54,28 +54,28 @@ exampleDoc = [
 ---- Test input
 
 type Cursor = Int
-type Model = { string:Span, selection:Cursor }
+type Model = { value:Span, selection:Cursor }
 
 goLeft start = start - 1
 
 goRight start = start + 1
 
 insertInString : (String, Cursor) -> String -> (String, Cursor)
-insertInString (string, selection) char =
-  let newString = (String.left selection string) ++ char ++ (String.dropLeft selection string)
+insertInString (value, selection) char =
+  let newValue = (String.left selection value) ++ char ++ (String.dropLeft selection value)
       newSelection = selection + 1
-    in (newString, newSelection)
+    in (newValue, newSelection)
 
 insertInSpan : (Span, Cursor) -> String -> (Span, Cursor)
-insertInSpan (string,selection) char = case string of
+insertInSpan (value,selection) char = case value of
   Plain s ->
     let (a, b) = insertInString (s, selection) char
     in (Plain a, b)
 
 insertInModel : Model -> String -> Model
-insertInModel {string,selection} char =
-  let (a, b) = insertInSpan (string, selection) char
-  in {string=a, selection=b}
+insertInModel {value,selection} char =
+  let (a, b) = insertInSpan (value, selection) char
+  in {value=a, selection=b}
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
@@ -87,10 +87,10 @@ apk key last = case key of
 aa = foldp apk (Model (Plain "Aaron") 2) Keys.lastPressed
 
 renderSpan : Model -> Html
-renderSpan content = case content.string of
+renderSpan content = case content.value of
   Plain string -> node "div" [] [
     text <| String.left content.selection string,
-    text "|*|",
+    node "span" [ class "cursor" ] [ text "|" ],
     text <| String.dropLeft content.selection string ]
 
 main = (toElement 800 600) <~ (renderSpan <~ aa)
