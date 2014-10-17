@@ -54,32 +54,41 @@ exampleDoc = [
 ---- Test input
 
 type Cursor = Int
-type Model = { string:String, selection:Cursor }
+type Model = { string:Span, selection:Cursor }
 
 goLeft start = start - 1
 
 goRight start = start + 1
 
-doKey {string,selection} char = {
-  string=
-    (String.left selection string)
-    ++ char
-    ++ (String.dropLeft selection string),
-  selection= selection+1 }
+insertInString : (String, Cursor) -> String -> (String, Cursor)
+insertInString (string, selection) char =
+  let newString = (String.left selection string) ++ char ++ (String.dropLeft selection string)
+      newSelection = selection + 1
+    in (newString, newSelection)
+
+insertInSpan : Model -> String -> Model
+insertInSpan {string,selection} char = case string of
+  Plain s ->
+    let (a, b) = insertInString (s, selection) char
+    in { string=Plain a, selection=b }
+
+insertInModel : Model -> String -> Model
+insertInModel = insertInSpan
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
   Keys.Left -> { last | selection <- goLeft last.selection }
   Keys.Right -> { last | selection <- goRight last.selection }
-  Keys.Character s -> doKey last s
+  Keys.Character s -> insertInModel last s
   Keys.Nothing -> last
 
-aa = foldp apk (Model "Aaron" 2) Keys.lastPressed
+aa = foldp apk (Model (Plain "Aaron") 2) Keys.lastPressed
 
-ff : Model -> Element
-ff content = toElement 800 600 <| node "div" [] [
-  text <| String.left content.selection content.string,
-  text "|*|",
-  text <| String.dropLeft content.selection content.string ]
+renderSpan : Model -> Html
+renderSpan content = case content.string of
+  Plain string -> node "div" [] [
+    text <| String.left content.selection string,
+    text "|*|",
+    text <| String.dropLeft content.selection string ]
 
-main = ff <~ aa
+main = (toElement 800 600) <~ (renderSpan <~ aa)
