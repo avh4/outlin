@@ -3,8 +3,6 @@ module Main where
 import Html (Html, text, node, toElement)
 import Html.Attributes (class)
 
-import Graphics.Input.Field (..)
-import Graphics.Input (..)
 import String
 import Keyboard
 import Char
@@ -55,32 +53,32 @@ exampleDoc = [
 
 ---- Test input
 
-type Model = Content
+type Cursor = Int
+type Model = { string:String, selection:Cursor }
 
-goLeft {start,end,direction} = {start=start-1, end=end, direction=direction}
+goLeft start = start - 1
 
-goRight {start,end,direction} = {start=start+1, end=end, direction=direction}
+goRight start = start + 1
 
 doKey {string,selection} char = {
   string=
-    (String.left selection.start string)
+    (String.left selection string)
     ++ String.fromList [char]
-    ++ (String.dropLeft selection.start string),
-  selection=Selection (selection.start+1) (selection.end+1) Forward }
+    ++ (String.dropLeft selection string),
+  selection= selection+1 }
 
-apk : Keyboard.KeyCode -> Content -> Content
+apk : Keyboard.KeyCode -> Model -> Model
 apk key last = case key of
   37 -> { last | selection <- goLeft last.selection }
   39 -> { last | selection <- goRight last.selection }
   _ -> doKey last <| Char.fromCode key
 
-aa = foldp apk (Content "Aaron" <| Selection 2 0 Forward) Keyboard.lastPressed
+aa = foldp apk (Model "Aaron" 2) Keyboard.lastPressed
 
 ff : Model -> Element
 ff content = toElement 800 600 <| node "div" [] [
-  text <| String.left content.selection.start content.string,
+  text <| String.left content.selection content.string,
   text "|*|",
-  text <| String.dropLeft content.selection.start content.string ]
+  text <| String.dropLeft content.selection content.string ]
 
---main = field defaultStyle aa.handle identity "__" <~ aa.signal
 main = ff <~ aa
