@@ -4,7 +4,7 @@ import Html (Html, text, node, toElement)
 import Html.Attributes (class)
 
 import String
-import Keyboard
+import Keys
 import Char
 
 type Document = [Block]
@@ -53,17 +53,6 @@ exampleDoc = [
 
 ---- Test input
 
-data KeyInput = Left | Right | Character String | Nothing
-
-fromKeyCode : Keyboard.KeyCode -> KeyInput
-fromKeyCode key = case key of
-  37 -> Left
-  39 -> Right
-  _ -> Character <| String.fromList [Char.fromCode key]
-
-keys : Signal KeyInput
-keys = lift fromKeyCode Keyboard.lastPressed
-
 type Cursor = Int
 type Model = { string:String, selection:Cursor }
 
@@ -78,14 +67,14 @@ doKey {string,selection} char = {
     ++ (String.dropLeft selection string),
   selection= selection+1 }
 
-apk : KeyInput -> Model -> Model
+apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
-  Left -> { last | selection <- goLeft last.selection }
-  Right -> { last | selection <- goRight last.selection }
-  Character s -> doKey last s
-  Nothing -> last
+  Keys.Left -> { last | selection <- goLeft last.selection }
+  Keys.Right -> { last | selection <- goRight last.selection }
+  Keys.Character s -> doKey last s
+  Keys.Nothing -> last
 
-aa = foldp apk (Model "Aaron" 2) keys
+aa = foldp apk (Model "Aaron" 2) Keys.lastPressed
 
 ff : Model -> Element
 ff content = toElement 800 600 <| node "div" [] [
