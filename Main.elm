@@ -66,14 +66,16 @@ insertInString (string, selection) char =
       newSelection = selection + 1
     in (newString, newSelection)
 
-insertInSpan : Model -> String -> Model
-insertInSpan {string,selection} char = case string of
+insertInSpan : (Span, Cursor) -> String -> (Span, Cursor)
+insertInSpan (string,selection) char = case string of
   Plain s ->
     let (a, b) = insertInString (s, selection) char
-    in { string=Plain a, selection=b }
+    in (Plain a, b)
 
 insertInModel : Model -> String -> Model
-insertInModel = insertInSpan
+insertInModel {string,selection} char =
+  let (a, b) = insertInSpan (string, selection) char
+  in {string=a, selection=b}
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
