@@ -53,6 +53,17 @@ exampleDoc = [
 
 ---- Test input
 
+data KeyInput = Left | Right | Character String | Nothing
+
+fromKeyCode : Keyboard.KeyCode -> KeyInput
+fromKeyCode key = case key of
+  37 -> Left
+  39 -> Right
+  _ -> Character <| String.fromList [Char.fromCode key]
+
+keys : Signal KeyInput
+keys = lift fromKeyCode Keyboard.lastPressed
+
 type Cursor = Int
 type Model = { string:String, selection:Cursor }
 
@@ -63,17 +74,18 @@ goRight start = start + 1
 doKey {string,selection} char = {
   string=
     (String.left selection string)
-    ++ String.fromList [char]
+    ++ char
     ++ (String.dropLeft selection string),
   selection= selection+1 }
 
-apk : Keyboard.KeyCode -> Model -> Model
+apk : KeyInput -> Model -> Model
 apk key last = case key of
-  37 -> { last | selection <- goLeft last.selection }
-  39 -> { last | selection <- goRight last.selection }
-  _ -> doKey last <| Char.fromCode key
+  Left -> { last | selection <- goLeft last.selection }
+  Right -> { last | selection <- goRight last.selection }
+  Character s -> doKey last s
+  Nothing -> last
 
-aa = foldp apk (Model "Aaron" 2) Keyboard.lastPressed
+aa = foldp apk (Model "Aaron" 2) keys
 
 ff : Model -> Element
 ff content = toElement 800 600 <| node "div" [] [
