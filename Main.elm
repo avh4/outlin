@@ -48,8 +48,9 @@ exampleDoc = [
 
 type StringCursor = Int
 type SpanCursor = StringCursor
-type SpansCursor = (Int, SpanCursor)
-type Model = { value:[Span], selection:SpansCursor }
+type BlockCursor = SpanCursor
+type BlocksCursor = (Int, BlockCursor)
+type Model = { value:[Block], selection:BlocksCursor }
 
 goLeft (n, start) = (n, start - 1)
 
@@ -78,16 +79,24 @@ spanner =
     Plain s -> stringer.move (s, selection) char
   }
 
+blocker : Foo Block BlockCursor
+blocker =
+  { update = \(value, cursor) char -> case value of
+    Paragraph span -> Paragraph <| spanner.update (span, cursor) char
+  , move = \(value, cursor) char -> case value of
+    Paragraph span -> spanner.move (span, cursor) char
+  }
+
 liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-spanser : Foo [Span] SpansCursor
-spanser =
+blockser : Foo [Block] BlocksCursor
+blockser =
   { update = \(value, cursor) char ->
-    changeAt (\(s,c) -> spanner.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
+    changeAt (\(s,c) -> blocker.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
   , move = \(value, cursor) char ->
-    (fst cursor, spanner.move (head value, snd cursor) char)
+    (fst cursor, blocker.move (head value, snd cursor) char)
   }
 
 changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
@@ -96,8 +105,8 @@ changeAt fn1 fn2 index list =
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = spanser.update (value, selection) char
-      b = spanser.move (value, selection) char
+  let a = blockser.update (value, selection) char
+      b = blockser.move (value, selection) char
   in {value=a, selection=b}
 
 -- INPUT
@@ -115,21 +124,29 @@ apk key last = case key of
 renderSpan : Span -> Maybe SpanCursor -> Html
 renderSpan span mc = case span of
   Plain string -> case mc of
-    Just cursor -> node "div" [] [
+    Just cursor -> node "span" [] [
       text <| String.left cursor string,
       node "span" [ class "cursor" ] [ text "^" ],
       text <| String.dropLeft cursor string ]
-    Nothing -> node "div" [] [ text string ]
+    Nothing -> node "span" [] [ text string ]
 
-renderSpans : [Span] -> SpansCursor -> Html
-renderSpans spans cursor =
-  changeAt (\s -> renderSpan s <| Just <| snd cursor) (\s -> renderSpan s Nothing) (fst cursor) spans
+renderBlock : Block -> Maybe BlockCursor -> Html
+renderBlock block mc = case block of
+  Paragraph span -> node "p" [] [ renderSpan span mc ]
+
+renderBlocks : [Block] -> BlocksCursor -> Html
+renderBlocks blocks cursor =
+  changeAt (\s -> renderBlock s <| Just <| snd cursor) (\s -> renderBlock s Nothing) (fst cursor) blocks
   |> node "div" []
 
 renderModel : Model -> Html
-renderModel m = renderSpans m.value m.selection
+renderModel m = renderBlocks m.value m.selection
 
 
-aa = foldp apk (Model [Plain "Aaron", Plain "Boyd", Plain "Welcome"] (1, 2)) Keys.lastPressed
+aa = foldp apk (Model [
+  Paragraph <| Plain "Aaron",
+  Paragraph <| Plain "Boyd",
+  Paragraph <|Plain "Welcome"
+  ] (1, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
