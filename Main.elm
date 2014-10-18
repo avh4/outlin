@@ -60,21 +60,27 @@ goLeft start = start - 1
 
 goRight start = start + 1
 
-insertInString : (String, Cursor) -> String -> (String, Cursor)
-insertInString (value, selection) char =
-  let newValue = (String.left selection value) ++ char ++ (String.dropLeft selection value)
-      newSelection = selection + 1
-    in (newValue, newSelection)
+updateString : (String, Cursor) -> String -> String
+updateString (value, selection) char =
+  (String.left selection value)
+  ++ char
+  ++ (String.dropLeft selection value)
 
-insertInSpan : (Span, Cursor) -> String -> (Span, Cursor)
-insertInSpan (value,selection) char = case value of
-  Plain s ->
-    let (a, b) = insertInString (s, selection) char
-    in (Plain a, b)
+moveString : (String, Cursor) -> String -> Cursor
+moveString (value, selection) char = selection + 1 -- TODO lenght of char
+
+updateSpan : (Span, Cursor) -> String -> Span
+updateSpan (value, selection) char = case value of
+  Plain s -> Plain <| updateString (s, selection) char
+
+moveSpan : (Span, Cursor) -> String -> Cursor
+moveSpan (value, selection) char = case value of
+  Plain s -> moveString (s, selection) char
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let (a, b) = insertInSpan (value, selection) char
+  let a = updateSpan (value, selection) char
+      b = moveSpan (value, selection) char
   in {value=a, selection=b}
 
 apk : Keys.KeyInput -> Model -> Model
