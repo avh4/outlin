@@ -54,7 +54,7 @@ exampleDoc = [
 ---- Test input
 
 type Cursor = Int
-type Model = { value:Span, selection:Cursor }
+type Model = { value:[Span], selection:Cursor }
 
 goLeft start = start - 1
 
@@ -83,11 +83,25 @@ spanner =
     Plain s -> stringer.move (s, selection) char
   }
 
+liftArrayTuple : ([a], b) -> [(a,b)]
+liftArrayTuple (aa, b) =
+  map (\a -> (a,b)) aa
+
+spanser : Foo [Span]
+spanser =
+  { update = \(value, selection) char ->
+    map (\x -> spanner.update x char) (liftArrayTuple (value, selection))
+  , move = \(value, selection) char ->
+    spanner.move (head value, selection) char
+  }
+
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = spanner.update (value, selection) char
-      b = spanner.move (value, selection) char
+  let a = spanser.update (value, selection) char
+      b = spanser.move (value, selection) char
   in {value=a, selection=b}
+
+-- INPUT
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
@@ -96,13 +110,23 @@ apk key last = case key of
   Keys.Character s -> insertInModel last s
   Keys.Nothing -> last
 
-aa = foldp apk (Model (Plain "Aaron") 2) Keys.lastPressed
+-- RENDER
 
-renderSpan : Model -> Html
-renderSpan content = case content.value of
+renderSpan : Span -> Cursor -> Html
+renderSpan span cursor = case span of
   Plain string -> node "div" [] [
-    text <| String.left content.selection string,
+    text <| String.left cursor string,
     node "span" [ class "cursor" ] [ text "|" ],
-    text <| String.dropLeft content.selection string ]
+    text <| String.dropLeft cursor string ]
 
-main = (toElement 800 600) <~ (renderSpan <~ aa)
+renderSpans : [Span] -> Cursor -> Html
+renderSpans spans cursor = map (\s -> renderSpan s cursor) spans
+  |> node "div" []
+
+renderModel : Model -> Html
+renderModel m = renderSpans m.value m.selection
+
+
+aa = foldp apk (Model [Plain "Aaron", Plain "Boyd"] 2) Keys.lastPressed
+
+main = (toElement 800 600) <~ (renderModel <~ aa)
