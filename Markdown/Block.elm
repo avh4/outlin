@@ -11,17 +11,11 @@ data Block =
 
 type Cursor = Span.Cursor
 
-blocker : Span.Foo Block Cursor
-blocker =
-  { update = \(value, cursor) char -> case value of
-    Paragraph span -> Paragraph <| Span.update (span, cursor) char
-  , move = \(value, cursor) char -> case value of
-    Paragraph span -> Span.move (span, cursor) char
-  }
+update (value, cursor) char = case value of
+  Paragraph span -> Paragraph <| Span.update (span, cursor) char
 
-update = blocker.update
-
-move = blocker.move
+move (value, cursor) char = case value of
+  Paragraph span -> Span.move (span, cursor) char
 
 render : Block -> Maybe Cursor -> Html
 render block mc = case block of
