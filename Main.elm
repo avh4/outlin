@@ -60,27 +60,33 @@ goLeft start = start - 1
 
 goRight start = start + 1
 
-updateString : (String, Cursor) -> String -> String
-updateString (value, selection) char =
-  (String.left selection value)
-  ++ char
-  ++ (String.dropLeft selection value)
+type Foo a = {
+  update: (a, Cursor) -> String -> a,
+  move: (a, Cursor) -> String -> Cursor
+  }
 
-moveString : (String, Cursor) -> String -> Cursor
-moveString (value, selection) char = selection + 1 -- TODO lenght of char
+stringer : Foo String
+stringer =
+  { update = \(value, selection) char ->
+    (String.left selection value)
+    ++ char
+    ++ (String.dropLeft selection value)
+  , move = \(value, selection) char ->
+    selection + 1 -- TODO lenght of char
+  }
 
-updateSpan : (Span, Cursor) -> String -> Span
-updateSpan (value, selection) char = case value of
-  Plain s -> Plain <| updateString (s, selection) char
-
-moveSpan : (Span, Cursor) -> String -> Cursor
-moveSpan (value, selection) char = case value of
-  Plain s -> moveString (s, selection) char
+spanner : Foo Span
+spanner =
+  { update = \(value, selection) char -> case value of
+    Plain s -> Plain <| stringer.update (s, selection) char
+  , move = \(value, selection) char -> case value of
+    Plain s -> stringer.move (s, selection) char
+  }
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = updateSpan (value, selection) char
-      b = moveSpan (value, selection) char
+  let a = spanner.update (value, selection) char
+      b = spanner.move (value, selection) char
   in {value=a, selection=b}
 
 apk : Keys.KeyInput -> Model -> Model
