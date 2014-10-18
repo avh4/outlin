@@ -7,48 +7,41 @@ import String
 import Keys
 import Char
 import Debug
+import Markdown.Span as Span
 
 type Document = [Block]
 
 data Block =
-  Heading Int Span | -- level, content
-  Paragraph Span | -- content
+  Heading Int Span.Span | -- level, content
+  Paragraph Span.Span | -- content
   CodeBlock (Maybe String) String -- language, content
-
-data Span =
-  Plain String
 
 ---- Rendering
 
-toHtml : Document -> Html
-toHtml d = node "div" [] <| map blockToHtml d
+-- toHtml : Document -> Html
+-- toHtml d = node "div" [] <| map blockToHtml d
 
-blockToHtml : Block -> Html
-blockToHtml b = case b of
-  Heading 1 s -> node "h1" [] [ spanToHtml s ]
-  Heading _ s -> node "h2" [] [ spanToHtml s ]
-  Paragraph s -> node "p" [] [ spanToHtml s ]
-  CodeBlock _ s -> node "code" [] [ text s ]
-
-spanToHtml : Span -> Html
-spanToHtml span = case span of
-  Plain s -> text s
+-- blockToHtml : Block -> Html
+-- blockToHtml b = case b of
+--   Heading 1 s -> node "h1" [] [ spanToHtml s ]
+--   Heading _ s -> node "h2" [] [ spanToHtml s ]
+--   Paragraph s -> node "p" [] [ spanToHtml s ]
+--   CodeBlock _ s -> node "code" [] [ text s ]
 
 ---- App
 
-exampleDoc = [
-  Heading 1 (Plain "Welcome to Elm"),
-  Paragraph (Plain "A functional reactive language for interactive applications"),
-  CodeBlock (Just "elm") "main = asText \"Hello World\""
-  ]
+-- exampleDoc = [
+--   Heading 1 (Plain "Welcome to Elm"),
+--   Paragraph (Plain "A functional reactive language for interactive applications"),
+--   CodeBlock (Just "elm") "main = asText \"Hello World\""
+--   ]
 
 --main = toElement 800 600 <| toHtml exampleDoc
 
 ---- Test input
 
 type StringCursor = Int
-type SpanCursor = StringCursor
-type BlockCursor = SpanCursor
+type BlockCursor = Span.Cursor
 type DocumentCursor = (Int, BlockCursor)
 type Model = { value:Document, selection:DocumentCursor }
 
@@ -61,30 +54,12 @@ type Foo a b = {
   move: (a, b) -> String -> b
   }
 
-stringer : Foo String StringCursor
-stringer =
-  { update = \(value, selection) char ->
-    (String.left selection value)
-    ++ char
-    ++ (String.dropLeft selection value)
-  , move = \(value, selection) char ->
-    selection + 1 -- TODO lenght of char
-  }
-
-spanner : Foo Span SpanCursor
-spanner =
-  { update = \(value, selection) char -> case value of
-    Plain s -> Plain <| stringer.update (s, selection) char
-  , move = \(value, selection) char -> case value of
-    Plain s -> stringer.move (s, selection) char
-  }
-
 blocker : Foo Block BlockCursor
 blocker =
   { update = \(value, cursor) char -> case value of
-    Paragraph span -> Paragraph <| spanner.update (span, cursor) char
+    Paragraph span -> Paragraph <| Span.update (span, cursor) char
   , move = \(value, cursor) char -> case value of
-    Paragraph span -> spanner.move (span, cursor) char
+    Paragraph span -> Span.move (span, cursor) char
   }
 
 liftArrayTuple : ([a], b) -> [(a,b)]
@@ -121,18 +96,9 @@ apk key last = case key of
 
 -- RENDER
 
-renderSpan : Span -> Maybe SpanCursor -> Html
-renderSpan span mc = case span of
-  Plain string -> case mc of
-    Just cursor -> node "span" [] [
-      text <| String.left cursor string,
-      node "span" [ class "cursor" ] [ text "^" ],
-      text <| String.dropLeft cursor string ]
-    Nothing -> node "span" [] [ text string ]
-
 renderBlock : Block -> Maybe BlockCursor -> Html
 renderBlock block mc = case block of
-  Paragraph span -> node "p" [] [ renderSpan span mc ]
+  Paragraph span -> node "p" [] [ Span.render span mc ]
 
 renderDocument : Document -> DocumentCursor -> Html
 renderDocument blocks cursor =
@@ -144,9 +110,9 @@ renderModel m = renderDocument m.value m.selection
 
 
 aa = foldp apk (Model [
-  Paragraph <| Plain "Aaron",
-  Paragraph <| Plain "Boyd",
-  Paragraph <|Plain "Welcome"
+  Paragraph <| Span.Plain "Welcome to Elm",
+  Paragraph <| Span.Plain "A functional reactive language for interactive applications",
+  Paragraph <| Span.Plain "main = asText \"Hello World\""
   ] (1, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
