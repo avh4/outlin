@@ -8,13 +8,9 @@ import Keys
 import Char
 import Debug
 import Markdown.Span as Span
+import Markdown.Block as Block
 
-type Document = [Block]
-
-data Block =
-  Heading Int Span.Span | -- level, content
-  Paragraph Span.Span | -- content
-  CodeBlock (Maybe String) String -- language, content
+type Document = [Block.Block]
 
 ---- Rendering
 
@@ -40,9 +36,7 @@ data Block =
 
 ---- Test input
 
-type StringCursor = Int
-type BlockCursor = Span.Cursor
-type DocumentCursor = (Int, BlockCursor)
+type DocumentCursor = (Int, Block.Cursor)
 type Model = { value:Document, selection:DocumentCursor }
 
 goLeft (n, start) = (n, start - 1)
@@ -54,14 +48,6 @@ type Foo a b = {
   move: (a, b) -> String -> b
   }
 
-blocker : Foo Block BlockCursor
-blocker =
-  { update = \(value, cursor) char -> case value of
-    Paragraph span -> Paragraph <| Span.update (span, cursor) char
-  , move = \(value, cursor) char -> case value of
-    Paragraph span -> Span.move (span, cursor) char
-  }
-
 liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
@@ -69,9 +55,9 @@ liftArrayTuple (aa, b) =
 documenter : Foo Document DocumentCursor
 documenter =
   { update = \(value, cursor) char ->
-    changeAt (\(s,c) -> blocker.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
+    changeAt (\(s,c) -> Block.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
   , move = \(value, cursor) char ->
-    (fst cursor, blocker.move (head value, snd cursor) char)
+    (fst cursor, Block.move (head value, snd cursor) char)
   }
 
 changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
@@ -96,13 +82,9 @@ apk key last = case key of
 
 -- RENDER
 
-renderBlock : Block -> Maybe BlockCursor -> Html
-renderBlock block mc = case block of
-  Paragraph span -> node "p" [] [ Span.render span mc ]
-
 renderDocument : Document -> DocumentCursor -> Html
 renderDocument blocks cursor =
-  changeAt (\s -> renderBlock s <| Just <| snd cursor) (\s -> renderBlock s Nothing) (fst cursor) blocks
+  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
   |> node "div" []
 
 renderModel : Model -> Html
@@ -110,9 +92,9 @@ renderModel m = renderDocument m.value m.selection
 
 
 aa = foldp apk (Model [
-  Paragraph <| Span.Plain "Welcome to Elm",
-  Paragraph <| Span.Plain "A functional reactive language for interactive applications",
-  Paragraph <| Span.Plain "main = asText \"Hello World\""
+  Block.Paragraph <| Span.Plain "Welcome to Elm",
+  Block.Paragraph <| Span.Plain "A functional reactive language for interactive applications",
+  Block.Paragraph <| Span.Plain "main = asText \"Hello World\""
   ] (1, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
