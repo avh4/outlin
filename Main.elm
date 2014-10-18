@@ -83,6 +83,6 @@ aa = foldp apk (Model [
   Block.Heading 1 <| Span.Plain "Welcome to Elm",
   Block.Paragraph <| Span.Plain "A functional reactive language for interactive applications",
   Block.CodeBlock (Just "elm") "main = asText \"Hello World\""
-  ] (0, 2)) Keys.lastPressed
+  ] (2, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)

@@ -19,6 +19,10 @@ stringer =
     selection + 1 -- TODO lenght of char
   }
 
+updateString = stringer.update
+
+moveString = stringer.move
+
 update : (Span, Cursor) -> String -> Span
 update (value, selection) char = case value of
   Plain s -> Plain <| stringer.update (s, selection) char
