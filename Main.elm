@@ -49,8 +49,8 @@ exampleDoc = [
 type StringCursor = Int
 type SpanCursor = StringCursor
 type BlockCursor = SpanCursor
-type BlocksCursor = (Int, BlockCursor)
-type Model = { value:[Block], selection:BlocksCursor }
+type DocumentCursor = (Int, BlockCursor)
+type Model = { value:Document, selection:DocumentCursor }
 
 goLeft (n, start) = (n, start - 1)
 
@@ -91,8 +91,8 @@ liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-blockser : Foo [Block] BlocksCursor
-blockser =
+documenter : Foo Document DocumentCursor
+documenter =
   { update = \(value, cursor) char ->
     changeAt (\(s,c) -> blocker.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
   , move = \(value, cursor) char ->
@@ -105,8 +105,8 @@ changeAt fn1 fn2 index list =
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = blockser.update (value, selection) char
-      b = blockser.move (value, selection) char
+  let a = documenter.update (value, selection) char
+      b = documenter.move (value, selection) char
   in {value=a, selection=b}
 
 -- INPUT
@@ -134,13 +134,13 @@ renderBlock : Block -> Maybe BlockCursor -> Html
 renderBlock block mc = case block of
   Paragraph span -> node "p" [] [ renderSpan span mc ]
 
-renderBlocks : [Block] -> BlocksCursor -> Html
-renderBlocks blocks cursor =
+renderDocument : Document -> DocumentCursor -> Html
+renderDocument blocks cursor =
   changeAt (\s -> renderBlock s <| Just <| snd cursor) (\s -> renderBlock s Nothing) (fst cursor) blocks
   |> node "div" []
 
 renderModel : Model -> Html
-renderModel m = renderBlocks m.value m.selection
+renderModel m = renderDocument m.value m.selection
 
 
 aa = foldp apk (Model [
