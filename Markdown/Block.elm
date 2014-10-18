@@ -13,9 +13,11 @@ type Cursor = Span.Cursor
 
 update : (Block, Cursor) -> String -> Block
 update (value, cursor) char = case value of
+  Heading h span -> Heading h <| Span.update (span, cursor) char
   Paragraph span -> Paragraph <| Span.update (span, cursor) char
 
 move (value, cursor) char = case value of
+  Heading _ span -> Span.move (span, cursor) char
   Paragraph span -> Span.move (span, cursor) char
 
 render : Block -> Maybe Cursor -> Html
