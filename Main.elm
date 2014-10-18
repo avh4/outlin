@@ -114,6 +114,7 @@ apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
   Keys.Left -> { last | selection <- goLeft last.selection }
   Keys.Right -> { last | selection <- goRight last.selection }
+  Keys.Enter -> last
   Keys.Character s -> insertInModel last s
   Keys.Nothing -> last
 
