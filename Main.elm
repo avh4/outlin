@@ -6,6 +6,7 @@ import Html.Attributes (class)
 import String
 import Keys
 import Char
+import Debug
 
 type Document = [Block]
 
@@ -53,19 +54,21 @@ exampleDoc = [
 
 ---- Test input
 
-type Cursor = Int
-type Model = { value:[Span], selection:Cursor }
+type StringCursor = Int
+type SpanCursor = StringCursor
+type SpansCursor = (Int, SpanCursor)
+type Model = { value:[Span], selection:SpansCursor }
 
-goLeft start = start - 1
+goLeft (n, start) = (n, start - 1)
 
-goRight start = start + 1
+goRight (n, start) = (n, start + 1)
 
-type Foo a = {
-  update: (a, Cursor) -> String -> a,
-  move: (a, Cursor) -> String -> Cursor
+type Foo a b = {
+  update: (a, b) -> String -> a,
+  move: (a, b) -> String -> b
   }
 
-stringer : Foo String
+stringer : Foo String StringCursor
 stringer =
   { update = \(value, selection) char ->
     (String.left selection value)
@@ -75,7 +78,7 @@ stringer =
     selection + 1 -- TODO lenght of char
   }
 
-spanner : Foo Span
+spanner : Foo Span SpanCursor
 spanner =
   { update = \(value, selection) char -> case value of
     Plain s -> Plain <| stringer.update (s, selection) char
@@ -87,13 +90,17 @@ liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-spanser : Foo [Span]
+spanser : Foo [Span] SpansCursor
 spanser =
-  { update = \(value, selection) char ->
-    map (\x -> spanner.update x char) (liftArrayTuple (value, selection))
-  , move = \(value, selection) char ->
-    spanner.move (head value, selection) char
+  { update = \(value, cursor) char ->
+    changeAt (\(s,c) -> spanner.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
+  , move = \(value, cursor) char ->
+    (fst cursor, spanner.move (head value, snd cursor) char)
   }
+
+changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
+changeAt fn1 fn2 index list =
+  indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
@@ -112,21 +119,24 @@ apk key last = case key of
 
 -- RENDER
 
-renderSpan : Span -> Cursor -> Html
-renderSpan span cursor = case span of
-  Plain string -> node "div" [] [
-    text <| String.left cursor string,
-    node "span" [ class "cursor" ] [ text "|" ],
-    text <| String.dropLeft cursor string ]
+renderSpan : Span -> Maybe SpanCursor -> Html
+renderSpan span mc = case span of
+  Plain string -> case mc of
+    Just cursor -> node "div" [] [
+      text <| String.left cursor string,
+      node "span" [ class "cursor" ] [ text "|" ],
+      text <| String.dropLeft cursor string ]
+    Nothing -> node "div" [] [ text string ]
 
-renderSpans : [Span] -> Cursor -> Html
-renderSpans spans cursor = map (\s -> renderSpan s cursor) spans
+renderSpans : [Span] -> SpansCursor -> Html
+renderSpans spans cursor =
+  changeAt (\s -> renderSpan s <| Just <| snd cursor) (\s -> renderSpan s Nothing) (fst cursor) spans
   |> node "div" []
 
 renderModel : Model -> Html
 renderModel m = renderSpans m.value m.selection
 
 
-aa = foldp apk (Model [Plain "Aaron", Plain "Boyd", Plain "Welcome"] 2) Keys.lastPressed
+aa = foldp apk (Model [Plain "Aaron", Plain "Boyd", Plain "Welcome"] (1, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
