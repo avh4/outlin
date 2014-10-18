@@ -127,6 +127,6 @@ renderModel : Model -> Html
 renderModel m = renderSpans m.value m.selection
 
 
-aa = foldp apk (Model [Plain "Aaron", Plain "Boyd"] 2) Keys.lastPressed
+aa = foldp apk (Model [Plain "Aaron", Plain "Boyd", Plain "Welcome"] 2) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
