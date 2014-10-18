@@ -12,18 +12,6 @@ import Markdown.Block as Block
 
 type Document = [Block.Block]
 
----- Rendering
-
--- toHtml : Document -> Html
--- toHtml d = node "div" [] <| map blockToHtml d
-
--- blockToHtml : Block -> Html
--- blockToHtml b = case b of
---   Heading 1 s -> node "h1" [] [ spanToHtml s ]
---   Heading _ s -> node "h2" [] [ spanToHtml s ]
---   Paragraph s -> node "p" [] [ spanToHtml s ]
---   CodeBlock _ s -> node "code" [] [ text s ]
-
 ---- App
 
 -- exampleDoc = [
@@ -92,9 +80,9 @@ renderModel m = renderDocument m.value m.selection
 
 
 aa = foldp apk (Model [
-  Block.Paragraph <| Span.Plain "Welcome to Elm",
+  Block.Heading 1 <| Span.Plain "Welcome to Elm",
   Block.Paragraph <| Span.Plain "A functional reactive language for interactive applications",
-  Block.Paragraph <| Span.Plain "main = asText \"Hello World\""
+  Block.CodeBlock (Just "elm") "main = asText \"Hello World\""
   ] (1, 2)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)

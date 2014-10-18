@@ -11,6 +11,7 @@ data Block =
 
 type Cursor = Span.Cursor
 
+update : (Block, Cursor) -> String -> Block
 update (value, cursor) char = case value of
   Paragraph span -> Paragraph <| Span.update (span, cursor) char
 
@@ -19,5 +20,7 @@ move (value, cursor) char = case value of
 
 render : Block -> Maybe Cursor -> Html
 render block mc = case block of
+  Heading 1 span -> node "h1" [] [ Span.render span mc ]
+  Heading _ span -> node "h1" [] [ Span.render span mc ]
   Paragraph span -> node "p" [] [ Span.render span mc ]
-
+  CodeBlock _ s -> node "code" [] [ text s ]
