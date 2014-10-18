@@ -124,7 +124,7 @@ renderSpan span mc = case span of
   Plain string -> case mc of
     Just cursor -> node "div" [] [
       text <| String.left cursor string,
-      node "span" [ class "cursor" ] [ text "|" ],
+      node "span" [ class "cursor" ] [ text "^" ],
       text <| String.dropLeft cursor string ]
     Nothing -> node "div" [] [ text string ]
 
