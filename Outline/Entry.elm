@@ -22,8 +22,13 @@ update value cursor char = case value of Entry e -> case cursor of
 --  InChild i c -> Entry { e | children <- changeAt ... }
   InChild _ _ -> value -- TODO
 
+at i list = list |> drop i |> head
+
 move : Entry -> Cursor -> String -> Cursor
-move value cursor char = cursor -- TODO
+move value cursor char = case value of Entry e -> case cursor of
+  InText i -> InText <| Core.String.move e.text i char
+  InDescription i -> InDescription <| Core.String.move e.description i char
+  InChild i child -> InChild i <| move (at i e.children ) child char
 
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
