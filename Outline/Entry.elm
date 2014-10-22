@@ -66,11 +66,22 @@ toDescriptionCursor mc = case mc of
   Just (InDescription i) -> Just i
   _ -> Nothing
 
+type ArrayCursor a = (Int, a)
+
+toChildrenCursor : Maybe Cursor -> Maybe (ArrayCursor Cursor)
+toChildrenCursor mc = case mc of
+  Just (InChild n c) -> Just (n, c)
+  _ -> Nothing
+
+renderArray : (a -> Maybe cur -> Html) -> [a] -> Maybe (ArrayCursor cur) -> [Html]
+renderArray fn list msel = case msel of
+  Just (n, c) -> indexedMap (\i x -> fn x (if i==n then Just c else Nothing)) list
+  Nothing -> map (\x -> fn x Nothing) list
 
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
   Entry e -> node "li" [] [
     Core.String.render e.text (toTextCursor mc),
     node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)],
-    node "ul" [] <| map (\x -> render x Nothing) e.children
+    node "ul" [] <| renderArray render e.children (toChildrenCursor mc)
     ]
