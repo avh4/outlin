@@ -7,46 +7,39 @@ import String
 import Keys
 import Char
 import Debug
-import Markdown.Span as Span
-import Markdown.Block as Block
+import Outline.Entry as Entry
 
-type Document = [Block.Block]
+
+type Document = Entry.Entry
 
 ---- App
 
--- exampleDoc = [
---   Heading 1 (Plain "Welcome to Elm"),
---   Paragraph (Plain "A functional reactive language for interactive applications"),
---   CodeBlock (Just "elm") "main = asText \"Hello World\""
---   ]
-
---main = toElement 800 600 <| toHtml exampleDoc
-
 ---- Test input
 
-type DocumentCursor = (Int, Block.Cursor)
+type DocumentCursor = Entry.Cursor
 type Model = { value:Document, selection:DocumentCursor }
 
-goLeft (n, start) = (n, start - 1)
+goLeft : DocumentCursor -> DocumentCursor
+goLeft cursor = case cursor of
+  Entry.InText n -> Entry.InText (n-1)
+  _ -> cursor
 
-goRight (n, start) = (n, start + 1)
-
-type Foo a b = {
-  update: (a, b) -> String -> a,
-  move: (a, b) -> String -> b
-  }
+goRight : DocumentCursor -> DocumentCursor
+goRight cursor = case cursor of
+  Entry.InText n -> Entry.InText (n+1)
+  _ -> cursor
 
 liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-documenter : Foo Document DocumentCursor
-documenter =
-  { update = \(value, cursor) char ->
-    changeAt (\(s,c) -> Block.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
-  , move = \(value, cursor) char ->
-    (fst cursor, Block.move (head value, snd cursor) char)
-  }
+updateDocument : Document -> DocumentCursor -> String -> Document
+updateDocument = Entry.update 
+--    changeAt (\(s,c) -> Block.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
+
+moveDocument : Document -> DocumentCursor -> String -> DocumentCursor
+moveDocument = Entry.move
+--    (fst cursor, Block.move (head value, snd cursor) char)
 
 changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
@@ -54,8 +47,8 @@ changeAt fn1 fn2 index list =
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = documenter.update (value, selection) char
-      b = documenter.move (value, selection) char
+  let a = updateDocument value selection char
+      b = moveDocument  value selection char
   in {value=a, selection=b}
 
 -- INPUT
@@ -71,18 +64,17 @@ apk key last = case key of
 -- RENDER
 
 renderDocument : Document -> DocumentCursor -> Html
-renderDocument blocks cursor =
-  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
-  |> node "div" []
+renderDocument value cursor = Entry.render value (Just cursor)
+
+--  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
+--  |> node "div" []
 
 renderModel : Model -> Html
 renderModel m = renderDocument m.value m.selection
 
 
-aa = foldp apk (Model [
-  Block.Heading 1 <| Span.Plain "Welcome to Elm",
-  Block.Paragraph <| Span.Plain "A functional reactive language for interactive applications",
-  Block.CodeBlock (Just "elm") "main = asText \"Hello World\""
-  ] (2, 2)) Keys.lastPressed
+aa = foldp apk (Model
+  (Entry.Entry { text="Text", description="Desc", children=[(Entry.Entry { text="Text", description="Desc", children=[] })] })
+  (Entry.InText 4)) Keys.lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
