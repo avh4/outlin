@@ -56,10 +56,15 @@ goPrev value cursor = case cursor of
   InDescription i -> InText i
   InText _ -> InText 0
 
+toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toTextCursor mc = case mc of
+  Just (InText i) -> Just i
+  _ -> Nothing
+
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
   Entry e -> node "li" [] [
-    text e.text,
+    Core.String.render e.text (toTextCursor mc),
     node "i" [] [ text e.description],
     node "ul" [] <| map (\x -> render x Nothing) e.children
     ]
