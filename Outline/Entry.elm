@@ -61,10 +61,16 @@ toTextCursor mc = case mc of
   Just (InText i) -> Just i
   _ -> Nothing
 
+toDescriptionCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toDescriptionCursor mc = case mc of
+  Just (InDescription i) -> Just i
+  _ -> Nothing
+
+
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
   Entry e -> node "li" [] [
     Core.String.render e.text (toTextCursor mc),
-    node "i" [] [ text e.description],
+    node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)],
     node "ul" [] <| map (\x -> render x Nothing) e.children
     ]
