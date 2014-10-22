@@ -15,12 +15,15 @@ data Cursor =
   InDescription Int |
   InChild Int Cursor
 
+changeAt : (a -> a) -> Int -> [a] -> [a]
+changeAt fn index list =
+  indexedMap (\i item -> if i == index then fn item else item) list
+
 update : Entry -> Cursor -> String -> Entry
 update value cursor char = case value of Entry e -> case cursor of
   InText i -> Entry { e | text <- Core.String.update e.text i char }
   InDescription i -> Entry { e | description <- Core.String.update e.description i char }
---  InChild i c -> Entry { e | children <- changeAt ... }
-  InChild _ _ -> value -- TODO
+  InChild i c -> Entry { e | children <- changeAt (\x -> update x c char) i e.children }
 
 at i list = list |> drop i |> head
 
@@ -29,6 +32,29 @@ move value cursor char = case value of Entry e -> case cursor of
   InText i -> InText <| Core.String.move e.text i char
   InDescription i -> InDescription <| Core.String.move e.description i char
   InChild i child -> InChild i <| move (at i e.children ) child char
+
+goLeft : Cursor -> Cursor
+goLeft cursor = case cursor of
+  InText n -> InText (n-1)
+  _ -> cursor
+
+goRight : Cursor -> Cursor
+goRight cursor = case cursor of
+  InText n -> InText (n+1)
+  _ -> cursor
+
+goNext value cursor = case cursor of
+  InText i -> InDescription i
+  InDescription i -> InChild 0 (InText i)
+  InChild n (InText i) -> InChild n (InDescription i)
+  InChild n (InDescription i) -> InChild (n+1) (InText i)
+  InChild n c -> InChild (n+1) c
+
+goPrev value cursor = case cursor of
+  InChild 0 c -> c
+  InChild i c -> InChild (i-1) c
+  InDescription i -> InText i
+  InText _ -> InText 0
 
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of

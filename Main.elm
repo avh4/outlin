@@ -19,23 +19,12 @@ type Document = Entry.Entry
 type DocumentCursor = Entry.Cursor
 type Model = { value:Document, selection:DocumentCursor }
 
-goLeft : DocumentCursor -> DocumentCursor
-goLeft cursor = case cursor of
-  Entry.InText n -> Entry.InText (n-1)
-  _ -> cursor
-
-goRight : DocumentCursor -> DocumentCursor
-goRight cursor = case cursor of
-  Entry.InText n -> Entry.InText (n+1)
-  _ -> cursor
-
 liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
 updateDocument : Document -> DocumentCursor -> String -> Document
 updateDocument = Entry.update 
---    changeAt (\(s,c) -> Block.update (s,snd c) char) (\(s,c) -> s) (fst cursor) (liftArrayTuple (value, cursor))
 
 moveDocument : Document -> DocumentCursor -> String -> DocumentCursor
 moveDocument = Entry.move
@@ -55,8 +44,10 @@ insertInModel {value,selection} char =
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
-  Keys.Left -> { last | selection <- goLeft last.selection }
-  Keys.Right -> { last | selection <- goRight last.selection }
+  Keys.Left -> { last | selection <- Entry.goLeft last.selection }
+  Keys.Right -> { last | selection <- Entry.goRight last.selection }
+  Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
+  Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
   Keys.Enter -> last
   Keys.Character s -> insertInModel last s
   Keys.Nothing -> last
@@ -64,7 +55,7 @@ apk key last = case key of
 -- RENDER
 
 renderDocument : Document -> DocumentCursor -> Html
-renderDocument value cursor = Entry.render value (Just cursor)
+renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
 
 --  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
 --  |> node "div" []
