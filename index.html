@@ -1,6 +1,5 @@
 <html>
 <script type="text/javascript" src="/elm-runtime.js"></script>
-<script type="text/javascript" src="/debugger.js"></script>
 <script type="text/javascript" src="build/Main.js"></script>
 <style>
 .selected {
@@ -19,6 +18,30 @@
 </style>
 <body></body>
 <script>
-var runningElmModule = Elm.debugFullscreen(Elm.Main, "Main.elm");
+var runningElmModule = Elm.fullscreen(Elm.Main, { downsIn: 0, pressesIn: ""});
+
+var specialKeys = {
+  '8': 'backspace',
+  '37': 'left',
+  '38': 'up',
+  '39': 'right',
+  '40': 'down',
+  '91': 'meta'
+}
+
+document.onkeydown = function(e) {
+  if (specialKeys[e.keyCode.toString()]) {
+    runningElmModule.ports.downsIn.send(e.keyCode);
+    e.preventDefault();
+  }
+}
+
+document.onkeypress = function(e) {
+  var evt = evt || window.event;
+  var charCode = evt.which || evt.keyCode;
+  var charTyped = String.fromCharCode(charCode);
+  runningElmModule.ports.pressesIn.send(charTyped);
+  e.preventDefault();
+}
 </script>
 </html>

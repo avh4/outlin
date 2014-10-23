@@ -63,9 +63,13 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 renderModel : Model -> Html
 renderModel m = renderDocument m.value m.selection
 
+port pressesIn : Signal String
+port downsIn : Signal Int
+
+lastPressed = merge (lift Keys.fromPresses pressesIn) (lift Keys.fromDowns downsIn)
 
 aa = foldp apk (Model
   (Entry.Entry { text="Text", description="Desc", children=[(Entry.Entry { text="Text", description="Desc", children=[] })] })
-  (Entry.InText 4)) Keys.lastPressed
+  (Entry.InText 4)) lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
