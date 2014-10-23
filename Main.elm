@@ -8,6 +8,7 @@ import Keys
 import Char
 import Debug
 import Outline.Entry as Entry
+import SampleData
 
 
 type Document = Entry.Entry
@@ -67,24 +68,6 @@ port downsIn : Signal Int
 
 lastPressed = merge (lift Keys.fromPresses pressesIn) (lift Keys.fromDowns downsIn)
 
-aa = foldp apk (Model
-  (Entry.Entry { text="Tasks", description="", children=[
-    Entry.Entry { text="Inbox", description="", children=[] },
-    Entry.Entry { text="By time (deadline)", description="", children=[
-      Entry.Entry { text="daily", description="", children=[] },
-      Entry.Entry { text="weekly", description="", children=[] },
-      Entry.Entry { text="waiting on", description="", children=[] },
-      Entry.Entry { text="monthly", description="", children=[] },
-      Entry.Entry { text="yearly, etc.", description="", children=[] }
-    ] },
-    Entry.Entry { text="Habits", description="", children=[
-      Entry.Entry { text="daily", description="", children=[] },
-      Entry.Entry { text="weekly", description="", children=[] },
-      Entry.Entry { text="monthly", description="", children=[] }
-    ] },
-    Entry.Entry { text="By priorty", description="", children=[] },
-    Entry.Entry { text="By project", description="", children=[] }
-    ] })
-  (Entry.InText 4)) lastPressed
+aa = foldp apk (Model SampleData.template (Entry.InText 4)) lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
