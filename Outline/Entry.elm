@@ -4,6 +4,7 @@ import Html (Html, node, text)
 import Html.Attributes (class)
 import Core.String
 import Core.Array
+import String
 
 data Entry = Entry {
   text:String,
@@ -26,6 +27,7 @@ update value cursor char = case value of Entry e -> case cursor of
   InDescription i -> Entry { e | description <- Core.String.update e.description i char }
   InChild i c -> Entry { e | children <- changeAt (\x -> update x c char) i e.children }
 
+at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
 move : Entry -> Cursor -> String -> Cursor
@@ -44,18 +46,41 @@ goRight cursor = case cursor of
   InText n -> InText (n+1)
   _ -> cursor
 
-goNext value cursor = case cursor of
-  InText i -> InDescription i
-  InDescription i -> InChild 0 (InText i)
-  InChild n (InText i) -> InChild n (InDescription i)
-  InChild n (InDescription i) -> InChild (n+1) (InText i)
-  InChild n c -> InChild (n+1) c
+data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
-goPrev value cursor = case cursor of
-  InChild 0 c -> c
-  InChild i c -> InChild (i-1) c
-  InDescription i -> InText i
-  InText _ -> InText 0
+ll : Entry -> Int
+ll e = case e of Entry value -> length value.children
+
+goChild n fn value cursor = case fn (at n value.children) cursor of
+  StayHere c -> StayHere <| InChild n c
+  EnterNext -> if length value.children > n+1 then StayHere <| InChild (n+1) (InText 0)
+    else EnterNext
+  EnterPrev -> if | n == 0 -> StayHere <| InText 0
+                  | (ll (at (n-1) value.children)) > 0 -> StayHere <| InChild (n-1) (InChild (ll (at (n-1) value.children) - 1) (InText 0))
+                  | otherwise -> StayHere <| InChild (n-1) (InText 0)
+
+gn : Entry -> Cursor -> MoveCmd
+gn e cursor = case e of Entry value -> case cursor of
+  InText i -> if length value.children > 0 then StayHere <| InChild 0 (InText i)
+    else EnterNext
+  InDescription i -> gn e (InText i)
+  InChild n c -> goChild n gn value c
+
+go : (Entry -> Cursor -> MoveCmd) -> Entry -> Cursor -> Cursor
+go fn value cursor = case fn value cursor of
+  EnterPrev -> InText 0
+  StayHere c -> c
+  EnterNext -> cursor
+
+goNext = go gn
+
+gp : Entry -> Cursor -> MoveCmd
+gp e cursor = case e of Entry value -> case cursor of
+  InText i -> EnterPrev
+  InDescription i -> StayHere <| InText i
+  InChild n c -> goChild n gp value c
+
+goPrev = go gp
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of
