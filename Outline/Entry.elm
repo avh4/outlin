@@ -38,13 +38,15 @@ move value cursor char = case value of Entry e -> case cursor of
 
 goLeft : Cursor -> Cursor
 goLeft cursor = case cursor of
-  InText n -> InText (n-1)
-  _ -> cursor
+  InText n -> InText <| Core.String.goLeft n
+  InDescription n -> InDescription <| Core.String.goLeft n
+  InChild n c -> InChild n <| goLeft c
 
 goRight : Cursor -> Cursor
 goRight cursor = case cursor of
-  InText n -> InText (n+1)
-  _ -> cursor
+  InText n -> InText <| Core.String.goRight n
+  InDescription n -> InDescription <| Core.String.goRight n
+  InChild n c -> InChild n <| goRight c
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 

@@ -14,6 +14,10 @@ update value selection char =
 move value selection char =
   selection + 1 -- TODO length of char
 
+goLeft cur = cur - 1
+
+goRight cur = cur + 1
+
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of
   Just cursor -> node "span" [] [
