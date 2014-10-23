@@ -23,12 +23,11 @@ liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-updateDocument : Document -> DocumentCursor -> String -> Document
-updateDocument = Entry.update 
+updateDocument : String -> Document -> DocumentCursor -> Document
+updateDocument = Entry.update
 
-moveDocument : Document -> DocumentCursor -> String -> DocumentCursor
+moveDocument : String -> Document -> DocumentCursor -> DocumentCursor
 moveDocument = Entry.move
---    (fst cursor, Block.move (head value, snd cursor) char)
 
 changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
@@ -36,8 +35,8 @@ changeAt fn1 fn2 index list =
 
 insertInModel : Model -> String -> Model
 insertInModel {value,selection} char =
-  let a = updateDocument value selection char
-      b = moveDocument  value selection char
+  let a = updateDocument char value selection
+      b = moveDocument char value selection
   in {value=a, selection=b}
 
 -- INPUT

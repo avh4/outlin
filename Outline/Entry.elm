@@ -21,20 +21,20 @@ changeAt : (a -> a) -> Int -> [a] -> [a]
 changeAt fn index list =
   indexedMap (\i item -> if i == index then fn item else item) list
 
-update : Entry -> Cursor -> String -> Entry
-update value cursor char = case value of Entry e -> case cursor of
-  InText i -> Entry { e | text <- Core.String.update e.text i char }
-  InDescription i -> Entry { e | description <- Core.String.update e.description i char }
-  InChild i c -> Entry { e | children <- changeAt (\x -> update x c char) i e.children }
+update : String -> Entry -> Cursor -> Entry
+update char value cursor = case value of Entry e -> case cursor of
+  InText i -> Entry { e | text <- Core.String.update char e.text i }
+  InDescription i -> Entry { e | description <- Core.String.update char e.description i }
+  InChild i c -> Entry { e | children <- changeAt (\x -> update char x c) i e.children }
 
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
-move : Entry -> Cursor -> String -> Cursor
-move value cursor char = case value of Entry e -> case cursor of
-  InText i -> InText <| Core.String.move e.text i char
-  InDescription i -> InDescription <| Core.String.move e.description i char
-  InChild i child -> InChild i <| move (at i e.children ) child char
+move : String -> Entry -> Cursor -> Cursor
+move char value cursor = case value of Entry e -> case cursor of
+  InText i -> InText <| Core.String.move char e.text i
+  InDescription i -> InDescription <| Core.String.move char e.description i
+  InChild i child -> InChild i <| move char (at i e.children ) child
 
 goLeft : Entry -> Cursor -> Cursor
 goLeft entry cursor = case entry of Entry e -> case cursor of

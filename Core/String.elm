@@ -6,12 +6,12 @@ import Html.Attributes (class)
 
 type Cursor = Int
 
-update value selection char =
+update char value selection =
   (String.left selection value)
   ++ char
   ++ (String.dropLeft selection value)
 
-move value selection char =
+move char value selection =
   selection + String.length char
 
 goLeft value cur = if cur > 0 then cur - 1 else cur
