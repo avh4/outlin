@@ -12,11 +12,11 @@ update value selection char =
   ++ (String.dropLeft selection value)
 
 move value selection char =
-  selection + 1 -- TODO length of char
+  selection + String.length char
 
-goLeft cur = cur - 1
+goLeft value cur = if cur > 0 then cur - 1 else cur
 
-goRight cur = cur + 1
+goRight value cur = if cur < String.length value then cur + 1 else cur
 
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of

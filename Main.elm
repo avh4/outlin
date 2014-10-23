@@ -44,8 +44,8 @@ insertInModel {value,selection} char =
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
-  Keys.Left -> { last | selection <- Entry.goLeft last.selection }
-  Keys.Right -> { last | selection <- Entry.goRight last.selection }
+  Keys.Left -> { last | selection <- Entry.goLeft last.value last.selection }
+  Keys.Right -> { last | selection <- Entry.goRight last.value last.selection }
   Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
   Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
   Keys.Enter -> last

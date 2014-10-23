@@ -36,17 +36,17 @@ move value cursor char = case value of Entry e -> case cursor of
   InDescription i -> InDescription <| Core.String.move e.description i char
   InChild i child -> InChild i <| move (at i e.children ) child char
 
-goLeft : Cursor -> Cursor
-goLeft cursor = case cursor of
-  InText n -> InText <| Core.String.goLeft n
-  InDescription n -> InDescription <| Core.String.goLeft n
-  InChild n c -> InChild n <| goLeft c
+goLeft : Entry -> Cursor -> Cursor
+goLeft entry cursor = case entry of Entry e -> case cursor of
+  InText n -> InText <| Core.String.goLeft e.text n
+  InDescription n -> InDescription <| Core.String.goLeft e.description n
+  InChild n c -> InChild n <| goLeft (at n e.children) c
 
-goRight : Cursor -> Cursor
-goRight cursor = case cursor of
-  InText n -> InText <| Core.String.goRight n
-  InDescription n -> InDescription <| Core.String.goRight n
-  InChild n c -> InChild n <| goRight c
+goRight : Entry -> Cursor -> Cursor
+goRight entry cursor = case entry of Entry e -> case cursor of
+  InText n -> InText <| Core.String.goRight e.text n
+  InDescription n -> InDescription <| Core.String.goRight e.description n
+  InChild n c -> InChild n <| goRight (at n e.children) c
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
