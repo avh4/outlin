@@ -30,23 +30,19 @@ update char value cursor = case value of Entry e -> case cursor of
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
+ddd : (String -> Core.String.Cursor -> Core.String.Cursor) -> Entry -> Cursor -> Cursor
+ddd fn entry cursor = case entry of Entry e -> case cursor of
+  InText n -> InText <| fn e.text n
+  InDescription n -> InDescription <| fn e.description n
+  InChild n c -> InChild n <| ddd fn (at n e.children) c
+
 move : String -> Entry -> Cursor -> Cursor
-move char value cursor = case value of Entry e -> case cursor of
-  InText i -> InText <| Core.String.move char e.text i
-  InDescription i -> InDescription <| Core.String.move char e.description i
-  InChild i child -> InChild i <| move char (at i e.children ) child
+move char = ddd (Core.String.move char)
 
 goLeft : Entry -> Cursor -> Cursor
-goLeft entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| Core.String.goLeft e.text n
-  InDescription n -> InDescription <| Core.String.goLeft e.description n
-  InChild n c -> InChild n <| goLeft (at n e.children) c
+goLeft = ddd Core.String.goLeft
 
-goRight : Entry -> Cursor -> Cursor
-goRight entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| Core.String.goRight e.text n
-  InDescription n -> InDescription <| Core.String.goRight e.description n
-  InChild n c -> InChild n <| goRight (at n e.children) c
+goRight = ddd Core.String.goRight
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
