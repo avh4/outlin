@@ -9,7 +9,6 @@ import Char
 import Debug
 import Outline.Entry as Entry
 import SampleData
-import SampleJson
 import Json.Decoder
 import Json.Process
 import Json.Output
@@ -66,12 +65,7 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 
 
 renderModel : Model -> Html
-renderModel m = node "div" [] [
-  renderDocument m.value m.selection,
-  node "code" [] [ text <| Entry.toJson m.value ],
-  node "hr" [] [],
-  node "code" [] [ text <| show <| Json.Decoder.fromString SampleJson.string `Json.Process.into` Entry.decoder  ]
-  ]
+renderModel m = node "div" [] [ renderDocument m.value m.selection ]
 
 port pressesIn : Signal String
 port downsIn : Signal Int
@@ -92,7 +86,8 @@ step c m = case c of
 commands : Signal Command
 commands = merges [
   KeyPress <~ pressesIn,
-  KeyDown <~ downsIn
+  KeyDown <~ downsIn,
+  Loaded <~ dropboxIn
   ]
 
 aa = foldp step (Model SampleData.template (Entry.InText 4)) commands
@@ -101,3 +96,5 @@ main = (toElement 800 600) <~ (renderModel <~ aa)
 
 port dropboxOut : Signal String
 port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ aa
+
+port dropboxIn : Signal String

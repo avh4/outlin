@@ -20,7 +20,11 @@
 </style>
 <body></body>
 <script>
-var runningElmModule = Elm.fullscreen(Elm.Main, { downsIn: 0, pressesIn: ""});
+var runningElmModule = Elm.fullscreen(Elm.Main, {
+  downsIn: 0,
+  pressesIn: "",
+  dropboxIn: ""
+});
 
 var specialKeys = {
   '8': 'backspace',
@@ -29,7 +33,7 @@ var specialKeys = {
   '39': 'right',
   '40': 'down',
   '91': 'meta'
-}
+};
 
 document.onkeydown = function(e) {
   if (specialKeys[e.keyCode.toString()]) {
@@ -55,6 +59,14 @@ client.authenticate(function(error, client) {
     return alert(error);
   }
   console.log("Dropbox is authorized");
+  client.readFile("outlin.json", function(error, data) {
+    if (error) {
+      return alert(error);
+    }
+    console.log("Read outlin.json from Dropbox");
+    runningElmModule.ports.dropboxIn.send(data);
+  });
+
   runningElmModule.ports.dropboxOut.subscribe(function(json) {
     console.log("Got " + json.slice(0, 100));
     client.writeFile("outlin.json", json, function(error, stat) {
