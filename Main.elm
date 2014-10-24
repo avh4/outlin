@@ -74,3 +74,6 @@ lastPressed = merge (lift Keys.fromPresses pressesIn) (lift Keys.fromDowns downs
 aa = foldp apk (Model SampleData.template (Entry.InText 4)) lastPressed
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
+
+port dropboxOut : Signal String
+port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ aa
