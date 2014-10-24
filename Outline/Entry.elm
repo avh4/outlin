@@ -8,7 +8,6 @@ import String
 import Json.Decoder
 import Json.Decoder (..)
 import Json.Output
-import Json.Process
 
 data Entry = Entry {
   text:String,
@@ -124,6 +123,3 @@ decoder a = Json.Decoder.decode3
   ("children" := Json.Decoder.listOf decoder)
   (\t d c -> Entry {text=t,description=d,children=c})
   a -- this is to work around https://github.com/elm-lang/Elm/issues/639
-
-fromJson : String -> Json.Output.Output Entry
-fromJson s = Json.Decoder.fromString s `Json.Process.into` decoder

@@ -10,6 +10,8 @@ import Debug
 import Outline.Entry as Entry
 import SampleData
 import SampleJson
+import Json.Decoder
+import Json.Process
 
 
 type Document = Entry.Entry
@@ -61,12 +63,13 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 --  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
 --  |> node "div" []
 
+
 renderModel : Model -> Html
 renderModel m = node "div" [] [
   renderDocument m.value m.selection,
   node "code" [] [ text <| Entry.toJson m.value ],
   node "hr" [] [],
-  node "code" [] [ text <| show <| Entry.fromJson SampleJson.string ]
+  node "code" [] [ text <| show <| Json.Decoder.fromString SampleJson.string `Json.Process.into` Entry.decoder  ]
   ]
 
 port pressesIn : Signal String
