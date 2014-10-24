@@ -43,9 +43,9 @@ updateModel {valueFn,curFn} {value,selection} =
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
   Keys.Left -> updateModel Entry.goLeftAction last
-  Keys.Right -> { last | selection <- Entry.goRight last.value last.selection }
-  Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
-  Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
+  Keys.Right -> updateModel Entry.goRightAction last
+  Keys.Down -> updateModel Entry.goNextAction last
+  Keys.Up -> updateModel Entry.goPrevAction last
   Keys.Enter -> last
   Keys.Character s -> updateModel (Entry.insertAction s) last
   Keys.Nothing -> last

@@ -46,13 +46,10 @@ move char = ddd (Core.String.move char)
 insertAction : String -> Action Entry Cursor
 insertAction s = Action (update s) (move s)
 
-goLeft : Entry -> Cursor -> Cursor
-goLeft = ddd Core.String.goLeft
-
 goLeftAction : Action Entry Cursor
-goLeftAction = Action (\v _ -> v) goLeft
+goLeftAction = Action (\v _ -> v) (ddd Core.String.goLeft)
 
-goRight = ddd Core.String.goRight
+goRightAction = Action (\v _ -> v) (ddd Core.String.goRight)
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
@@ -67,12 +64,12 @@ goChild n fn value cursor = case fn (at n value.children) cursor of
                   | (ll (at (n-1) value.children)) > 0 -> StayHere <| InChild (n-1) (InChild (ll (at (n-1) value.children) - 1) (InText 0))
                   | otherwise -> StayHere <| InChild (n-1) (InText 0)
 
-gn : Entry -> Cursor -> MoveCmd
-gn e cursor = case e of Entry value -> case cursor of
+goNext : Entry -> Cursor -> MoveCmd
+goNext e cursor = case e of Entry value -> case cursor of
   InText i -> if length value.children > 0 then StayHere <| InChild 0 (InText i)
     else EnterNext
-  InDescription i -> gn e (InText i)
-  InChild n c -> goChild n gn value c
+  InDescription i -> goNext e (InText i)
+  InChild n c -> goChild n goNext value c
 
 go : (Entry -> Cursor -> MoveCmd) -> Entry -> Cursor -> Cursor
 go fn value cursor = case fn value cursor of
@@ -80,15 +77,16 @@ go fn value cursor = case fn value cursor of
   StayHere c -> c
   EnterNext -> cursor
 
-goNext = go gn
+goNextAction : Action Entry Cursor
+goNextAction = Action (\v _ -> v) (go goNext)
 
-gp : Entry -> Cursor -> MoveCmd
-gp e cursor = case e of Entry value -> case cursor of
+goPrev : Entry -> Cursor -> MoveCmd
+goPrev e cursor = case e of Entry value -> case cursor of
   InText i -> EnterPrev
   InDescription i -> StayHere <| InText i
-  InChild n c -> goChild n gp value c
+  InChild n c -> goChild n goPrev value c
 
-goPrev = go gp
+goPrevAction = Action (\v _ -> v) (go goPrev)
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of
