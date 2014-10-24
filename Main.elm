@@ -12,6 +12,7 @@ import SampleData
 import SampleJson
 import Json.Decoder
 import Json.Process
+import Json.Output
 
 
 type Document = Entry.Entry
@@ -75,9 +76,26 @@ renderModel m = node "div" [] [
 port pressesIn : Signal String
 port downsIn : Signal Int
 
-lastPressed = merge (lift Keys.fromPresses pressesIn) (lift Keys.fromDowns downsIn)
+data Command =
+  KeyPress String |
+  KeyDown Int |
+  Loaded String
 
-aa = foldp apk (Model SampleData.template (Entry.InText 4)) lastPressed
+step : Command -> Model -> Model
+step c m = case c of
+  KeyPress char -> apk (Keys.fromPresses char) m
+  KeyDown code -> apk (Keys.fromDowns code) m
+  Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
+    Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
+    _ -> m
+
+commands : Signal Command
+commands = merges [
+  KeyPress <~ pressesIn,
+  KeyDown <~ downsIn
+  ]
+
+aa = foldp step (Model SampleData.template (Entry.InText 4)) commands
 
 main = (toElement 800 600) <~ (renderModel <~ aa)
 
