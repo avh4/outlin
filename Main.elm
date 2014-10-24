@@ -27,12 +27,6 @@ liftArrayTuple : ([a], b) -> [(a,b)]
 liftArrayTuple (aa, b) =
   map (\a -> (a,b)) aa
 
-updateDocument : String -> Document -> DocumentCursor -> Document
-updateDocument = Entry.update
-
-moveDocument : String -> Document -> DocumentCursor -> DocumentCursor
-moveDocument = Entry.move
-
 changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
@@ -44,7 +38,7 @@ updateModel valueFn curFn char {value,selection} =
   in {value=a, selection=b}
 
 insertInModel : Model -> String -> Model
-insertInModel m s = updateModel updateDocument moveDocument s m
+insertInModel m s = updateModel Entry.update Entry.move s m
 
 -- INPUT
 
