@@ -5,6 +5,10 @@ import Html.Attributes (class)
 import Core.String
 import Core.Array
 import String
+import Json.Decoder
+import Json.Decoder (..)
+import Json.Output
+import Json.Process
 
 data Entry = Entry {
   text:String,
@@ -112,3 +116,14 @@ toJson entry = case entry of Entry e ->
   ++ ",\"description\":" ++ Core.String.toJson e.description
   ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
   ++ "}"
+
+decoder : Json.Decoder.Decoder Entry
+decoder a = Json.Decoder.decode3
+  ("text" := Json.Decoder.string)
+  ("description" := Json.Decoder.string)
+  ("children" := Json.Decoder.listOf decoder)
+  (\t d c -> Entry {text=t,description=d,children=c})
+  a -- this is to work around https://github.com/elm-lang/Elm/issues/639
+
+fromJson : String -> Json.Output.Output Entry
+fromJson s = Json.Decoder.fromString s `Json.Process.into` decoder

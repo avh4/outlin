@@ -9,6 +9,7 @@ import Char
 import Debug
 import Outline.Entry as Entry
 import SampleData
+import SampleJson
 
 
 type Document = Entry.Entry
@@ -63,7 +64,9 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 renderModel : Model -> Html
 renderModel m = node "div" [] [
   renderDocument m.value m.selection,
-  node "code" [] [ text <| Entry.toJson m.value ]
+  node "code" [] [ text <| Entry.toJson m.value ],
+  node "hr" [] [],
+  node "code" [] [ text <| show <| Entry.fromJson SampleJson.string ]
   ]
 
 port pressesIn : Signal String
