@@ -25,14 +25,15 @@ function quote(string) {
   return '"' + string.replace(/"/g, '\\"') + '"';
 }
 
-function Entry(text, children) {
+function Entry(text, description, children) {
   this.text = text;
+  this.description = description;
   this.children = children;
 }
 
 Entry.prototype.toString = function(depth) {
   var indent = Array((depth||0)*2).join("  ");
-  return "Entry.Entry {text=" + quote(this.text) + ", description=\"\", children=[" + this.children.map(function(c) { return "\n" + indent + c.toString((depth||0)+1); }) + "]}";
+  return "Entry.Entry {text=" + quote(this.text) + ", description=" + quote(this.description) + ", children=[" + this.children.map(function(c) { return "\n" + indent + c.toString((depth||0)+1); }) + "]}";
 }
 
 function doNode(node) {
@@ -58,9 +59,10 @@ function doNode(node) {
     return;
   } else if (node.name == 'item') {
     var children = node.getChild("children") ? doNode(node.getChild("children")) : [];
+    var note = node.getChild("note") ? doNode(node.getChild("note")) : "";
     return new Entry(
       doNode(node.getChild("values").getChild("text")),
-      children
+      note, children
     );
   } else if (node.name == 'text') {
     return node.getChildren("p").map(doNode).join("\n");
@@ -78,6 +80,8 @@ function doNode(node) {
     }
   } else if (node.name == 'children') {
     return node.getChildren("item").map(doNode);
+  } else if (node.name == 'note') {
+    return doNode(node.getChild("text"));
   } else {
     throw new Error("Unknown element: " + node.name);
   }
