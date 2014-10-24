@@ -1,6 +1,6 @@
 module Core.Action where
 
-type Action com val cur = {
-  valueFn:(com -> val -> cur -> val),
-  curFn:(com -> val -> cur -> cur)
+type Action val cur = {
+  valueFn:(val -> cur -> val),
+  curFn:(val -> cur -> cur)
   }

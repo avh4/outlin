@@ -32,22 +32,22 @@ changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
-updateModel : Action c val cur -> c -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel {valueFn,curFn} char {value,selection} =
-  let a = valueFn char value selection
-      b = curFn char value selection
+updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
+updateModel {valueFn,curFn} {value,selection} =
+  let a = valueFn value selection
+      b = curFn value selection
   in {value=a, selection=b}
 
 -- INPUT
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
-  Keys.Left -> updateModel Entry.goLeftAction () last
+  Keys.Left -> updateModel Entry.goLeftAction last
   Keys.Right -> { last | selection <- Entry.goRight last.value last.selection }
   Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
   Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
   Keys.Enter -> last
-  Keys.Character s -> updateModel Entry.insertAction s last
+  Keys.Character s -> updateModel (Entry.insertAction s) last
   Keys.Nothing -> last
 
 -- RENDER

@@ -43,14 +43,14 @@ ddd fn entry cursor = case entry of Entry e -> case cursor of
 move : String -> Entry -> Cursor -> Cursor
 move char = ddd (Core.String.move char)
 
-insertAction : Action String Entry Cursor
-insertAction = Action update move
+insertAction : String -> Action Entry Cursor
+insertAction s = Action (update s) (move s)
 
-goLeft : () -> Entry -> Cursor -> Cursor
-goLeft _ = ddd Core.String.goLeft
+goLeft : Entry -> Cursor -> Cursor
+goLeft = ddd Core.String.goLeft
 
-goLeftAction : Action () Entry Cursor
-goLeftAction = Action (\_ v _ -> v) goLeft
+goLeftAction : Action Entry Cursor
+goLeftAction = Action (\v _ -> v) goLeft
 
 goRight = ddd Core.String.goRight
 
