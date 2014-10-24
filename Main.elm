@@ -37,9 +37,6 @@ updateModel valueFn curFn char {value,selection} =
       b = curFn char value selection
   in {value=a, selection=b}
 
-insertInModel : Model -> String -> Model
-insertInModel m s = updateModel Entry.update Entry.move s m
-
 -- INPUT
 
 apk : Keys.KeyInput -> Model -> Model
@@ -49,7 +46,7 @@ apk key last = case key of
   Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
   Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
   Keys.Enter -> last
-  Keys.Character s -> insertInModel last s
+  Keys.Character s -> updateModel Entry.update Entry.move s last
   Keys.Nothing -> last
 
 -- RENDER
