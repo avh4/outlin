@@ -44,10 +44,13 @@ move : String -> Entry -> Cursor -> Cursor
 move char = ddd (Core.String.move char)
 
 insertAction : Action String Entry Cursor
-insertAction = { valueFn=update, curFn=move }
+insertAction = Action update move
 
-goLeft : Entry -> Cursor -> Cursor
-goLeft = ddd Core.String.goLeft
+goLeft : () -> Entry -> Cursor -> Cursor
+goLeft _ = ddd Core.String.goLeft
+
+goLeftAction : Action () Entry Cursor
+goLeftAction = Action (\_ v _ -> v) goLeft
 
 goRight = ddd Core.String.goRight
 
