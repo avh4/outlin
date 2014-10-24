@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "ltx": "^0.7.0",
+    "optimist": "^0.6.1",
     "xml-stream": "^0.4.5"
   }
 }

@@ -1,7 +1,25 @@
+var argv = require('optimist').demand(1).argv;
+
 var fs = require('fs');
 var ltx = require('ltx');
+var zlib = require('zlib');
 
-var xml = ltx.parse(fs.readFileSync("Tasks.xml"));
+function processFile(filename) {
+  var string = ''
+  var stream = fs.createReadStream(filename + "/contents.xml").pipe(zlib.createGunzip());
+  stream.on('data',function(chunk){
+    var part = chunk.toString();
+    string += part;
+  });
+
+  stream.on('end',function(){
+   var xml = ltx.parse(string);
+   //console.log(JSON.stringify(doNode(xml), null, 2));
+   console.log("module SampleData where\n");
+   console.log("import Outline.Entry as Entry\n");
+   console.log("template = " + doNode(xml).toString(1))
+  });
+}
 
 function quote(string) {
   return '"' + string.replace(/"/g, '\\"') + '"';
@@ -57,7 +75,6 @@ function doNode(node) {
   }
 }
 
-//console.log(JSON.stringify(doNode(xml), null, 2));
-console.log("module SampleData where\n");
-console.log("import Outline.Entry as Entry\n");
-console.log("template = " + doNode(xml).toString(1))
+// START
+
+processFile(argv._[0]);
