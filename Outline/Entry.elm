@@ -8,6 +8,7 @@ import String
 import Json.Decoder
 import Json.Decoder (..)
 import Json.Output
+import Core.Action (Action)
 
 data Entry = Entry {
   text:String,
@@ -41,6 +42,9 @@ ddd fn entry cursor = case entry of Entry e -> case cursor of
 
 move : String -> Entry -> Cursor -> Cursor
 move char = ddd (Core.String.move char)
+
+insertAction : Action String Entry Cursor
+insertAction = { valueFn=update, curFn=move }
 
 goLeft : Entry -> Cursor -> Cursor
 goLeft = ddd Core.String.goLeft

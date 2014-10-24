@@ -12,6 +12,7 @@ import SampleData
 import Json.Decoder
 import Json.Process
 import Json.Output
+import Core.Action (Action)
 
 
 type Document = Entry.Entry
@@ -31,8 +32,8 @@ changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
-updateModel : (c -> val -> cur -> val) -> (c -> val -> cur -> cur) -> c -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel valueFn curFn char {value,selection} =
+updateModel : Action c val cur -> c -> {value:val, selection:cur} -> {value:val, selection:cur}
+updateModel {valueFn,curFn} char {value,selection} =
   let a = valueFn char value selection
       b = curFn char value selection
   in {value=a, selection=b}
@@ -46,7 +47,7 @@ apk key last = case key of
   Keys.Down -> { last | selection <- Entry.goNext last.value last.selection }
   Keys.Up -> { last | selection <- Entry.goPrev last.value last.selection }
   Keys.Enter -> last
-  Keys.Character s -> updateModel Entry.update Entry.move s last
+  Keys.Character s -> updateModel Entry.insertAction s last
   Keys.Nothing -> last
 
 -- RENDER
