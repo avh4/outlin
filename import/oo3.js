@@ -36,7 +36,9 @@ Entry.prototype.toString = function(depth) {
 }
 
 function doNode(node) {
-  if (node.name == 'outline') {
+  if (typeof node == 'string') {
+    return node;
+  } else if (node.name == 'outline') {
     return doNode(node.getChild('root'));
   } else if (node.name == 'style-attribute-registry') {
     return;
@@ -63,11 +65,17 @@ function doNode(node) {
   } else if (node.name == 'text') {
     return node.getChildren("p").map(doNode).join("\n");
   } else if (node.name == 'p') {
-    return node.getChildren("run").map(doNode).join();
+    return node.getChildren("run").map(doNode).join("");
   } else if (node.name == 'run') {
-    return node.getChildren("lit").map(doNode).join();
+    return node.getChildren("lit").map(doNode).join("");
   } else if (node.name == 'lit') {
-    return node.getText();
+    return node.children.map(doNode).join("");
+  } else if (node.name == 'cell') {
+    if (node.attrs.href == node.attrs.name) {
+      return node.attrs.name;
+    } else {
+      return '[' + node.attrs.name + '](' + node.attrs.href + ')';
+    }
   } else if (node.name == 'children') {
     return node.getChildren("item").map(doNode);
   } else {
