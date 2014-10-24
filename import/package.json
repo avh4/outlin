@@ -1,0 +1,11 @@
+{
+  "name": "outlin-import",
+  "version": "0.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ltx": "^0.7.0",
+    "xml-stream": "^0.4.5"
+  }
+}
