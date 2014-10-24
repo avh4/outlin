@@ -102,3 +102,13 @@ render value mc = case value of
     node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)],
     node "ul" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]
+
+
+---- JSON
+
+toJson : Entry -> String
+toJson entry = case entry of Entry e ->
+  "{\"text\":" ++ Core.String.toJson e.text
+  ++ ",\"description\":" ++ Core.String.toJson e.description
+  ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
+  ++ "}"

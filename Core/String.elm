@@ -1,6 +1,7 @@
 module Core.String where
 
 import String
+import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
 
@@ -25,3 +26,14 @@ render value msel = case msel of
     node "span" [ class "cursor" ] [ text "^" ],
     text <| String.dropLeft cursor value ]
   Nothing -> node "span" [] [ text value ]
+
+
+---- JSON
+
+quoteQuote = replace All (regex "\"") (\_ -> "&quot;")
+quoteNewline = replace All (regex "\n") (\_ -> "\\n")
+
+quote s = s |> quoteQuote |> quoteNewline
+
+toJson : String -> String
+toJson s = "\"" ++ quote s ++ "\""

@@ -61,7 +61,10 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 --  |> node "div" []
 
 renderModel : Model -> Html
-renderModel m = renderDocument m.value m.selection
+renderModel m = node "div" [] [
+  renderDocument m.value m.selection,
+  node "code" [] [ text <| Entry.toJson m.value ]
+  ]
 
 port pressesIn : Signal String
 port downsIn : Signal Int
