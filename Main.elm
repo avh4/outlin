@@ -37,11 +37,14 @@ changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
 changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
-insertInModel : Model -> String -> Model
-insertInModel {value,selection} char =
-  let a = updateDocument char value selection
-      b = moveDocument char value selection
+updateModel : (c -> val -> cur -> val) -> (c -> val -> cur -> cur) -> c -> {value:val, selection:cur} -> {value:val, selection:cur}
+updateModel valueFn curFn char {value,selection} =
+  let a = valueFn char value selection
+      b = curFn char value selection
   in {value=a, selection=b}
+
+insertInModel : Model -> String -> Model
+insertInModel m s = updateModel updateDocument moveDocument s m
 
 -- INPUT
 
