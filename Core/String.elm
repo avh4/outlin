@@ -31,8 +31,8 @@ backspace = Action.split bback
 goLeft value cur = if cur > 0 then cur - 1 else cur
 goRight value cur = if cur < String.length value then cur + 1 else cur
 
-goLeftAction = Action (\v _ -> v) goLeft
-goRightAction = Action (\v _ -> v) goRight
+goLeftAction = Action.nav goLeft
+goRightAction = Action.nav goRight
 
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of
