@@ -20,8 +20,10 @@ insertAction : String -> Action String Cursor
 insertAction s = Action (update s) (move s)
 
 goLeft value cur = if cur > 0 then cur - 1 else cur
-
 goRight value cur = if cur < String.length value then cur + 1 else cur
+
+goLeftAction = Action (\v _ -> v) goLeft
+goRightAction = Action (\v _ -> v) goRight
 
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of
