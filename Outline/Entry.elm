@@ -48,8 +48,8 @@ insertAction s = liftAction (Core.String.insertAction s)
 backspace : EntryAction
 backspace = liftAction Core.String.backspace
 
-goLeftAction = liftCursorAction Core.String.goLeftAction
-goRightAction = liftCursorAction Core.String.goRightAction
+goLeftAction = liftCursorAction Core.String.goLeft
+goRightAction = liftCursorAction Core.String.goRight
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 

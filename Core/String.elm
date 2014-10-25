@@ -1,4 +1,4 @@
-module Core.String (Cursor, insertAction, backspace, goLeftAction, goRightAction, render, toJson) where
+module Core.String (Cursor, insertAction, backspace, goLeft, goRight, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -28,11 +28,8 @@ bback v c = case (v,c) of
 backspace : Action String Cursor
 backspace = Action.split bback
 
-goLeft value cur = if cur > 0 then cur - 1 else cur
-goRight value cur = if cur < String.length value then cur + 1 else cur
-
-goLeftAction = Action.nav goLeft
-goRightAction = Action.nav goRight
+goLeft = Action.nav (\_ c -> if c > 0 then c-1 else c)
+goRight = Action.nav (\v c -> min (String.length v) (c+1))
 
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of
