@@ -9,7 +9,9 @@ data KeyInput =
   Nothing
 
 fromPresses : String -> KeyInput
-fromPresses string = Character string
+fromPresses string = case string of
+  "\r" -> Enter
+  _ -> Character string
 
 fromDowns : Int -> KeyInput
 fromDowns key = case Debug.watch "key" key of

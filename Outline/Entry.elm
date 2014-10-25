@@ -1,4 +1,4 @@
-module Outline.Entry where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -9,20 +9,30 @@ import Json.Decoder
 import Json.Decoder (..)
 import Json.Output
 import Core.Action (Action)
+import Core.Action as Action
 
-data Entry = Entry {
-  text:String,
-  description:String,
-  children:[Entry]
+data Base a = Entry {
+  text:a,
+  description:a,
+  children:[Base a]
   }
 
-data Cursor =
-  InText Core.String.Cursor |
-  InDescription Core.String.Cursor |
-  InChild (Core.Array.Cursor Cursor)
+type Entry = Base String
+
+entry : String -> String -> [Entry] -> Entry
+entry t d c = Entry {text=t, description=d, children=c}
+
+data BaseCursor c =
+  InText c |
+  InDescription c |
+  InChild (Core.Array.Cursor (BaseCursor c))
+
+type Cursor = BaseCursor Core.String.Cursor
 
 type StringAction = Action String Core.String.Cursor
 type EntryAction = Action Entry Cursor
+
+--doText : (String -> x) -> ()
 
 uupdate : StringAction -> Entry -> Cursor -> Entry
 uupdate action value cursor = case value of Entry e -> case cursor of
@@ -30,10 +40,28 @@ uupdate action value cursor = case value of Entry e -> case cursor of
   InDescription i -> Entry { e | description <- action.valueFn e.description i }
   InChild c -> Entry { e | children <- (Core.Array.applyAt <| Action (uupdate action) (\_ cc -> cc)).valueFn e.children c }
 
+-- navTo : (String -> x) -> (String -> x) -> (Core.Array.Cursor x -> x) -> Entry -> Cursor -> x
+-- navTo textFn descFn childFn en cur = case en of Entry e -> case cur of
+--   InText n -> textFn e.text
+--   InDescription n -> descFn e.description
+--   InChild c -> childFn --(Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
+
+-- straightNav : (String -> Core.String.Cursor) -> Entry -> Cursor -> Cursor
+-- straightNav fn = navTo
+--   (\s -> InText <| fn s)
+--   (\s -> InDescription <| fn s)
+--   (\(i,c) -> InChild (i,c))
+
+mmmove : StringAction -> Core.String.Cursor -> String -> Core.String.Cursor
+mmmove action cur s = action.curFn s cur
+
+-- mmove : StringAction -> Entry -> Cursor -> Cursor
+-- mmove action = straightNav (\n -> mmmove action n)
+
 mmove : StringAction -> Entry -> Cursor -> Cursor
 mmove action entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| action.curFn e.text n
-  InDescription n -> InDescription <| action.curFn e.description n
+  InText n -> InText <| (mmmove action n) e.text
+  InDescription n -> InDescription <| (mmmove action n) e.description
   InChild c -> InChild <| (Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
 
 liftAction : StringAction -> EntryAction
@@ -47,6 +75,14 @@ insertAction s = liftAction (Core.String.insertAction s)
 
 backspace : EntryAction
 backspace = liftAction Core.String.backspace
+
+e_enter : Entry -> Cursor -> (Entry, Cursor)
+e_enter en c = case en of
+  Entry e ->
+  (entry "" "" [entry "a" "" [], entry "b" "" []], InChild (1,InText 0))
+
+enter : EntryAction
+enter = Action.split e_enter
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight

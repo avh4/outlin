@@ -7,6 +7,7 @@
     "elm-version": "0.13",
     "dependencies": {
         "lambdatoast/elm-json": "0.3.4",
+        "deadfoxygrandpa/Elm-Test": "0.3.4",
         "evancz/elm-html": "0.2.1"
     },
     "repository": "https://github.com/USER/PROJECT.git"
