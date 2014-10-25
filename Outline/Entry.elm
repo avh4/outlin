@@ -79,15 +79,15 @@ backspace = liftAction Core.String.backspace
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
 ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
 
-s_split : Entry -> Cursor -> (Entry, Entry, Cursor)
+s_split : Entry -> Cursor -> ([Entry], Core.Array.Cursor Cursor)
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
-    (left, right, c) -> (entry left "" [], Entry {e | text <- right}, InText c)
-  _ -> (en, entry "" "" [], InText 0)
+    (left, right, c) -> ([entry left "" [], Entry {e | text <- right}], (1, InText c))
+  _ -> ([en], (0, cur))
 
 e_enter : Entry -> Cursor -> (Entry, Cursor)
 e_enter en cur = case en of Entry e -> case cur of
-  InChild (n,c) -> case Action.apply (Core.Array.split s_split) e.children (n,c) of
+  InChild (n,c) -> case Action.apply (Core.Array.do s_split) e.children (n,c) of
     (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (en, cur) -- can't split root node
 

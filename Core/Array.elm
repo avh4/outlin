@@ -1,4 +1,4 @@
-module Core.Array (Cursor, applyAt, split, render, toJson) where
+module Core.Array (Cursor, applyAt, do, split, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
