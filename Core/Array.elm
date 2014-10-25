@@ -2,7 +2,9 @@ module Core.Array where
 
 import Core.Action (Action)
 
+type Value a = [a]
 type Cursor a = (Int, a)
+type Subs a = {child:a}
 
 changeAt : (a -> a) -> Int -> [a] -> [a]
 changeAt fn index list =
@@ -24,7 +26,8 @@ render fn list msel = case msel of
 
 ---- JSON
 
+walk : (Value b -> c) -> Subs (a -> b) -> Value a -> c
+walk wrapFn {child} list = wrapFn <| map child list
+
 toJson : (a -> String) -> [a] -> String
-toJson fn list = "["
-  ++ (join "," <| map fn list)
-  ++ "]"
+toJson fn = walk (\vs -> "[" ++ (join "," vs) ++ "]") {child=fn}

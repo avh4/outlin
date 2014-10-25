@@ -7,7 +7,9 @@ import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
 
+type Value = String
 type Cursor = Int
+type Subs = {}
 
 update char value selection =
   (String.left selection value)
@@ -42,10 +44,13 @@ render value msel = case msel of
 
 ---- JSON
 
+walk : (Value -> a) -> Subs -> Value -> a
+walk fn _ = fn
+
 quoteQuote = replace All (regex "\"") (\_ -> "&quot;")
 quoteNewline = replace All (regex "\n") (\_ -> "\\n")
 
 quote s = s |> quoteQuote |> quoteNewline
 
 toJson : String -> String
-toJson s = "\"" ++ quote s ++ "\""
+toJson = walk (\s -> "\"" ++ quote s ++ "\"") {}
