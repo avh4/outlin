@@ -21,36 +21,43 @@ data Cursor =
   InDescription Core.String.Cursor |
   InChild (Core.Array.Cursor Cursor)
 
-update : String -> Entry -> Cursor -> Entry
-update char value cursor = case value of Entry e -> case cursor of
-  InText i -> Entry { e | text <- (Core.String.insertAction char).valueFn e.text i }
-  InDescription i -> Entry { e | description <- (Core.String.insertAction char).valueFn e.description i }
-  InChild c -> Entry { e | children <- (Core.Array.applyAt <| Action (update char) (\_ cc -> cc)).valueFn e.children c }
+type StringAction = Action String Core.String.Cursor
+type EntryAction = Action Entry Cursor
 
-at : Int -> [a] -> a
-at i list = list |> drop i |> head
+uupdate : StringAction -> Entry -> Cursor -> Entry
+uupdate action value cursor = case value of Entry e -> case cursor of
+  InText i -> Entry { e | text <- action.valueFn e.text i }
+  InDescription i -> Entry { e | description <- action.valueFn e.description i }
+  InChild c -> Entry { e | children <- (Core.Array.applyAt <| Action (uupdate action) (\_ cc -> cc)).valueFn e.children c }
 
-ddd : Action String Core.String.Cursor -> Entry -> Cursor -> Cursor
-ddd action entry cursor = case entry of Entry e -> case cursor of
+mmove : StringAction -> Entry -> Cursor -> Cursor
+mmove action entry cursor = case entry of Entry e -> case cursor of
   InText n -> InText <| action.curFn e.text n
   InDescription n -> InDescription <| action.curFn e.description n
-  InChild c -> InChild <| (Core.Array.applyAt <| Action (\v _ -> v) (ddd action)).curFn e.children c
+  InChild c -> InChild <| (Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
 
-move : String -> Entry -> Cursor -> Cursor
-move char = ddd (Core.String.insertAction char)
+liftAction : StringAction -> EntryAction
+liftAction sa = Action (uupdate sa) (mmove sa)
 
-insertAction : String -> Action Entry Cursor
-insertAction s = Action (update s) (move s)
+liftCursorAction : StringAction -> EntryAction
+liftCursorAction sa = Action (\v _ -> v) (mmove sa)
 
-goLeftAction : Action Entry Cursor
-goLeftAction = Action (\v _ -> v) (ddd Core.String.goLeftAction)
+insertAction : String -> EntryAction
+insertAction s = liftAction (Core.String.insertAction s)
 
-goRightAction = Action (\v _ -> v) (ddd Core.String.goRightAction)
+backspace : EntryAction
+backspace = liftAction Core.String.backspace
+
+goLeftAction = liftCursorAction Core.String.goLeftAction
+goRightAction = liftCursorAction Core.String.goRightAction
 
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
 ll : Entry -> Int
 ll e = case e of Entry value -> length value.children
+
+at : Int -> [a] -> a
+at i list = list |> drop i |> head
 
 goChild n fn value cursor = case fn (at n value.children) cursor of
   StayHere c -> StayHere <| InChild (n,c)

@@ -48,6 +48,7 @@ apk key last = case key of
   Keys.Up -> updateModel Entry.goPrevAction last
   Keys.Enter -> last
   Keys.Character s -> updateModel (Entry.insertAction s) last
+  Keys.Backspace -> updateModel Entry.backspace last
   Keys.Nothing -> last
 
 -- RENDER
