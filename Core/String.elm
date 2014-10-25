@@ -1,6 +1,7 @@
-module Core.String where
+module Core.String (Cursor, insertAction, backspace, goLeftAction, goRightAction, render, toJson) where
 
 import Core.Action (Action)
+import Core.Action as Action
 import String
 import Regex (..)
 import Html (Html, node, text)
@@ -24,11 +25,8 @@ bback v c = case (v,c) of
   (_, 0) -> (v,c)
   _ -> (String.left (c-1) v ++ String.dropLeft c v, c-1)
 
-toAction : (v -> c -> (v, c)) -> Action v c
-toAction fn = Action (\v c -> fst <| fn v c) (\v c -> snd <| fn v c)
-
 backspace : Action String Cursor
-backspace = toAction bback
+backspace = Action.split bback
 
 goLeft value cur = if cur > 0 then cur - 1 else cur
 goRight value cur = if cur < String.length value then cur + 1 else cur
