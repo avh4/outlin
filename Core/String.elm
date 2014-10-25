@@ -1,5 +1,6 @@
 module Core.String where
 
+import Core.Action (Action)
 import String
 import Regex (..)
 import Html (Html, node, text)
@@ -14,6 +15,9 @@ update char value selection =
 
 move char value selection =
   selection + String.length char
+
+insertAction : String -> Action String Cursor
+insertAction s = Action (update s) (move s)
 
 goLeft value cur = if cur > 0 then cur - 1 else cur
 
