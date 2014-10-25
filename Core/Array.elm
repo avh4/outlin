@@ -20,7 +20,8 @@ applyAt {valueFn,curFn} = Action
   (\vs (i,c) -> (i, curFn (at i vs) c))
 
 do : (v -> c -> ([v], Cursor c)) -> Action [v] (Cursor c)
-do fn = Action.split (\vs (i,c) -> fn (at i vs) c)
+do fn = Action.split (\vs (i,c) -> case fn (at i vs) c of
+  (newVs, (newI, newC)) -> ((take i vs) ++ newVs ++ (drop (i+1) vs), (newI+i, newC)))
 
 split_ : (v -> c -> (v, v, c)) -> (v -> c -> ([v], Cursor c))
 split_ fn = \v c -> case fn v c of
