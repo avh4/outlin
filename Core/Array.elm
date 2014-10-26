@@ -16,8 +16,9 @@ replaceAt a index list =
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
-do : c -> Action v c -> Action [v] (Cursor c)
-do nextCursor action vs (i,c) = case action (at i vs) c of
+-- TODO: instead of passing in nextCursor/prevCursor eagerly, can we flip it around so that there is an ActionResult that has a function : c -> Array.Cursor c
+do : c -> (v -> c) -> Action v c -> Action [v] (Cursor c)
+do nextCursor prevCursor action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
   Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
   Action.Delete -> if
@@ -27,7 +28,7 @@ do nextCursor action vs (i,c) = case action (at i vs) c of
     | length vs > i+1 -> Action.Update vs (i+1, nextCursor)
     | otherwise -> Action.EnterNext
   Action.EnterPrev -> if
-    | i > 0 -> Action.Update vs (i-1, c)
+    | i > 0 -> Action.Update vs (i-1, prevCursor (at (i-1) vs))
     | otherwise -> Action.EnterPrev
   Action.NoChange -> Action.NoChange
 
@@ -35,8 +36,8 @@ split_ : (v -> c -> (v, v, c)) -> Action v c
 split_ fn = \v c -> case fn v c of
   (v1, v2, innerC) -> Action.Split [v1, v2] 1 innerC
 
-split : c -> (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
-split nextCursor fn = do nextCursor (split_ fn)
+split : c -> (v -> c) -> (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
+split nextCursor prevCursor fn = do nextCursor prevCursor (split_ fn)
 
 render : (val -> Maybe cur -> out) -> [val] -> Maybe (Cursor cur) -> [out]
 render fn list msel = case msel of

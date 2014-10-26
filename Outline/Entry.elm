@@ -37,9 +37,15 @@ type EntryAction = Action Entry Cursor
 
 enter = do Core.String.split
 
+findLastCursor en = case en of
+  Entry e -> if
+    | length e.children > 0 -> InChild (-1+length e.children,InText 0)
+    | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
+    | otherwise -> InText 0
+
 addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.do (InText 0) addInboxItem e.children c of
+  InChild c -> case Core.Array.do (InText 0) (\_ -> InText 0) addInboxItem e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
@@ -62,17 +68,21 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Update newV newCur -> Action.Update (Entry { e | description <- newV }) (InDescription newCur)
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-  InInbox c -> case Core.Array.do 0 stringAction e.inbox c of
+  InInbox c -> case Core.Array.do 0 (\_ -> 0) stringAction e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
     Action.EnterNext -> if
       | length e.children > 0 -> Action.Update en <| InChild (0,InText 0)
       | otherwise -> Action.EnterNext
-  InChild c -> case Core.Array.do (InText 0) (do stringAction) e.children c of
+    Action.EnterPrev -> Action.Update en <| InText 0
+  InChild c -> case Core.Array.do (InText 0) findLastCursor (do stringAction) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.EnterNext -> Action.EnterNext
+    Action.EnterPrev -> Action.Update en <| if
+      | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
+      | otherwise -> InText 0
     Action.NoChange -> Action.NoChange
 
 goLeft = do Core.String.goLeft
@@ -83,34 +93,8 @@ delete = do Core.String.delete
 insert : String -> EntryAction
 insert s = do (Core.String.insert s)
 
-ll : Entry -> Int
-ll e = case e of Entry value -> length value.children
-
-at : Int -> [a] -> a
-at i list = list |> drop i |> head
-
-goChild n fn e cursor = case e of Entry value -> case fn (at n value.children) cursor of
-  Action.Update _ c -> Action.Update e <| InChild (n,c)
-  Action.EnterPrev -> Action.Update e <| if
-    | n == 0 -> InText 0
-    | (ll (at (n-1) value.children)) > 0 -> InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
-    | otherwise -> InChild (n-1, (InText 0))
-
-go : EntryAction -> EntryAction
-go fn value cursor = case fn value cursor of
-  Action.EnterPrev -> Action.Update value (InText 0)
-  Action.Update _ c -> Action.Update value c
-
 goNext = do (Action.always Action.EnterNext)
-
-goPrev_ : EntryAction
-goPrev_ e cursor = case e of Entry value -> case cursor of
-  InText i -> Action.EnterPrev
-  InDescription i -> Action.Update e <| InText i
-  InInbox (n,c) -> Action.Update e <| if (n > 0) then InInbox (n-1, c) else InText c
-  InChild (n,c) -> goChild n goPrev_ e c
-
-goPrev = go goPrev_
+goPrev = do (Action.always Action.EnterPrev)
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of

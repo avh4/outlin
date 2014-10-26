@@ -38,6 +38,8 @@ updateModel action {value,selection} = case action value selection of
   Action.Update a b -> {value=a, selection=b}
   Action.Split _ _ _ -> {value=value, selection=selection}
   Action.Delete -> {value=value, selection=selection}
+  Action.EnterNext -> {value=value, selection=selection}
+  Action.EnterPrev -> {value=value, selection=selection}
   Action.NoChange -> {value=value, selection=selection}
 
 -- INPUT

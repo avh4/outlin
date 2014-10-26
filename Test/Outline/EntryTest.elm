@@ -69,6 +69,18 @@ navTest = Suite "navigation"
     , test "can exit last inbox item with no children" <|
       Entry.goNext tree (InInbox (1,0))
         `assertEqual` Action.EnterNext
+    , test "can go to prev inbox item" <|
+      Entry.goPrev tree (InInbox (1,0))
+        `assertEqual` Action.Update tree (InInbox (0,0))
+    , test "can enter inbox from bottom" <|
+      Entry.goPrev (entry "" "" ["a","b"] [textEntry "x"]) (InChild (0,InText 0))
+        `assertEqual` Action.Update (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
+    , test "can exit first inbox item" <|
+      Entry.goPrev tree (InInbox (0,0))
+        `assertEqual` Action.Update tree (InText 0)
+    -- , test "can exit last inbox item with no children" <|
+    --   Entry.goPrev tree (InInbox (1,0))
+    --     `assertEqual` Action.EnterNext
     ]
   ]
 
