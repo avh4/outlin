@@ -99,14 +99,13 @@ goNext e cursor = case e of Entry value -> case cursor of
   InInbox (n,c) -> StayHere <| InInbox (min ((length value.inbox)-1) (n+1), c)
   InChild (n,c) -> goChild n goNext value c
 
-go : (Entry -> Cursor -> MoveCmd) -> Entry -> Cursor -> Cursor
+go : (Entry -> Cursor -> MoveCmd) -> EntryAction
 go fn value cursor = case fn value cursor of
-  EnterPrev -> InText 0
-  StayHere c -> c
-  EnterNext -> cursor
+  EnterPrev -> Action.Update value (InText 0)
+  StayHere c -> Action.Update value c
+  EnterNext -> Action.Update value cursor
 
-goNextAction : Action Entry Cursor
-goNextAction = Action.nav (go goNext)
+goNextAction = go goNext
 
 goPrev : Entry -> Cursor -> MoveCmd
 goPrev e cursor = case e of Entry value -> case cursor of
@@ -115,7 +114,7 @@ goPrev e cursor = case e of Entry value -> case cursor of
   InInbox (n,c) -> StayHere <| if (n > 0) then InInbox (n-1, c) else InText c
   InChild (n,c) -> goChild n goPrev value c
 
-goPrevAction = Action.nav (go goPrev)
+goPrevAction = go goPrev
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of
