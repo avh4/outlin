@@ -1,4 +1,4 @@
-module Core.Array (Cursor, cursor, applyAt, do, split, render, toJson) where
+module Core.Array (Cursor, cursor, do, split, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -16,18 +16,14 @@ replaceAt a index list =
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
-applyAt : Action v c -> Action [v] (Cursor c)
-applyAt action vs (i,c) = case action (at i vs) c of
+do : Action v c -> Action [v] (Cursor c)
+do action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
   Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
   Action.Delete -> if
     | length vs > 1 -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (min i <| -2+length vs,c)
     | otherwise -> Action.Delete
   Action.NoChange -> Action.NoChange
-
--- TODO: remove either do or applyAt
-do : Action v c -> Action [v] (Cursor c)
-do = applyAt
 
 split_ : (v -> c -> (v, v, c)) -> Action v c
 split_ fn = \v c -> case fn v c of

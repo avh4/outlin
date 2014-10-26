@@ -39,7 +39,7 @@ enter = do Core.String.split
 
 addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.applyAt addInboxItem e.children c of
+  InChild c -> case Core.Array.do addInboxItem e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
@@ -61,7 +61,7 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
-  InChild c -> case Core.Array.applyAt (do stringAction) e.children c of
+  InChild c -> case Core.Array.do (do stringAction) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
