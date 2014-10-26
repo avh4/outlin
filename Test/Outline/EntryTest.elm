@@ -54,6 +54,22 @@ navTest = Suite "navigation"
       in Entry.goPrev tree (InChild (1,InText 0))
         `assertEqual` Action.Update tree (InChild (0,InChild (0,InText 0)))
     ]
+  , Suite "inbox" <|
+    let tree = (entry "" "" ["a","b"] [])
+    in
+    [ test "can go to next inbox item" <|
+      Entry.goNext tree (InInbox (0,0))
+        `assertEqual` Action.Update tree (InInbox (1,0))
+    , test "can enter inbox item" <|
+      Entry.goNext tree (InText 0)
+        `assertEqual` Action.Update tree (InInbox (0,0))
+    , test "can exit last inbox item into children" <|
+      Entry.goNext (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
+        `assertEqual` Action.Update (entry "" "" ["a","b"] [textEntry "x"]) (InChild (0,InText 0))
+    , test "can exit last inbox item with no children" <|
+      Entry.goNext tree (InInbox (1,0))
+        `assertEqual` Action.EnterNext
+    ]
   ]
 
 editTest = Suite "basic editing"

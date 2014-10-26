@@ -55,6 +55,7 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Split _ _ _ -> Debug.crash "Split has less than two children"
     Action.EnterPrev -> Action.EnterPrev
     Action.EnterNext -> if
+      | length e.inbox > 0 -> Action.Update en <| InInbox (0,0)
       | length e.children > 0 -> Action.Update en <| InChild (0, (InText c))
       | otherwise -> Action.EnterNext
   InDescription c -> case stringAction e.description c of
@@ -65,6 +66,9 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
+    Action.EnterNext -> if
+      | length e.children > 0 -> Action.Update en <| InChild (0,InText 0)
+      | otherwise -> Action.EnterNext
   InChild c -> case Core.Array.do (InText 0) (do stringAction) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
