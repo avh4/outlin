@@ -90,14 +90,18 @@ client.authenticate(function(error, client) {
     runningElmModule.ports.dropboxIn.send(data);
   });
 
+  var writeToken = null;
   runningElmModule.ports.dropboxOut.subscribe(function(json) {
     console.log("Got " + json.slice(0, 100));
-    client.writeFile("outlin.json", json, function(error, stat) {
-      if (error) {
-        return alert(error);
-      }
-      console.log("outlin.json saved as revision " + stat.versionTag);
-    });
+    if (writeToken) clearTimeout(writeToken);
+    writeToken = setTimeout(function() {
+      client.writeFile("outlin.json", json, function(error, stat) {
+        if (error) {
+          return alert(error);
+        }
+        console.log("outlin.json saved as revision " + stat.versionTag);
+      });
+    }, 5000);
   });
 });
 

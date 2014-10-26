@@ -198,6 +198,7 @@ toJson : Entry -> String
 toJson entry = case entry of Entry e ->
   "{\"text\":" ++ Core.String.toJson e.text
   ++ ",\"description\":" ++ Core.String.toJson e.description
+  ++ ",\"inbox\":" ++ Core.Array.toJson Core.String.toJson e.inbox
   ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
   ++ "}"
 
