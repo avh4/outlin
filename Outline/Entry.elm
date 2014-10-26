@@ -113,6 +113,8 @@ deleteInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
 deleteInboxItem_ en cur = case en of Entry e -> case cur of
   InInbox (n,c) -> case Action.apply (Core.Array.do dii) e.inbox (n,c) of
     (newList, newCur) -> (Entry { e | inbox <- newList }, InInbox newCur)
+  InChild c -> case Action.apply (Core.Array.applyAt (Action.split deleteInboxItem_)) e.children c of
+    (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (en, cur)
 
 deleteInboxItem = Action.split deleteInboxItem_
