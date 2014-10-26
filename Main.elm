@@ -65,24 +65,29 @@ renderModel m = node "div" [] [ renderDocument m.value m.selection ]
 
 port pressesIn : Signal String
 port downsIn : Signal Int
+port metaIn : Signal Int
 
 data Command =
   KeyPress String |
   KeyDown Int |
+  KeyMeta Int |
   Loaded String
 
 step : Command -> Model -> Model
 step c m = case c of
   KeyPress char -> apk (Keys.fromPresses char) m
   KeyDown code -> apk (Keys.fromDowns code) m
+  KeyMeta 65 -> m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     _ -> m
+  x -> fst (m, Debug.log "Extra command" x)
 
 commands : Signal Command
 commands = merges [
   KeyPress <~ pressesIn,
   KeyDown <~ downsIn,
+  KeyMeta <~ metaIn,
   Loaded <~ dropboxIn
   ]
 

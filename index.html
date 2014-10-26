@@ -23,7 +23,8 @@
 var runningElmModule = Elm.fullscreen(Elm.Main, {
   downsIn: 0,
   pressesIn: "",
-  dropboxIn: ""
+  dropboxIn: "",
+  metaIn: 0
 });
 
 var specialKeys = {
@@ -31,14 +32,28 @@ var specialKeys = {
   '37': 'left',
   '38': 'up',
   '39': 'right',
-  '40': 'down',
+  '40': 'down'
+};
+
+var modKeys = {
   '91': 'meta'
 };
 
+var downMods = {};
+
 document.onkeydown = function(e) {
-  if (specialKeys[e.keyCode.toString()]) {
+  var mod;
+  if (mod = modKeys[e.keyCode.toString()]) {
+    downMods[mod] = true;
+    e.preventDefault();
+  } else if (specialKeys[e.keyCode.toString()]) {
     runningElmModule.ports.downsIn.send(e.keyCode);
     e.preventDefault();
+  } else {
+    if (downMods.meta) {
+      runningElmModule.ports.metaIn.send(e.keyCode);
+      e.preventDefault();
+    }
   }
 }
 
