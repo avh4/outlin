@@ -35,6 +35,9 @@ deleteTest = Suite "delete"
   , test "can delete the terminal child" <|
     Entry.delete (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (1,InText 0))
       `assertEqual` Action.Update (entry "" "" [] [textEntry "a"]) (InChild (0,InText 0))
+  , test "can delete the last child" <|
+    Entry.delete (entry "" "" [] [textEntry "a"]) (InChild (0,InText 0))
+      `assertEqual` Action.Update (entry "" "" [] []) (InText 0)
   ]
 
 suite = Suite "Outline.Entry" [backspaceTest, enterTest, deleteTest]

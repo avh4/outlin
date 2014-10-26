@@ -112,6 +112,7 @@ delete en cur = case en of Entry e -> case cur of
     Action.NoChange -> Action.NoChange
   InChild c -> case Core.Array.applyAt delete e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+    Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
   _ -> Action.Delete
 
