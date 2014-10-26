@@ -39,7 +39,7 @@ enter = do Core.String.split
 
 addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.do addInboxItem e.children c of
+  InChild c -> case Core.Array.do (InText 0) addInboxItem e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
@@ -53,17 +53,22 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Split (left :: right :: []) newI c -> Action.Split [entry left "" [] [], Entry {e | text <- right}] newI (InText c)
     Action.Split (_ :: _ :: _) _ _ -> Debug.crash "Not yet implemented for splits > 2"
     Action.Split _ _ _ -> Debug.crash "Split has less than two children"
+    Action.EnterPrev -> Action.EnterPrev
+    Action.EnterNext -> if
+      | length e.children > 0 -> Action.Update en <| InChild (0, (InText c))
+      | otherwise -> Action.EnterNext
   InDescription c -> case stringAction e.description c of
     Action.Update newV newCur -> Action.Update (Entry { e | description <- newV }) (InDescription newCur)
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-  InInbox c -> case Core.Array.do stringAction e.inbox c of
+  InInbox c -> case Core.Array.do 0 stringAction e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
-  InChild c -> case Core.Array.do (do stringAction) e.children c of
+  InChild c -> case Core.Array.do (InText 0) (do stringAction) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
+    Action.EnterNext -> Action.EnterNext
     Action.NoChange -> Action.NoChange
 
 goLeft = do Core.String.goLeft
@@ -82,30 +87,17 @@ at i list = list |> drop i |> head
 
 goChild n fn e cursor = case e of Entry value -> case fn (at n value.children) cursor of
   Action.Update _ c -> Action.Update e <| InChild (n,c)
-  Action.EnterNext -> if
-    | length value.children > n+1 -> Action.Update e <| InChild (n+1, (InText 0))
-    | otherwise -> Action.EnterNext
   Action.EnterPrev -> Action.Update e <| if
     | n == 0 -> InText 0
     | (ll (at (n-1) value.children)) > 0 -> InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
     | otherwise -> InChild (n-1, (InText 0))
 
-goNext_ : EntryAction
-goNext_ e cursor = case e of Entry value -> case cursor of
-  InText i -> if
-    | length value.children > 0 -> Action.Update e <| InChild (0, (InText i))
-    | otherwise -> Action.EnterNext
-  InDescription i -> goNext_ e (InText i)
-  InInbox (n,c) -> Action.Update e <| InInbox (min ((length value.inbox)-1) (n+1), c)
-  InChild (n,c) -> goChild n goNext_ e c
-
 go : EntryAction -> EntryAction
 go fn value cursor = case fn value cursor of
   Action.EnterPrev -> Action.Update value (InText 0)
   Action.Update _ c -> Action.Update value c
-  Action.EnterNext -> Action.Update value cursor
 
-goNext = go goNext_
+goNext = do (Action.always Action.EnterNext)
 
 goPrev_ : EntryAction
 goPrev_ e cursor = case e of Entry value -> case cursor of
