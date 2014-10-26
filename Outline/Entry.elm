@@ -104,9 +104,9 @@ addInboxItem en cur = case en of Entry e -> case cur of
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
 
-delete : EntryAction
-delete en cur = case en of Entry e -> case cur of
-  InInbox c -> case Core.Array.do Core.String.delete e.inbox c of
+do : StringAction -> EntryAction
+do stringAction en cur = case en of Entry e -> case cur of
+  InInbox c -> case Core.Array.do stringAction e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
@@ -115,6 +115,9 @@ delete en cur = case en of Entry e -> case cur of
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
   _ -> Action.Delete
+
+delete : EntryAction
+delete = do Core.String.delete
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight
