@@ -86,7 +86,7 @@ backspace = do Core.String.backspace
 delete = do Core.String.delete
 
 insert : String -> EntryAction
-insert s = do (Core.String.insertAction s)
+insert s = do (Core.String.insert s)
 
 -- TODO: replace with Action.Result
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext

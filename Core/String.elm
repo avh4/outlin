@@ -1,4 +1,4 @@
-module Core.String (Cursor, insertAction, backspace, goLeft, goRight, delete, render, toJson) where
+module Core.String (Cursor, insert, backspace, goLeft, goRight, delete, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -19,8 +19,8 @@ update char value cursor =
 move char value cursor =
   cursor + String.length char
 
-insertAction : String -> Action String Cursor
-insertAction s v c = Action.Update (update s v c) (move s v c)
+insert : String -> Action String Cursor
+insert s v c = Action.Update (update s v c) (move s v c)
 
 backspace : Action String Cursor
 backspace v c = case (v,c) of

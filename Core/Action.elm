@@ -1,4 +1,4 @@
-module Core.Action (Action, nav, change, always, Result(..), val, cur) where
+module Core.Action (Action, nav, change, always, Result(..)) where
 
 data Result v c =
   Update v c |
@@ -16,9 +16,3 @@ change fn = \v c -> Update (fn v c) c
 
 always : Result v c -> Action v c
 always r = \_ _ -> r
-
-val : Result v c -> v
-val r = case r of Update v _ -> v -- TODO: this function needs to go away
-
-cur : Result v c -> c
-cur r = case r of Update _ c -> c -- TODO: this function needs to go away
