@@ -99,6 +99,8 @@ enter = Action.split e_enter
 
 addInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
 addInboxItem_ en cur = case en of Entry e -> case cur of
+  InChild c -> case Action.apply (Core.Array.applyAt (Action.split addInboxItem_)) e.children c of
+    (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (Entry { e | inbox <- [""] ++ e.inbox }, InInbox (0,0))
 
 addInboxItem : EntryAction
