@@ -36,6 +36,7 @@ changeAt fn1 fn2 index list =
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
 updateModel action {value,selection} = case action value selection of
   Action.Update a b -> {value=a, selection=b}
+  Action.Delete -> {value=value, selection=selection}
   Action.NoChange -> {value=value, selection=selection}
 
 -- INPUT
