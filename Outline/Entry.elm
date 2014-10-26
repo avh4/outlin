@@ -96,6 +96,8 @@ insert s = do (Core.String.insert s)
 goNext = do (Action.always Action.EnterNext)
 goPrev = do (Action.always Action.EnterPrev)
 
+---- RENDER
+
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of
   Just (InText i) -> Just i
@@ -118,13 +120,12 @@ toChildrenCursor mc = case mc of
 
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
-  Entry e -> node "li" [] [
-    Core.String.render e.text (toTextCursor mc),
-    node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)],
-    node "ol" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc),
-    node "ul" [] <| Core.Array.render render e.children (toChildrenCursor mc)
+  Entry e -> node "li" []
+    [ Core.String.render e.text (toTextCursor mc)
+    , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
+    , node "ol" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc)
+    , node "ul" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]
-
 
 ---- JSON
 

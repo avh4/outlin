@@ -42,7 +42,7 @@ updateModel action {value,selection} = case action value selection of
   Action.EnterPrev -> {value=value, selection=selection}
   Action.NoChange -> {value=value, selection=selection}
 
--- INPUT
+---- INPUT
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
@@ -55,14 +55,14 @@ apk key last = case key of
   Keys.Backspace -> updateModel Entry.backspace last
   Keys.Nothing -> last
 
--- RENDER
+---- RENDER
 
 renderDocument : Document -> DocumentCursor -> Html
 renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
 
-renderDocs = node "div" [] [
-  node "p" [] [ text "Cmd-A: add to inbox" ],
-  node "p" [] [ text "Cmd-D: delete" ]
+renderDocs = node "div" []
+  [ node "p" [] [ text "Cmd-A: add to inbox" ]
+  , node "p" [] [ text "Cmd-D: delete" ]
   ]
 
 renderModel : Model -> Html
@@ -90,11 +90,11 @@ step c m = case c of
   x -> fst (m, Debug.log "Extra command" x)
 
 commands : Signal Command
-commands = merges [
-  KeyPress <~ pressesIn,
-  KeyDown <~ downsIn,
-  KeyMeta <~ metaIn,
-  Loaded <~ dropboxIn
+commands = merges
+  [ KeyPress <~ pressesIn
+  , KeyDown <~ downsIn
+  , KeyMeta <~ metaIn
+  , Loaded <~ dropboxIn
   ]
 
 aa = foldp step (Model SampleData.template (Entry.InText 4)) commands
