@@ -84,9 +84,9 @@ s_split : Entry -> Cursor -> ([Entry], Core.Array.Cursor Cursor)
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
     (left, right, c) -> ([entry left "" [], Entry {e | text <- right}], (1, InText c))
-  InDescription _ -> ([en], (0, cur))
   InChild (n,c) -> case Action.apply (Core.Array.do s_split) e.children (n,c) of
     (newChildren, newChildCur) -> ([Entry {e | children <- newChildren}], (0, InChild newChildCur))
+  _ -> ([en], (0, cur))
 
 e_enter : Entry -> Cursor -> (Entry, Cursor)
 e_enter en cur = case en of Entry e -> case cur of
@@ -130,7 +130,8 @@ goNext e cursor = case e of Entry value -> case cursor of
   InText i -> if length value.children > 0 then StayHere <| InChild (0, (InText i))
     else EnterNext
   InDescription i -> goNext e (InText i)
-  InChild (n, c) -> goChild n goNext value c
+  InInbox (n,c) -> StayHere <| InInbox (min ((length value.inbox)-1) (n+1), c)
+  InChild (n,c) -> goChild n goNext value c
 
 go : (Entry -> Cursor -> MoveCmd) -> Entry -> Cursor -> Cursor
 go fn value cursor = case fn value cursor of
@@ -145,6 +146,7 @@ goPrev : Entry -> Cursor -> MoveCmd
 goPrev e cursor = case e of Entry value -> case cursor of
   InText i -> EnterPrev
   InDescription i -> StayHere <| InText i
+  InInbox (n,c) -> StayHere <| if (n > 0) then InInbox (n-1, c) else InText c
   InChild (n,c) -> goChild n goPrev value c
 
 goPrevAction = Action (\v _ -> v) (go goPrev)
