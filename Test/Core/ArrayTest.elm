@@ -17,8 +17,12 @@ splitTest = Suite "split"
       `equals` Action.Update ["a", "x", "y", "b"] (2,0)
   , Array.do (Action.always Action.Delete) ["a", "b"] (0,0)
       `equals` Action.Update ["b"] (0,0)
-  , Array.do (Action.always Action.Delete) ["a"] (0,0)
-      `equals` Action.Delete
+  , test "can delete the last item" <|
+    Array.do (Action.always Action.Delete) ["a"] (0,0)
+      `assertEqual` Action.Delete
+  , test "can delete the terminal item" <|
+    Array.do (Action.always Action.Delete) ["a", "b"] (1,0)
+      `assertEqual` Action.Update ["a"] (0,0)
   ]
 
 suite = Suite "Core.Array" [splitTest]

@@ -21,7 +21,7 @@ applyAt action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
   Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
   Action.Delete -> if
-    | length vs > 1 -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (i,c)
+    | length vs > 1 -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (min i <| -2+length vs,c)
     | otherwise -> Action.Delete
   Action.NoChange -> Action.NoChange
 
