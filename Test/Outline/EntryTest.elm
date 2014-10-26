@@ -18,38 +18,42 @@ backspaceTest = Suite "backspace"
   ]
 
 navTest = Suite "navigation"
-  [ test "can go left in text" <|
-    Entry.goLeft (textEntry "ab") (InText 1)
-      `assertEqual` Action.Update (textEntry "ab") (InText 0)
-  , test "go left stops at the edge" <|
-    Entry.goLeft (textEntry "ab") (InText 0)
-      `assertEqual` Action.Update (textEntry "ab") (InText 0)
-  , test "can go right in text" <|
-    Entry.goRight (textEntry "ab") (InText 1)
-      `assertEqual` Action.Update (textEntry "ab") (InText 2)
-  , test "go right stops at the edge" <|
-    Entry.goRight (textEntry "ab") (InText 2)
-      `assertEqual` Action.Update (textEntry "ab") (InText 2)
-  , test "can go to next child" <|
-    Entry.goNext simpleTree (InChild (0,InText 0))
-      `assertEqual` Action.Update simpleTree (InChild (1,InText 0))
-  , test "can go to prev child" <|
-    Entry.goPrev simpleTree (InChild (1,InText 0))
-      `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
-  , test "can go into child" <|
-    Entry.goNext simpleTree (InText 0)
-      `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
-  , test "can go out of child" <|
-    Entry.goPrev simpleTree (InChild (0,InText 0))
-      `assertEqual` Action.Update simpleTree (InText 0)
-  , test "can go to next parent" <|
-    let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
-    in Entry.goNext tree (InChild (0,InChild (0,InText 0)))
-      `assertEqual` Action.Update tree (InChild (1,InText 0))
-  , test "can go to child of previous parent" <|
-    let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
-    in Entry.goPrev tree (InChild (1,InText 0))
-      `assertEqual` Action.Update tree (InChild (0,InChild (0,InText 0)))
+  [ Suite "text"
+    [ test "can go left in text" <|
+      Entry.goLeft (textEntry "ab") (InText 1)
+        `assertEqual` Action.Update (textEntry "ab") (InText 0)
+    , test "go left stops at the edge" <|
+      Entry.goLeft (textEntry "ab") (InText 0)
+        `assertEqual` Action.Update (textEntry "ab") (InText 0)
+    , test "can go right in text" <|
+      Entry.goRight (textEntry "ab") (InText 1)
+        `assertEqual` Action.Update (textEntry "ab") (InText 2)
+    , test "go right stops at the edge" <|
+      Entry.goRight (textEntry "ab") (InText 2)
+        `assertEqual` Action.Update (textEntry "ab") (InText 2)
+    ]
+  , Suite "children"
+    [ test "can go to next child" <|
+      Entry.goNext simpleTree (InChild (0,InText 0))
+        `assertEqual` Action.Update simpleTree (InChild (1,InText 0))
+    , test "can go to prev child" <|
+      Entry.goPrev simpleTree (InChild (1,InText 0))
+        `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
+    , test "can go into child" <|
+      Entry.goNext simpleTree (InText 0)
+        `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
+    , test "can go out of child" <|
+      Entry.goPrev simpleTree (InChild (0,InText 0))
+        `assertEqual` Action.Update simpleTree (InText 0)
+    , test "can go to next parent" <|
+      let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
+      in Entry.goNext tree (InChild (0,InChild (0,InText 0)))
+        `assertEqual` Action.Update tree (InChild (1,InText 0))
+    , test "can go to child of previous parent" <|
+      let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
+      in Entry.goPrev tree (InChild (1,InText 0))
+        `assertEqual` Action.Update tree (InChild (0,InChild (0,InText 0)))
+    ]
   ]
 
 editTest = Suite "basic editing"
