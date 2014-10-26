@@ -18,15 +18,16 @@ at i list = list |> drop i |> head
 
 applyAt : Action v a -> Action [v] (Cursor a)
 applyAt action vs (i,c) = case action (at i vs) c of
-  (newV, newC) -> (replaceAt newV i vs, (i,newC))
+  Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
 
-do : (v -> c -> ([v], Cursor c)) -> Action [v] (Cursor c)
+do : (v -> c -> Action.Result [v] (Cursor c)) -> Action [v] (Cursor c)
 do fn = \vs (i,c) -> case fn (at i vs) c of
-  (newVs, (newI, newC)) -> ((take i vs) ++ newVs ++ (drop (i+1) vs), (newI+i, newC))
+  Action.Update newVs (newI,newC) -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
 
-split_ : (v -> c -> (v, v, c)) -> (v -> c -> ([v], Cursor c))
+-- TODO: first arg should become an Action.Result
+split_ : (v -> c -> (v, v, c)) -> (v -> c -> Action.Result [v] (Cursor c))
 split_ fn = \v c -> case fn v c of
-  (v1, v2, innerC) -> ([v1, v2], (1, innerC))
+  (v1, v2, innerC) -> Action.Update [v1, v2] (1, innerC)
 
 split : (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
 split fn = do (split_ fn)

@@ -38,10 +38,10 @@ type EntryAction = Action Entry Cursor
 
 uupdate : StringAction -> Entry -> Cursor -> Entry
 uupdate action value cursor = case value of Entry e -> case cursor of
-  InText i -> Entry { e | text <- fst <| action e.text i }
-  InDescription i -> Entry { e | description <- fst <| action e.description i }
-  InInbox c -> Entry { e | inbox <- fst <| Core.Array.applyAt action e.inbox c }
-  InChild c -> Entry { e | children <- fst <| Core.Array.applyAt (Action.change (uupdate action)) e.children c }
+  InText i -> Entry { e | text <- Action.val <| action e.text i }
+  InDescription i -> Entry { e | description <- Action.val <| action e.description i }
+  InInbox c -> Entry { e | inbox <- Action.val <| Core.Array.applyAt action e.inbox c }
+  InChild c -> Entry { e | children <- Action.val <| Core.Array.applyAt (Action.change (uupdate action)) e.children c }
 
 -- navTo : (String -> x) -> (String -> x) -> (Core.Array.Cursor x -> x) -> Entry -> Cursor -> x
 -- navTo textFn descFn childFn en cur = case en of Entry e -> case cur of
@@ -60,13 +60,13 @@ uupdate action value cursor = case value of Entry e -> case cursor of
 
 mmove : StringAction -> Entry -> Cursor -> Cursor
 mmove action entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| snd <| action e.text n
-  InDescription n -> InDescription <| snd <| action e.description n
-  InInbox c -> InInbox <| snd <| Core.Array.applyAt action e.inbox c
-  InChild c -> InChild <| snd <| Core.Array.applyAt (Action.nav (mmove action)) e.children c
+  InText n -> InText <| Action.cur <| action e.text n
+  InDescription n -> InDescription <| Action.cur <| action e.description n
+  InInbox c -> InInbox <| Action.cur <| Core.Array.applyAt action e.inbox c
+  InChild c -> InChild <| Action.cur <| Core.Array.applyAt (Action.nav (mmove action)) e.children c
 
 liftAction : StringAction -> EntryAction
-liftAction action v c = (uupdate action v c, mmove action v c)
+liftAction action v c = Action.Update (uupdate action v c) (mmove action v c)
 
 liftCursorAction : StringAction -> EntryAction
 liftCursorAction action = Action.nav (mmove action)
@@ -77,39 +77,41 @@ insertAction s = liftAction (Core.String.insertAction s)
 backspace : EntryAction
 backspace = liftAction Core.String.backspace
 
+-- TODO: should return a new Action.Result
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
 ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
 
-s_split : Entry -> Cursor -> ([Entry], Core.Array.Cursor Cursor)
+s_split : Entry -> Cursor -> Action.Result [Entry] (Core.Array.Cursor Cursor)
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
-    (left, right, c) -> ([entry left "" [], Entry {e | text <- right}], (1, InText c))
+    (left, right, c) -> Action.Update ([entry left "" [], Entry {e | text <- right}]) (1, InText c)
   InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
-    (newChildren, newChildCur) -> ([Entry {e | children <- newChildren}], (0, InChild newChildCur))
-  _ -> ([en], (0, cur))
+    Action.Update newChildren newChildCur -> Action.Update [Entry {e | children <- newChildren}] (0, InChild newChildCur)
+  _ -> Action.Update [en] (0, cur)
 
 enter : EntryAction
 enter en cur = case en of Entry e -> case cur of
   InChild c -> case Core.Array.do s_split e.children c of
-    (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
-  _ -> (en, cur) -- can't split root node
+    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+  _ -> Action.Update en cur -- TODO: Action.Nothing -- can't split root node
 
-addInboxItem : Entry -> Cursor -> (Entry, Cursor)
+addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
   InChild c -> case Core.Array.applyAt addInboxItem e.children c of
-    (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
-  _ -> (Entry { e | inbox <- [""] ++ e.inbox }, InInbox (0,0))
+    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+  _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
 
-dii : String -> Core.String.Cursor -> ([String], Core.Array.Cursor Core.String.Cursor)
-dii v c = ([], Core.Array.cursor 0 c)
+-- TODO: become an Action.Result
+dii : String -> Core.String.Cursor -> Action.Result [String] (Core.Array.Cursor Core.String.Cursor)
+dii v c = Action.Update [] (Core.Array.cursor 0 c)
 
-deleteInboxItem : Entry -> Cursor -> (Entry, Cursor)
+deleteInboxItem : EntryAction
 deleteInboxItem en cur = case en of Entry e -> case cur of
   InInbox (n,c) -> case Core.Array.do dii e.inbox (n,c) of
-    (newList, newCur) -> (Entry { e | inbox <- newList }, InInbox newCur)
+    Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
   InChild c -> case Core.Array.applyAt deleteInboxItem e.children c of
-    (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
-  _ -> (en, cur)
+    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+  _ -> Action.Update en cur --TODO: Action.Nothing
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight
