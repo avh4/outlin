@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, deleteInboxItem, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -105,6 +105,17 @@ addInboxItem_ en cur = case en of Entry e -> case cur of
 
 addInboxItem : EntryAction
 addInboxItem = Action.split addInboxItem_
+
+dii : String -> Core.String.Cursor -> ([String], Core.Array.Cursor Core.String.Cursor)
+dii v c = ([], Core.Array.cursor 0 c)
+
+deleteInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
+deleteInboxItem_ en cur = case en of Entry e -> case cur of
+  InInbox (n,c) -> case Action.apply (Core.Array.do dii) e.inbox (n,c) of
+    (newList, newCur) -> (Entry { e | inbox <- newList }, InInbox newCur)
+  _ -> (en, cur)
+
+deleteInboxItem = Action.split deleteInboxItem_
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight

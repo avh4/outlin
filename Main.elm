@@ -57,7 +57,8 @@ renderDocument : Document -> DocumentCursor -> Html
 renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
 
 renderDocs = node "div" [] [
-  node "p" [] [ text "Cmd-A: add to inbox" ]
+  node "p" [] [ text "Cmd-A: add to inbox" ],
+  node "p" [] [ text "Cmd-D: delete" ]
   ]
 
 renderModel : Model -> Html
@@ -78,6 +79,7 @@ step c m = case c of
   KeyPress char -> apk (Keys.fromPresses char) m
   KeyDown code -> apk (Keys.fromDowns code) m
   KeyMeta 65 -> updateModel Entry.addInboxItem m
+  KeyMeta 68 -> updateModel Entry.deleteInboxItem m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
