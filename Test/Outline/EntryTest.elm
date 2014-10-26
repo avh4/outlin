@@ -30,6 +30,18 @@ navTest = Suite "navigation"
       `assertEqual` Action.Update (textEntry "ab") (InText 2)
   ]
 
+editTest = Suite "basic editing"
+  [ test "can insert text" <|
+    Entry.insert "xx" (textEntry "ab") (InText 1)
+      `assertEqual` Action.Update (textEntry "axxb") (InText 3)
+  , test "can backspace text" <|
+    Entry.backspace (textEntry "Elm") (InText 1)
+      `assertEqual` Action.Update (textEntry "lm") (InText 0)
+  -- , test "backspace stops at edge" <|
+  --   Entry.backspace (textEntry "Elm") (InText 0)
+  --     `assertEqual` Action.Update (textEntry "Elm") (InText 0)
+  ]
+
 enterTest = Suite "enter"
   [ Entry.enter (entry "" "" [] [textEntry "ab"]) (InChild (0,InText 1))
       `equals` Action.Update (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (1, InText 0))
@@ -55,4 +67,4 @@ deleteTest = Suite "delete"
       `assertEqual` Action.Update (entry "" "" [] []) (InText 0)
   ]
 
-suite = Suite "Outline.Entry" [navTest, backspaceTest, enterTest, deleteTest]
+suite = Suite "Outline.Entry" [navTest, editTest, backspaceTest, enterTest, deleteTest]

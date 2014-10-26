@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, delete, goLeft, goRight, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, delete, goLeft, goRight, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -68,8 +68,8 @@ mmove action entry cursor = case entry of Entry e -> case cursor of
 liftAction : StringAction -> EntryAction
 liftAction action v c = Action.Update (uupdate action v c) (mmove action v c)
 
-insertAction : String -> EntryAction
-insertAction s = liftAction (Core.String.insertAction s)
+insert : String -> EntryAction
+insert s = liftAction (Core.String.insertAction s)
 
 backspace : EntryAction
 backspace = liftAction Core.String.backspace

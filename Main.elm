@@ -48,7 +48,7 @@ apk key last = case key of
   Keys.Down -> updateModel Entry.goNextAction last
   Keys.Up -> updateModel Entry.goPrevAction last
   Keys.Enter -> updateModel Entry.enter last
-  Keys.Character s -> updateModel (Entry.insertAction s) last
+  Keys.Character s -> updateModel (Entry.insert s) last
   Keys.Backspace -> updateModel Entry.backspace last
   Keys.Nothing -> last
 
