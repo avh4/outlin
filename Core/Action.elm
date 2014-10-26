@@ -4,6 +4,7 @@ data Result v c =
   Update v c |
   Split [v] Int c |
   Delete |
+  EnterPrev | EnterNext |
   NoChange
 
 type Action v c = (v -> c -> Result v c)

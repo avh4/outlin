@@ -74,8 +74,8 @@ delete = do Core.String.delete
 insert : String -> EntryAction
 insert s = do (Core.String.insert s)
 
--- TODO: replace with Action.Result
-data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
+-- TODO: inline Action.Result
+type MoveCmd = Action.Result Entry Cursor
 
 ll : Entry -> Int
 ll e = case e of Entry value -> length value.children
@@ -83,36 +83,39 @@ ll e = case e of Entry value -> length value.children
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
-goChild n fn value cursor = case fn (at n value.children) cursor of
-  StayHere c -> StayHere <| InChild (n,c)
-  EnterNext -> if length value.children > n+1 then StayHere <| InChild (n+1, (InText 0))
-    else EnterNext
-  EnterPrev -> if | n == 0 -> StayHere <| InText 0
-                  | (ll (at (n-1) value.children)) > 0 -> StayHere <| InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
-                  | otherwise -> StayHere <| InChild (n-1, (InText 0))
+goChild n fn e cursor = case e of Entry value -> case fn (at n value.children) cursor of
+  Action.Update _ c -> Action.Update e <| InChild (n,c)
+  Action.EnterNext -> if
+    | length value.children > n+1 -> Action.Update e <| InChild (n+1, (InText 0))
+    | otherwise -> Action.EnterNext
+  Action.EnterPrev -> Action.Update e <| if
+    | n == 0 -> InText 0
+    | (ll (at (n-1) value.children)) > 0 -> InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
+    | otherwise -> InChild (n-1, (InText 0))
 
 goNext_ : Entry -> Cursor -> MoveCmd
 goNext_ e cursor = case e of Entry value -> case cursor of
-  InText i -> if length value.children > 0 then StayHere <| InChild (0, (InText i))
-    else EnterNext
+  InText i -> if
+    | length value.children > 0 -> Action.Update e <| InChild (0, (InText i))
+    | otherwise -> Action.EnterNext
   InDescription i -> goNext_ e (InText i)
-  InInbox (n,c) -> StayHere <| InInbox (min ((length value.inbox)-1) (n+1), c)
-  InChild (n,c) -> goChild n goNext_ value c
+  InInbox (n,c) -> Action.Update e <| InInbox (min ((length value.inbox)-1) (n+1), c)
+  InChild (n,c) -> goChild n goNext_ e c
 
 go : (Entry -> Cursor -> MoveCmd) -> EntryAction
 go fn value cursor = case fn value cursor of
-  EnterPrev -> Action.Update value (InText 0)
-  StayHere c -> Action.Update value c
-  EnterNext -> Action.Update value cursor
+  Action.EnterPrev -> Action.Update value (InText 0)
+  Action.Update _ c -> Action.Update value c
+  Action.EnterNext -> Action.Update value cursor
 
 goNext = go goNext_
 
 goPrev_ : Entry -> Cursor -> MoveCmd
 goPrev_ e cursor = case e of Entry value -> case cursor of
-  InText i -> EnterPrev
-  InDescription i -> StayHere <| InText i
-  InInbox (n,c) -> StayHere <| if (n > 0) then InInbox (n-1, c) else InText c
-  InChild (n,c) -> goChild n goPrev_ value c
+  InText i -> Action.EnterPrev
+  InDescription i -> Action.Update e <| InText i
+  InInbox (n,c) -> Action.Update e <| if (n > 0) then InInbox (n-1, c) else InText c
+  InChild (n,c) -> goChild n goPrev_ e c
 
 goPrev = go goPrev_
 
