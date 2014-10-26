@@ -87,18 +87,21 @@ s_split en cur = case en of Entry e -> case cur of
     (left, right, c) -> Action.Update ([entry left "" [], Entry {e | text <- right}]) (1, InText c)
   InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
     Action.Update newChildren newChildCur -> Action.Update [Entry {e | children <- newChildren}] (0, InChild newChildCur)
-  _ -> Action.Update [en] (0, cur)
+    Action.NoChange -> Action.NoChange
+  _ -> Action.NoChange
 
 enter : EntryAction
 enter en cur = case en of Entry e -> case cur of
   InChild c -> case Core.Array.do s_split e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
-  _ -> Action.Update en cur -- TODO: Action.Nothing -- can't split root node
+    Action.NoChange -> Action.NoChange
+  _ -> Action.NoChange
 
 addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
   InChild c -> case Core.Array.applyAt addInboxItem e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+    Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
 
 -- TODO: become an Action.Result
@@ -109,13 +112,16 @@ deleteInboxItem : EntryAction
 deleteInboxItem en cur = case en of Entry e -> case cur of
   InInbox (n,c) -> case Core.Array.do dii e.inbox (n,c) of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
+    Action.NoChange -> Action.NoChange
   InChild c -> case Core.Array.applyAt deleteInboxItem e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
-  _ -> Action.Update en cur --TODO: Action.Nothing
+    Action.NoChange -> Action.NoChange
+  _ -> Action.NoChange
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight
 
+-- TODO: replace with Action.Result
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
 
 ll : Entry -> Int

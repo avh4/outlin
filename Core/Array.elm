@@ -19,10 +19,12 @@ at i list = list |> drop i |> head
 applyAt : Action v a -> Action [v] (Cursor a)
 applyAt action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
+  Action.NoChange -> Action.NoChange
 
 do : (v -> c -> Action.Result [v] (Cursor c)) -> Action [v] (Cursor c)
 do fn = \vs (i,c) -> case fn (at i vs) c of
   Action.Update newVs (newI,newC) -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
+  Action.NoChange -> Action.NoChange
 
 -- TODO: first arg should become an Action.Result
 split_ : (v -> c -> (v, v, c)) -> (v -> c -> Action.Result [v] (Cursor c))

@@ -13,6 +13,7 @@ import Json.Decoder
 import Json.Process
 import Json.Output
 import Core.Action (Action)
+import Core.Action as Action
 
 
 type Document = Entry.Entry
@@ -33,9 +34,9 @@ changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel action {value,selection} =
-  let (a,b) = action value selection
-  in {value=a, selection=b}
+updateModel action {value,selection} = case action value selection of
+  Action.Update a b -> {value=a, selection=b}
+  Action.NoChange -> {value=value, selection=selection}
 
 -- INPUT
 
