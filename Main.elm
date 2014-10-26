@@ -56,12 +56,12 @@ apk key last = case key of
 renderDocument : Document -> DocumentCursor -> Html
 renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
 
---  changeAt (\s -> Block.render s <| Just <| snd cursor) (\s -> Block.render s Nothing) (fst cursor) blocks
---  |> node "div" []
-
+renderDocs = node "div" [] [
+  node "p" [] [ text "Cmd-A: add to inbox" ]
+  ]
 
 renderModel : Model -> Html
-renderModel m = node "div" [] [ renderDocument m.value m.selection ]
+renderModel m = node "div" [] [ renderDocs, renderDocument m.value m.selection ]
 
 port pressesIn : Signal String
 port downsIn : Signal Int
