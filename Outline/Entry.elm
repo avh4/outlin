@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -40,6 +40,7 @@ uupdate : StringAction -> Entry -> Cursor -> Entry
 uupdate action value cursor = case value of Entry e -> case cursor of
   InText i -> Entry { e | text <- action.valueFn e.text i }
   InDescription i -> Entry { e | description <- action.valueFn e.description i }
+  InInbox c -> Entry { e | inbox <- (Core.Array.applyAt action).valueFn e.inbox c }
   InChild c -> Entry { e | children <- (Core.Array.applyAt <| Action (uupdate action) (\_ cc -> cc)).valueFn e.children c }
 
 -- navTo : (String -> x) -> (String -> x) -> (Core.Array.Cursor x -> x) -> Entry -> Cursor -> x
@@ -54,16 +55,14 @@ uupdate action value cursor = case value of Entry e -> case cursor of
 --   (\s -> InDescription <| fn s)
 --   (\(i,c) -> InChild (i,c))
 
-mmmove : StringAction -> Core.String.Cursor -> String -> Core.String.Cursor
-mmmove action cur s = action.curFn s cur
-
 -- mmove : StringAction -> Entry -> Cursor -> Cursor
 -- mmove action = straightNav (\n -> mmmove action n)
 
 mmove : StringAction -> Entry -> Cursor -> Cursor
 mmove action entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| (mmmove action n) e.text
-  InDescription n -> InDescription <| (mmmove action n) e.description
+  InText n -> InText <| action.curFn e.text n
+  InDescription n -> InDescription <| action.curFn e.description n
+  InInbox c -> InInbox <| (Core.Array.applyAt action).curFn e.inbox c
   InChild c -> InChild <| (Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
 
 liftAction : StringAction -> EntryAction
@@ -97,6 +96,13 @@ e_enter en cur = case en of Entry e -> case cur of
 
 enter : EntryAction
 enter = Action.split e_enter
+
+addInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
+addInboxItem_ en cur = case en of Entry e -> case cur of
+  _ -> (Entry { e | inbox <- [""] ++ e.inbox }, InInbox (0,0))
+
+addInboxItem : EntryAction
+addInboxItem = Action.split addInboxItem_
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight

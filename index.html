@@ -65,6 +65,14 @@ document.onkeypress = function(e) {
   e.preventDefault();
 }
 
+document.onkeyup = function(e) {
+  var mod;
+  if (mod = modKeys[e.keyCode.toString()]) {
+    downMods[mod] = false;
+    e.preventDefault();
+  }
+}
+
 // ---- DROPBOX
 
 var client = new Dropbox.Client({ key: "mjplyqeks6z3js8" });
