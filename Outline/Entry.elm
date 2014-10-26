@@ -81,12 +81,12 @@ backspace = liftAction Core.String.backspace
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
 ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
 
-s_split : Entry -> Cursor -> Action.Result [Entry] (Core.Array.Cursor Cursor)
+s_split : EntryAction
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
-    (left, right, c) -> Action.Update ([entry left "" [], Entry {e | text <- right}]) (1, InText c)
+    (left, right, c) -> Action.Split [entry left "" [], Entry {e | text <- right}] 1 (InText c)
   InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
-    Action.Update newChildren newChildCur -> Action.Update [Entry {e | children <- newChildren}] (0, InChild newChildCur)
+    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.NoChange
 
@@ -104,9 +104,9 @@ addInboxItem en cur = case en of Entry e -> case cur of
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
 
--- TODO: become an Action.Result
-dii : String -> Core.String.Cursor -> Action.Result [String] (Core.Array.Cursor Core.String.Cursor)
-dii v c = Action.Update [] (Core.Array.cursor 0 c)
+-- TODO: become an Action.Result.Delete
+dii : StringAction
+dii _ c = Action.Split [] 0 c
 
 deleteInboxItem : EntryAction
 deleteInboxItem en cur = case en of Entry e -> case cur of

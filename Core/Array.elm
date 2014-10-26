@@ -16,20 +16,19 @@ replaceAt a index list =
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
-applyAt : Action v a -> Action [v] (Cursor a)
+applyAt : Action v c -> Action [v] (Cursor c)
 applyAt action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
+  Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
   Action.NoChange -> Action.NoChange
 
-do : (v -> c -> Action.Result [v] (Cursor c)) -> Action [v] (Cursor c)
-do fn = \vs (i,c) -> case fn (at i vs) c of
-  Action.Update newVs (newI,newC) -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
-  Action.NoChange -> Action.NoChange
+-- TODO: remove either do or applyAt
+do : Action v c -> Action [v] (Cursor c)
+do = applyAt
 
--- TODO: first arg should become an Action.Result
-split_ : (v -> c -> (v, v, c)) -> (v -> c -> Action.Result [v] (Cursor c))
+split_ : (v -> c -> (v, v, c)) -> Action v c
 split_ fn = \v c -> case fn v c of
-  (v1, v2, innerC) -> Action.Update [v1, v2] (1, innerC)
+  (v1, v2, innerC) -> Action.Split [v1, v2] 1 innerC
 
 split : (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
 split fn = do (split_ fn)

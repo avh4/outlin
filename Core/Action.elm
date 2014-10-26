@@ -2,6 +2,7 @@ module Core.Action (Action, nav, change, Result(..), val, cur) where
 
 data Result v c =
   Update v c |
+  Split [v] Int c |
   NoChange
 
 type Action v c = (v -> c -> Result v c)
