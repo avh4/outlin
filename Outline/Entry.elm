@@ -68,9 +68,6 @@ mmove action entry cursor = case entry of Entry e -> case cursor of
 liftAction : StringAction -> EntryAction
 liftAction action v c = Action.Update (uupdate action v c) (mmove action v c)
 
-liftCursorAction : StringAction -> EntryAction
-liftCursorAction action = Action.nav (mmove action)
-
 insertAction : String -> EntryAction
 insertAction s = liftAction (Core.String.insertAction s)
 
@@ -106,21 +103,26 @@ addInboxItem en cur = case en of Entry e -> case cur of
 
 do : StringAction -> EntryAction
 do stringAction en cur = case en of Entry e -> case cur of
+  InText c -> case stringAction e.text c of
+    Action.Update newV newCur -> Action.Update (Entry { e | text <- newV }) (InText newCur)
+    Action.Delete -> Action.Delete
+    Action.NoChange -> Action.NoChange
+  InDescription c -> case stringAction e.description c of
+    Action.Update newV newCur -> Action.Update (Entry { e | description <- newV }) (InDescription newCur)
+    Action.Delete -> Action.Delete
+    Action.NoChange -> Action.NoChange
   InInbox c -> case Core.Array.do stringAction e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
-  InChild c -> case Core.Array.applyAt delete e.children c of
+  InChild c -> case Core.Array.applyAt (do stringAction) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
-  _ -> Action.Delete
 
-delete : EntryAction
 delete = do Core.String.delete
-
-goLeft = liftCursorAction Core.String.goLeft
-goRight = liftCursorAction Core.String.goRight
+goLeft = do Core.String.goLeft
+goRight = do Core.String.goRight
 
 -- TODO: replace with Action.Result
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
