@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, deleteInboxItem, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, delete, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -20,8 +20,8 @@ data Base a = Entry {
 
 type Entry = Base String
 
-entry : String -> String -> [Entry] -> Entry
-entry t d c = Entry {text=t, description=d, inbox=[], children=c}
+entry : String -> String -> [String] -> [Entry] -> Entry
+entry t d i c = Entry {text=t, description=d, inbox=i, children=c}
 
 data BaseCursor c =
   InText c |
@@ -84,7 +84,7 @@ ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
 s_split : EntryAction
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
-    (left, right, c) -> Action.Split [entry left "" [], Entry {e | text <- right}] 1 (InText c)
+    (left, right, c) -> Action.Split [entry left "" [] [], Entry {e | text <- right}] 1 (InText c)
   InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
@@ -104,13 +104,13 @@ addInboxItem en cur = case en of Entry e -> case cur of
     Action.NoChange -> Action.NoChange
   _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
 
-deleteInboxItem : EntryAction
-deleteInboxItem en cur = case en of Entry e -> case cur of
+delete : EntryAction
+delete en cur = case en of Entry e -> case cur of
   InInbox c -> case Core.Array.do Core.String.delete e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
-  InChild c -> case Core.Array.applyAt deleteInboxItem e.children c of
+  InChild c -> case Core.Array.applyAt delete e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.NoChange

@@ -4,22 +4,9 @@ import ElmTest.Assertion (..)
 import ElmTest.Test (..)
 
 import Test.Core.ArrayTest
+import Test.Outline.EntryTest
 
-import Outline.Entry as Entry
-import Outline.Entry (BaseCursor(..), entry)
-import Core.Action as Action
-
-tests : Test
-tests = Suite "backspace"
-        [ Entry.backspace (entry "Elm" "" []) (InText 1)
-            `equals` Action.Update (entry "lm" "" []) (InText 0)
-        ]
-
-enterTest = Suite "enter"
-  [ Entry.enter (entry "" "" [entry "ab" "" []]) (InChild (0,InText 1))
-      `equals` Action.Update (entry "" "" [entry "a" "" [], entry "b" "" []]) (InChild (1, InText 0))
---  [ Action.apply Entry.enter tree (InChild 0 (InText 3))
---      `equals` (entry "Elm" "" [ entry "Sta" "" [], entry "dard Libraries"])
+suite = Suite "outlin"
+  [ Test.Core.ArrayTest.suite
+  , Test.Outline.EntryTest.suite
   ]
-
-suite = Suite "Outline.Entry" [tests, enterTest, Test.Core.ArrayTest.suite]
