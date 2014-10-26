@@ -46,8 +46,8 @@ apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
   Keys.Left -> updateModel Entry.goLeft last
   Keys.Right -> updateModel Entry.goRight last
-  Keys.Down -> updateModel Entry.goNextAction last
-  Keys.Up -> updateModel Entry.goPrevAction last
+  Keys.Down -> updateModel Entry.goNext last
+  Keys.Up -> updateModel Entry.goPrev last
   Keys.Enter -> updateModel Entry.enter last
   Keys.Character s -> updateModel (Entry.insert s) last
   Keys.Backspace -> updateModel Entry.backspace last

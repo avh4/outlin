@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, delete, goLeft, goRight, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -91,13 +91,13 @@ goChild n fn value cursor = case fn (at n value.children) cursor of
                   | (ll (at (n-1) value.children)) > 0 -> StayHere <| InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
                   | otherwise -> StayHere <| InChild (n-1, (InText 0))
 
-goNext : Entry -> Cursor -> MoveCmd
-goNext e cursor = case e of Entry value -> case cursor of
+goNext_ : Entry -> Cursor -> MoveCmd
+goNext_ e cursor = case e of Entry value -> case cursor of
   InText i -> if length value.children > 0 then StayHere <| InChild (0, (InText i))
     else EnterNext
-  InDescription i -> goNext e (InText i)
+  InDescription i -> goNext_ e (InText i)
   InInbox (n,c) -> StayHere <| InInbox (min ((length value.inbox)-1) (n+1), c)
-  InChild (n,c) -> goChild n goNext value c
+  InChild (n,c) -> goChild n goNext_ value c
 
 go : (Entry -> Cursor -> MoveCmd) -> EntryAction
 go fn value cursor = case fn value cursor of
@@ -105,16 +105,16 @@ go fn value cursor = case fn value cursor of
   StayHere c -> Action.Update value c
   EnterNext -> Action.Update value cursor
 
-goNextAction = go goNext
+goNext = go goNext_
 
-goPrev : Entry -> Cursor -> MoveCmd
-goPrev e cursor = case e of Entry value -> case cursor of
+goPrev_ : Entry -> Cursor -> MoveCmd
+goPrev_ e cursor = case e of Entry value -> case cursor of
   InText i -> EnterPrev
   InDescription i -> StayHere <| InText i
   InInbox (n,c) -> StayHere <| if (n > 0) then InInbox (n-1, c) else InText c
-  InChild (n,c) -> goChild n goPrev value c
+  InChild (n,c) -> goChild n goPrev_ value c
 
-goPrevAction = go goPrev
+goPrev = go goPrev_
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of

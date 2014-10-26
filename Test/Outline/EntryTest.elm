@@ -9,6 +9,8 @@ import Outline.Entry (entry, BaseCursor(..))
 
 textEntry s = entry s "" [] []
 
+simpleTree = (entry "root" "" [] [textEntry "a", textEntry "b"])
+
 backspaceTest : Test
 backspaceTest = Suite "backspace"
   [ Entry.backspace (entry "Elm" "" [] []) (InText 1)
@@ -28,6 +30,26 @@ navTest = Suite "navigation"
   , test "go right stops at the edge" <|
     Entry.goRight (textEntry "ab") (InText 2)
       `assertEqual` Action.Update (textEntry "ab") (InText 2)
+  , test "can go to next child" <|
+    Entry.goNext simpleTree (InChild (0,InText 0))
+      `assertEqual` Action.Update simpleTree (InChild (1,InText 0))
+  , test "can go to prev child" <|
+    Entry.goPrev simpleTree (InChild (1,InText 0))
+      `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
+  , test "can go into child" <|
+    Entry.goNext simpleTree (InText 0)
+      `assertEqual` Action.Update simpleTree (InChild (0,InText 0))
+  , test "can go out of child" <|
+    Entry.goPrev simpleTree (InChild (0,InText 0))
+      `assertEqual` Action.Update simpleTree (InText 0)
+  , test "can go to next parent" <|
+    let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
+    in Entry.goNext tree (InChild (0,InChild (0,InText 0)))
+      `assertEqual` Action.Update tree (InChild (1,InText 0))
+  , test "can go to child of previous parent" <|
+    let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
+    in Entry.goPrev tree (InChild (1,InText 0))
+      `assertEqual` Action.Update tree (InChild (0,InChild (0,InText 0)))
   ]
 
 editTest = Suite "basic editing"
