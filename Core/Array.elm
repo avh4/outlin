@@ -1,4 +1,4 @@
-module Core.Array (Cursor, applyAt, do, split, render, toJson) where
+module Core.Array (Cursor, cursor, applyAt, do, split, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -6,6 +6,8 @@ import Core.Action as Action
 type Value a = [a]
 type Cursor a = (Int, a)
 type Subs a = {child:a}
+
+cursor n c = (n, c)
 
 changeAt : (a -> a) -> Int -> [a] -> [a]
 changeAt fn index list =

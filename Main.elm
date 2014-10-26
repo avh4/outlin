@@ -80,7 +80,7 @@ step c m = case c of
   KeyMeta 65 -> m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
-    _ -> m
+    x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Extra command" x)
 
 commands : Signal Command

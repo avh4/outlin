@@ -14,17 +14,19 @@ import Core.Action as Action
 data Base a = Entry {
   text:a,
   description:a,
+  inbox:[a],
   children:[Base a]
   }
 
 type Entry = Base String
 
 entry : String -> String -> [Entry] -> Entry
-entry t d c = Entry {text=t, description=d, children=c}
+entry t d c = Entry {text=t, description=d, inbox=[], children=c}
 
 data BaseCursor c =
   InText c |
   InDescription c |
+  InInbox (Core.Array.Cursor c) |
   InChild (Core.Array.Cursor (BaseCursor c))
 
 type Cursor = BaseCursor Core.String.Cursor
@@ -149,9 +151,14 @@ toDescriptionCursor mc = case mc of
   Just (InDescription i) -> Just i
   _ -> Nothing
 
+toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Core.String.Cursor)
+toInboxCursor mc = case mc of
+  Just (InInbox (n,c)) -> Just <| Core.Array.cursor n c
+  _ -> Nothing
+
 toChildrenCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
 toChildrenCursor mc = case mc of
-  Just (InChild (n,c)) -> Just (n, c)
+  Just (InChild (n,c)) -> Just <| Core.Array.cursor n c
   _ -> Nothing
 
 render : Entry -> Maybe Cursor -> Html
@@ -159,6 +166,7 @@ render value mc = case value of
   Entry e -> node "li" [] [
     Core.String.render e.text (toTextCursor mc),
     node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)],
+    node "ol" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc),
     node "ul" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]
 
@@ -173,9 +181,10 @@ toJson entry = case entry of Entry e ->
   ++ "}"
 
 decoder : Json.Decoder.Decoder Entry
-decoder a = Json.Decoder.decode3
+decoder a = Json.Decoder.decode4
   ("text" := Json.Decoder.string)
   ("description" := Json.Decoder.string)
+  ("inbox" := Json.Decoder.listOf Json.Decoder.string)
   ("children" := Json.Decoder.listOf decoder)
-  (\t d c -> Entry {text=t,description=d,children=c})
+  (\t d i c -> Entry {text=t,description=d,inbox=i,children=c})
   a -- this is to work around https://github.com/elm-lang/Elm/issues/639
