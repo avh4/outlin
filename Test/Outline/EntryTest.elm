@@ -37,9 +37,9 @@ editTest = Suite "basic editing"
   , test "can backspace text" <|
     Entry.backspace (textEntry "Elm") (InText 1)
       `assertEqual` Action.Update (textEntry "lm") (InText 0)
-  -- , test "backspace stops at edge" <|
-  --   Entry.backspace (textEntry "Elm") (InText 0)
-  --     `assertEqual` Action.Update (textEntry "Elm") (InText 0)
+  , test "backspace stops at edge" <|
+    Entry.backspace (textEntry "Elm") (InText 0)
+      `assertEqual` Action.NoChange
   ]
 
 enterTest = Suite "enter"

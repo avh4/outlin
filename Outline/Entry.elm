@@ -34,45 +34,10 @@ type Cursor = BaseCursor Core.String.Cursor
 type StringAction = Action String Core.String.Cursor
 type EntryAction = Action Entry Cursor
 
---doText : (String -> x) -> ()
-
-uupdate : StringAction -> Entry -> Cursor -> Entry
-uupdate action value cursor = case value of Entry e -> case cursor of
-  InText i -> Entry { e | text <- Action.val <| action e.text i }
-  InDescription i -> Entry { e | description <- Action.val <| action e.description i }
-  InInbox c -> Entry { e | inbox <- Action.val <| Core.Array.applyAt action e.inbox c }
-  InChild c -> Entry { e | children <- Action.val <| Core.Array.applyAt (Action.change (uupdate action)) e.children c }
-
--- navTo : (String -> x) -> (String -> x) -> (Core.Array.Cursor x -> x) -> Entry -> Cursor -> x
--- navTo textFn descFn childFn en cur = case en of Entry e -> case cur of
---   InText n -> textFn e.text
---   InDescription n -> descFn e.description
---   InChild c -> childFn --(Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
-
--- straightNav : (String -> Core.String.Cursor) -> Entry -> Cursor -> Cursor
--- straightNav fn = navTo
---   (\s -> InText <| fn s)
---   (\s -> InDescription <| fn s)
---   (\(i,c) -> InChild (i,c))
-
--- mmove : StringAction -> Entry -> Cursor -> Cursor
--- mmove action = straightNav (\n -> mmmove action n)
-
-mmove : StringAction -> Entry -> Cursor -> Cursor
-mmove action entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| Action.cur <| action e.text n
-  InDescription n -> InDescription <| Action.cur <| action e.description n
-  InInbox c -> InInbox <| Action.cur <| Core.Array.applyAt action e.inbox c
-  InChild c -> InChild <| Action.cur <| Core.Array.applyAt (Action.nav (mmove action)) e.children c
-
-liftAction : StringAction -> EntryAction
-liftAction action v c = Action.Update (uupdate action v c) (mmove action v c)
-
 insert : String -> EntryAction
-insert s = liftAction (Core.String.insertAction s)
+insert s = do (Core.String.insertAction s)
 
-backspace : EntryAction
-backspace = liftAction Core.String.backspace
+backspace = do Core.String.backspace
 
 -- TODO: should return a new Action.Result
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
