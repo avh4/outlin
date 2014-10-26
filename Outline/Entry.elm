@@ -34,11 +34,6 @@ type Cursor = BaseCursor Core.String.Cursor
 type StringAction = Action String Core.String.Cursor
 type EntryAction = Action Entry Cursor
 
-insert : String -> EntryAction
-insert s = do (Core.String.insertAction s)
-
-backspace = do Core.String.backspace
-
 -- TODO: should return a new Action.Result
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
 ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
@@ -85,9 +80,13 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
 
-delete = do Core.String.delete
 goLeft = do Core.String.goLeft
 goRight = do Core.String.goRight
+backspace = do Core.String.backspace
+delete = do Core.String.delete
+
+insert : String -> EntryAction
+insert s = do (Core.String.insertAction s)
 
 -- TODO: replace with Action.Result
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
