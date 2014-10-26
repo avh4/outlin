@@ -11,16 +11,16 @@ type Value = String
 type Cursor = Int
 type Subs = {}
 
-update char value selection =
-  (String.left selection value)
+update char value cursor =
+  (String.left cursor value)
   ++ char
-  ++ (String.dropLeft selection value)
+  ++ (String.dropLeft cursor value)
 
-move char value selection =
-  selection + String.length char
+move char value cursor =
+  cursor + String.length char
 
 insertAction : String -> Action String Cursor
-insertAction s = Action (update s) (move s)
+insertAction s v c = (update s v c, move s v c)
 
 bback : String -> Cursor -> (String, Cursor)
 bback v c = case (v,c) of

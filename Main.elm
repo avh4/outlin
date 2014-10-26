@@ -33,9 +33,8 @@ changeAt fn1 fn2 index list =
   indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel {valueFn,curFn} {value,selection} =
-  let a = valueFn value selection
-      b = curFn value selection
+updateModel action {value,selection} =
+  let (a,b) = action value selection
   in {value=a, selection=b}
 
 -- INPUT

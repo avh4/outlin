@@ -9,17 +9,16 @@ type Subs a = {child:a}
 
 cursor n c = (n, c)
 
-changeAt : (a -> a) -> Int -> [a] -> [a]
-changeAt fn index list =
-  indexedMap (\i item -> if i == index then fn item else item) list
+replaceAt : a -> Int -> [a] -> [a]
+replaceAt a index list =
+  indexedMap (\i item -> if i == index then a else item) list
 
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
 applyAt : Action v a -> Action [v] (Cursor a)
-applyAt {valueFn,curFn} = Action
-  (\vs (i,c) -> changeAt (\x -> valueFn x c) i vs)
-  (\vs (i,c) -> (i, curFn (at i vs) c))
+applyAt action vs (i,c) = case action (at i vs) c of
+  (newV, newC) -> (replaceAt newV i vs, (i,newC))
 
 do : (v -> c -> ([v], Cursor c)) -> Action [v] (Cursor c)
 do fn = Action.split (\vs (i,c) -> case fn (at i vs) c of

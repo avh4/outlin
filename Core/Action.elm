@@ -1,15 +1,20 @@
-module Core.Action (Action, split, nav, apply) where
+module Core.Action (Action, split, nav, change, apply) where
 
-type Action val cur = {
-  valueFn:(val -> cur -> val),
-  curFn:(val -> cur -> cur)
-  }
+-- data Result v c =
+--   Update v c
 
-split : (v -> c -> (v, c)) -> Action v c
-split fn = Action (\v c -> fst <| fn v c) (\v c -> snd <| fn v c)
+type Result v c = (v, c)
+
+type Action v c = (v -> c -> Result v c)
+
+split : (v -> c -> Result v c) -> Action v c
+split fn = fn
 
 nav : (v -> c -> c) -> Action v c
-nav fn = Action (\v _ -> v) fn
+nav fn = \v c -> (v, fn v c)
 
-apply : Action val cur -> val -> cur -> (val, cur)
-apply action v c = (action.valueFn v c, action.curFn v c)
+change : (v -> c -> v) -> Action v c
+change fn = \v c -> (fn v c, c)
+
+apply : Action v c -> v -> c -> Result v c
+apply action = action

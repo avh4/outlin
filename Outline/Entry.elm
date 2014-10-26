@@ -38,10 +38,10 @@ type EntryAction = Action Entry Cursor
 
 uupdate : StringAction -> Entry -> Cursor -> Entry
 uupdate action value cursor = case value of Entry e -> case cursor of
-  InText i -> Entry { e | text <- action.valueFn e.text i }
-  InDescription i -> Entry { e | description <- action.valueFn e.description i }
-  InInbox c -> Entry { e | inbox <- (Core.Array.applyAt action).valueFn e.inbox c }
-  InChild c -> Entry { e | children <- (Core.Array.applyAt <| Action (uupdate action) (\_ cc -> cc)).valueFn e.children c }
+  InText i -> Entry { e | text <- fst <| action e.text i }
+  InDescription i -> Entry { e | description <- fst <| action e.description i }
+  InInbox c -> Entry { e | inbox <- fst <| Core.Array.applyAt action e.inbox c }
+  InChild c -> Entry { e | children <- fst <| Core.Array.applyAt (Action.change (uupdate action)) e.children c }
 
 -- navTo : (String -> x) -> (String -> x) -> (Core.Array.Cursor x -> x) -> Entry -> Cursor -> x
 -- navTo textFn descFn childFn en cur = case en of Entry e -> case cur of
@@ -60,16 +60,16 @@ uupdate action value cursor = case value of Entry e -> case cursor of
 
 mmove : StringAction -> Entry -> Cursor -> Cursor
 mmove action entry cursor = case entry of Entry e -> case cursor of
-  InText n -> InText <| action.curFn e.text n
-  InDescription n -> InDescription <| action.curFn e.description n
-  InInbox c -> InInbox <| (Core.Array.applyAt action).curFn e.inbox c
-  InChild c -> InChild <| (Core.Array.applyAt <| Action (\v _ -> v) (mmove action)).curFn e.children c
+  InText n -> InText <| snd <| action e.text n
+  InDescription n -> InDescription <| snd <| action e.description n
+  InInbox c -> InInbox <| snd <| Core.Array.applyAt action e.inbox c
+  InChild c -> InChild <| snd <| Core.Array.applyAt (Action.nav (mmove action)) e.children c
 
 liftAction : StringAction -> EntryAction
-liftAction sa = Action (uupdate sa) (mmove sa)
+liftAction action v c = (uupdate action v c, mmove action v c)
 
 liftCursorAction : StringAction -> EntryAction
-liftCursorAction sa = Action (\v _ -> v) (mmove sa)
+liftCursorAction action = Action.nav (mmove action)
 
 insertAction : String -> EntryAction
 insertAction s = liftAction (Core.String.insertAction s)
@@ -153,7 +153,7 @@ go fn value cursor = case fn value cursor of
   EnterNext -> cursor
 
 goNextAction : Action Entry Cursor
-goNextAction = Action (\v _ -> v) (go goNext)
+goNextAction = Action.nav (go goNext)
 
 goPrev : Entry -> Cursor -> MoveCmd
 goPrev e cursor = case e of Entry value -> case cursor of
@@ -162,7 +162,7 @@ goPrev e cursor = case e of Entry value -> case cursor of
   InInbox (n,c) -> StayHere <| if (n > 0) then InInbox (n-1, c) else InText c
   InChild (n,c) -> goChild n goPrev value c
 
-goPrevAction = Action (\v _ -> v) (go goPrev)
+goPrevAction = Action.nav (go goPrev)
 
 toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
 toTextCursor mc = case mc of
