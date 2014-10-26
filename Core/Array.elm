@@ -21,8 +21,8 @@ applyAt action vs (i,c) = case action (at i vs) c of
   (newV, newC) -> (replaceAt newV i vs, (i,newC))
 
 do : (v -> c -> ([v], Cursor c)) -> Action [v] (Cursor c)
-do fn = Action.split (\vs (i,c) -> case fn (at i vs) c of
-  (newVs, (newI, newC)) -> ((take i vs) ++ newVs ++ (drop (i+1) vs), (newI+i, newC)))
+do fn = \vs (i,c) -> case fn (at i vs) c of
+  (newVs, (newI, newC)) -> ((take i vs) ++ newVs ++ (drop (i+1) vs), (newI+i, newC))
 
 split_ : (v -> c -> (v, v, c)) -> (v -> c -> ([v], Cursor c))
 split_ fn = \v c -> case fn v c of

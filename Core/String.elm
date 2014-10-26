@@ -22,13 +22,10 @@ move char value cursor =
 insertAction : String -> Action String Cursor
 insertAction s v c = (update s v c, move s v c)
 
-bback : String -> Cursor -> (String, Cursor)
-bback v c = case (v,c) of
+backspace : String -> Cursor -> (String, Cursor)
+backspace v c = case (v,c) of
   (_, 0) -> (v,c)
   _ -> (String.left (c-1) v ++ String.dropLeft c v, c-1)
-
-backspace : Action String Cursor
-backspace = Action.split bback
 
 goLeft = Action.nav (\_ c -> if c > 0 then c-1 else c)
 goRight = Action.nav (\v c -> min (String.length v) (c+1))

@@ -84,40 +84,32 @@ s_split : Entry -> Cursor -> ([Entry], Core.Array.Cursor Cursor)
 s_split en cur = case en of Entry e -> case cur of
   InText n -> case ss_split e.text n of
     (left, right, c) -> ([entry left "" [], Entry {e | text <- right}], (1, InText c))
-  InChild (n,c) -> case Action.apply (Core.Array.do s_split) e.children (n,c) of
+  InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
     (newChildren, newChildCur) -> ([Entry {e | children <- newChildren}], (0, InChild newChildCur))
   _ -> ([en], (0, cur))
 
-e_enter : Entry -> Cursor -> (Entry, Cursor)
-e_enter en cur = case en of Entry e -> case cur of
-  InChild c -> case Action.apply (Core.Array.do s_split) e.children c of
+enter : EntryAction
+enter en cur = case en of Entry e -> case cur of
+  InChild c -> case Core.Array.do s_split e.children c of
     (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (en, cur) -- can't split root node
 
-enter : EntryAction
-enter = Action.split e_enter
-
-addInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
-addInboxItem_ en cur = case en of Entry e -> case cur of
-  InChild c -> case Action.apply (Core.Array.applyAt (Action.split addInboxItem_)) e.children c of
+addInboxItem : Entry -> Cursor -> (Entry, Cursor)
+addInboxItem en cur = case en of Entry e -> case cur of
+  InChild c -> case Core.Array.applyAt addInboxItem e.children c of
     (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (Entry { e | inbox <- [""] ++ e.inbox }, InInbox (0,0))
-
-addInboxItem : EntryAction
-addInboxItem = Action.split addInboxItem_
 
 dii : String -> Core.String.Cursor -> ([String], Core.Array.Cursor Core.String.Cursor)
 dii v c = ([], Core.Array.cursor 0 c)
 
-deleteInboxItem_ : Entry -> Cursor -> (Entry, Cursor)
-deleteInboxItem_ en cur = case en of Entry e -> case cur of
-  InInbox (n,c) -> case Action.apply (Core.Array.do dii) e.inbox (n,c) of
+deleteInboxItem : Entry -> Cursor -> (Entry, Cursor)
+deleteInboxItem en cur = case en of Entry e -> case cur of
+  InInbox (n,c) -> case Core.Array.do dii e.inbox (n,c) of
     (newList, newCur) -> (Entry { e | inbox <- newList }, InInbox newCur)
-  InChild c -> case Action.apply (Core.Array.applyAt (Action.split deleteInboxItem_)) e.children c of
+  InChild c -> case Core.Array.applyAt deleteInboxItem e.children c of
     (newChildren, newChildCur) -> (Entry {e | children <- newChildren}, InChild newChildCur)
   _ -> (en, cur)
-
-deleteInboxItem = Action.split deleteInboxItem_
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight
