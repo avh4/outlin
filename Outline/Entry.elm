@@ -113,7 +113,7 @@ delete en cur = case en of Entry e -> case cur of
   InChild c -> case Core.Array.applyAt delete e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
-  _ -> Action.NoChange
+  _ -> Action.Delete
 
 goLeftAction = liftCursorAction Core.String.goLeft
 goRightAction = liftCursorAction Core.String.goRight
