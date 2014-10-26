@@ -10,6 +10,7 @@ import Json.Decoder (..)
 import Json.Output
 import Core.Action (Action)
 import Core.Action as Action
+import Debug
 
 data Base a = Entry {
   text:a,
@@ -34,18 +35,7 @@ type Cursor = BaseCursor Core.String.Cursor
 type StringAction = Action String Core.String.Cursor
 type EntryAction = Action Entry Cursor
 
--- TODO: should return a new Action.Result
-ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
-ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
-
-enter : EntryAction
-enter en cur = case en of Entry e -> case cur of
-  InText n -> case ss_split e.text n of
-    (left, right, c) -> Action.Split [entry left "" [] [], Entry {e | text <- right}] 1 (InText c)
-  InChild (n,c) -> case Core.Array.do enter e.children (n,c) of
-    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
-    Action.NoChange -> Action.NoChange
-  _ -> Action.NoChange
+enter = do Core.String.split
 
 addInboxItem : EntryAction
 addInboxItem en cur = case en of Entry e -> case cur of
@@ -60,6 +50,9 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Update newV newCur -> Action.Update (Entry { e | text <- newV }) (InText newCur)
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
+    Action.Split (left :: right :: []) newI c -> Action.Split [entry left "" [] [], Entry {e | text <- right}] newI (InText c)
+    Action.Split (_ :: _ :: _) _ _ -> Debug.crash "Not yet implemented for splits > 2"
+    Action.Split _ _ _ -> Debug.crash "Split has less than two children"
   InDescription c -> case stringAction e.description c of
     Action.Update newV newCur -> Action.Update (Entry { e | description <- newV }) (InDescription newCur)
     Action.Delete -> Action.Delete
