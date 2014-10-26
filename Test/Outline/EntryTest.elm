@@ -15,6 +15,21 @@ backspaceTest = Suite "backspace"
       `equals` Action.Update (entry "lm" "" [] []) (InText 0)
   ]
 
+navTest = Suite "navigation"
+  [ test "can go left in text" <|
+    Entry.goLeft (textEntry "ab") (InText 1)
+      `assertEqual` Action.Update (textEntry "ab") (InText 0)
+  , test "go left stops at the edge" <|
+    Entry.goLeft (textEntry "ab") (InText 0)
+      `assertEqual` Action.Update (textEntry "ab") (InText 0)
+  , test "can go right in text" <|
+    Entry.goRight (textEntry "ab") (InText 1)
+      `assertEqual` Action.Update (textEntry "ab") (InText 2)
+  , test "go right stops at the edge" <|
+    Entry.goRight (textEntry "ab") (InText 2)
+      `assertEqual` Action.Update (textEntry "ab") (InText 2)
+  ]
+
 enterTest = Suite "enter"
   [ Entry.enter (entry "" "" [] [textEntry "ab"]) (InChild (0,InText 1))
       `equals` Action.Update (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (1, InText 0))
@@ -40,4 +55,4 @@ deleteTest = Suite "delete"
       `assertEqual` Action.Update (entry "" "" [] []) (InText 0)
   ]
 
-suite = Suite "Outline.Entry" [backspaceTest, enterTest, deleteTest]
+suite = Suite "Outline.Entry" [navTest, backspaceTest, enterTest, deleteTest]

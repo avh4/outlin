@@ -43,8 +43,8 @@ updateModel action {value,selection} = case action value selection of
 
 apk : Keys.KeyInput -> Model -> Model
 apk key last = case key of
-  Keys.Left -> updateModel Entry.goLeftAction last
-  Keys.Right -> updateModel Entry.goRightAction last
+  Keys.Left -> updateModel Entry.goLeft last
+  Keys.Right -> updateModel Entry.goRight last
   Keys.Down -> updateModel Entry.goNextAction last
   Keys.Up -> updateModel Entry.goPrevAction last
   Keys.Enter -> updateModel Entry.enter last

@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, delete, goLeftAction, goRightAction, goNextAction, goPrevAction, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insertAction, backspace, enter, addInboxItem, delete, goLeft, goRight, goNextAction, goPrevAction, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -119,8 +119,8 @@ do stringAction en cur = case en of Entry e -> case cur of
 delete : EntryAction
 delete = do Core.String.delete
 
-goLeftAction = liftCursorAction Core.String.goLeft
-goRightAction = liftCursorAction Core.String.goRight
+goLeft = liftCursorAction Core.String.goLeft
+goRight = liftCursorAction Core.String.goRight
 
 -- TODO: replace with Action.Result
 data MoveCmd = EnterPrev | StayHere Cursor | EnterNext
