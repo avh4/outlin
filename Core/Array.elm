@@ -20,6 +20,7 @@ applyAt : Action v c -> Action [v] (Cursor c)
 applyAt action vs (i,c) = case action (at i vs) c of
   Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
   Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
+  Action.Delete -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (i,c)
   Action.NoChange -> Action.NoChange
 
 -- TODO: remove either do or applyAt
