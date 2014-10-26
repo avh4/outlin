@@ -43,10 +43,12 @@ editTest = Suite "basic editing"
   ]
 
 enterTest = Suite "enter"
-  [ Entry.enter (entry "" "" [] [textEntry "ab"]) (InChild (0,InText 1))
-      `equals` Action.Update (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (1, InText 0))
---  [ Action.apply Entry.enter tree (InChild 0 (InText 3))
---      `equals` (entry "Elm" "" [ entry "Sta" "" [], entry "dard Libraries"])
+  [ test "can split an Entry" <|
+    Entry.enter (textEntry "ab") (InText 1)
+      `assertEqual` Action.Split [textEntry "a", textEntry "b"] 1 (InText 0)
+  , test "can split a child Entry" <|
+    Entry.enter (entry "" "" [] [textEntry "ab"]) (InChild (0,InText 1))
+      `assertEqual` Action.Update (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (1, InText 0))
   ]
 
 deleteTest = Suite "delete"

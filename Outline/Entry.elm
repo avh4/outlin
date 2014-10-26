@@ -38,18 +38,11 @@ type EntryAction = Action Entry Cursor
 ss_split : String -> Core.String.Cursor -> (String, String, Core.String.Cursor)
 ss_split = (\s n -> (String.left n s, String.dropLeft n s, 0))
 
-s_split : EntryAction
-s_split en cur = case en of Entry e -> case cur of
-  InText n -> case ss_split e.text n of
-    (left, right, c) -> Action.Split [entry left "" [] [], Entry {e | text <- right}] 1 (InText c)
-  InChild (n,c) -> case Core.Array.do s_split e.children (n,c) of
-    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
-    Action.NoChange -> Action.NoChange
-  _ -> Action.NoChange
-
 enter : EntryAction
 enter en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.do s_split e.children c of
+  InText n -> case ss_split e.text n of
+    (left, right, c) -> Action.Split [entry left "" [] [], Entry {e | text <- right}] 1 (InText c)
+  InChild (n,c) -> case Core.Array.do enter e.children (n,c) of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
   _ -> Action.NoChange
