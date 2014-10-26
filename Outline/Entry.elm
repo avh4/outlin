@@ -74,9 +74,6 @@ delete = do Core.String.delete
 insert : String -> EntryAction
 insert s = do (Core.String.insert s)
 
--- TODO: inline Action.Result
-type MoveCmd = Action.Result Entry Cursor
-
 ll : Entry -> Int
 ll e = case e of Entry value -> length value.children
 
@@ -93,7 +90,7 @@ goChild n fn e cursor = case e of Entry value -> case fn (at n value.children) c
     | (ll (at (n-1) value.children)) > 0 -> InChild (n-1, (InChild (ll (at (n-1) value.children) - 1, (InText 0))))
     | otherwise -> InChild (n-1, (InText 0))
 
-goNext_ : Entry -> Cursor -> MoveCmd
+goNext_ : EntryAction
 goNext_ e cursor = case e of Entry value -> case cursor of
   InText i -> if
     | length value.children > 0 -> Action.Update e <| InChild (0, (InText i))
@@ -102,7 +99,7 @@ goNext_ e cursor = case e of Entry value -> case cursor of
   InInbox (n,c) -> Action.Update e <| InInbox (min ((length value.inbox)-1) (n+1), c)
   InChild (n,c) -> goChild n goNext_ e c
 
-go : (Entry -> Cursor -> MoveCmd) -> EntryAction
+go : EntryAction -> EntryAction
 go fn value cursor = case fn value cursor of
   Action.EnterPrev -> Action.Update value (InText 0)
   Action.Update _ c -> Action.Update value c
@@ -110,7 +107,7 @@ go fn value cursor = case fn value cursor of
 
 goNext = go goNext_
 
-goPrev_ : Entry -> Cursor -> MoveCmd
+goPrev_ : EntryAction
 goPrev_ e cursor = case e of Entry value -> case cursor of
   InText i -> Action.EnterPrev
   InDescription i -> Action.Update e <| InText i
