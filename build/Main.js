@@ -12195,15 +12195,19 @@ Elm.App.make = function (_elm) {
    _L.fromArray([A3($Html.node,
                 "p",
                 _L.fromArray([]),
-                _L.fromArray([$Html.text("Cmd-A: add to inbox")]))
+                _L.fromArray([$Html.text("⌘A: add to inbox")]))
                 ,A3($Html.node,
                 "p",
                 _L.fromArray([]),
-                _L.fromArray([$Html.text("Cmd-D: delete")]))
+                _L.fromArray([$Html.text("⌘D: delete")]))
                 ,A3($Html.node,
                 "p",
                 _L.fromArray([]),
-                _L.fromArray([$Html.text("Cmd-P: promote from inbox")]))]));
+                _L.fromArray([$Html.text("⌘P: promote from inbox")]))
+                ,A3($Html.node,
+                "p",
+                _L.fromArray([]),
+                _L.fromArray([$Html.text("⌘1 - ⌘7: move into …")]))]));
    var renderDocument = F2(function (value,
    cursor) {
       return A2($Outline$Entry.render,
@@ -12276,8 +12280,29 @@ Elm.App.make = function (_elm) {
                    $Outline$Entry.insert(c._0._0),
                    m);
                  case "Command": switch (c._0._0)
-                   {case "a":
+                   {case "1":
                       return A2(updateModel,
+                        $Outline$Entry.moveInto(0),
+                        m);
+                      case "2": return A2(updateModel,
+                        $Outline$Entry.moveInto(1),
+                        m);
+                      case "3": return A2(updateModel,
+                        $Outline$Entry.moveInto(2),
+                        m);
+                      case "4": return A2(updateModel,
+                        $Outline$Entry.moveInto(3),
+                        m);
+                      case "5": return A2(updateModel,
+                        $Outline$Entry.moveInto(4),
+                        m);
+                      case "6": return A2(updateModel,
+                        $Outline$Entry.moveInto(5),
+                        m);
+                      case "7": return A2(updateModel,
+                        $Outline$Entry.moveInto(6),
+                        m);
+                      case "a": return A2(updateModel,
                         $Outline$Entry.addInboxItem,
                         m);
                       case "d": return A2(updateModel,
@@ -12421,7 +12446,18 @@ Elm.SampleData.make = function (_elm) {
                                                                                      ,text: "By project"})])
                                        ,description: ""
                                        ,inbox: _L.fromArray(["sdfs"
-                                                            ,"sdfsd"])
+                                                            ,"Bacon"
+                                                            ,"Freddy"
+                                                            ,"Jo-jo"
+                                                            ,"Fish"
+                                                            ,"Fries"
+                                                            ,"Pork"
+                                                            ,"Lacey"
+                                                            ,"quux"
+                                                            ,"sdfsd"
+                                                            ,"Billy"
+                                                            ,"Camilla"
+                                                            ,"baz"])
                                        ,text: "Tasks (LOADING...)"});
    _elm.SampleData.values = {_op: _op
                             ,template: template};
@@ -12469,7 +12505,7 @@ Elm.Outline.Entry.make = function (_elm) {
               entry._0.children),
               "}"))))))));}
          _E.Case($moduleName,
-         "between lines 149 and 154");
+         "between lines 183 and 188");
       }();
    };
    var toChildrenCursor = function (mc) {
@@ -12544,7 +12580,7 @@ Elm.Outline.Entry.make = function (_elm) {
                            value._0.description,
                            toDescriptionCursor(mc))]))
                            ,A2($Html.node,
-                           "ol",
+                           "ul",
                            _L.fromArray([]))($List.map(function (x) {
                               return A3($Html.node,
                               "li",
@@ -12555,14 +12591,45 @@ Elm.Outline.Entry.make = function (_elm) {
                            value._0.inbox,
                            toInboxCursor(mc))))
                            ,A2($Html.node,
-                           "ul",
+                           "ol",
                            _L.fromArray([]))(A3($Core$Array.render,
                            render,
                            value._0.children,
                            toChildrenCursor(mc)))]));}
          _E.Case($moduleName,
-         "between lines 138 and 144");
+         "between lines 172 and 178");
       }();
+   });
+   var countInbox = function (en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return $List.length(en._0.inbox);}
+         _E.Case($moduleName,
+         "on line 74, column 17 to 53");
+      }();
+   };
+   var at = F2(function (i,list) {
+      return $List.head(A2($List.drop,
+      i,
+      list));
+   });
+   var changeAt = F3(function (fn,
+   i,
+   list) {
+      return A2($List.indexedMap,
+      F2(function (n,x) {
+         return _U.eq(n,
+         i) ? fn(x) : x;
+      }),
+      list);
+   });
+   var dropAt = F2(function (i,
+   list) {
+      return _L.append(A2($List.take,
+      i,
+      list),
+      A2($List.drop,i + 1,list));
    });
    var InChild = function (a) {
       return {ctor: "InChild"
@@ -12571,6 +12638,25 @@ Elm.Outline.Entry.make = function (_elm) {
    var InInbox = function (a) {
       return {ctor: "InInbox"
              ,_0: a};
+   };
+   var findFirstChildInbox = function (en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return function (i) {
+                 return InChild({ctor: "_Tuple2"
+                                ,_0: i
+                                ,_1: InInbox({ctor: "_Tuple2"
+                                             ,_0: 0
+                                             ,_1: 9})});
+              }($List.head($List.filterMap($Basics.identity)($List.indexedMap(F2(function (i,
+              ee) {
+                 return _U.cmp(countInbox(ee),
+                 0) > 0 ? $Maybe.Just(i) : $Maybe.Nothing;
+              }))(en._0.children))));}
+         _E.Case($moduleName,
+         "between lines 77 and 81");
+      }();
    };
    var InDescription = function (a) {
       return {ctor: "InDescription"
@@ -12608,21 +12694,31 @@ Elm.Outline.Entry.make = function (_elm) {
                    ,inbox: i
                    ,text: t});
    });
+   var addInboxItem__ = F2(function (s,
+   en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return Entry(_U.replace([["inbox"
+                                     ,_L.append(_L.fromArray([s]),
+                                     en._0.inbox)]],
+              en._0));}
+         _E.Case($moduleName,
+         "on line 47, column 23 to 82");
+      }();
+   });
    var addInboxItem_ = F2(function (en,
    cur) {
       return function () {
          switch (en.ctor)
          {case "Entry":
             return A2($Core$Action.Update,
-              Entry(_U.replace([["inbox"
-                                ,_L.append(_L.fromArray([""]),
-                                en._0.inbox)]],
-              en._0)),
+              A2(addInboxItem__,"",en),
               InInbox({ctor: "_Tuple2"
                       ,_0: 0
                       ,_1: 0}));}
          _E.Case($moduleName,
-         "between lines 47 and 48");
+         "between lines 50 and 51");
       }();
    });
    var promote_ = F2(function (en,
@@ -12637,18 +12733,13 @@ Elm.Outline.Entry.make = function (_elm) {
                       {case "_Tuple2":
                          return A2($Core$Action.Update,
                            Entry(_U.replace([["inbox"
-                                             ,_L.append(A2($List.take,
+                                             ,A2(dropAt,
                                              cur._0._0,
-                                             en._0.inbox),
-                                             A2($List.drop,
-                                             cur._0._0 + 1,
-                                             en._0.inbox))]
+                                             en._0.inbox)]
                                             ,["children"
                                              ,A2($List._op["::"],
                                              A4(entry,
-                                             $List.head(A2($List.drop,
-                                             cur._0._0,
-                                             en._0.inbox)),
+                                             A2(at,cur._0._0,en._0.inbox),
                                              "",
                                              _L.fromArray([]),
                                              _L.fromArray([])),
@@ -12669,7 +12760,55 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Core$Action.NoChange;
               }();}
          _E.Case($moduleName,
-         "between lines 53 and 58");
+         "between lines 65 and 70");
+      }();
+   });
+   var moveInto_ = F3(function (n,
+   en,
+   cur) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return function () {
+                 switch (cur.ctor)
+                 {case "InInbox":
+                    switch (cur._0.ctor)
+                      {case "_Tuple2":
+                         return _U.cmp($List.length(en._0.children),
+                           n) < 1 ? $Core$Action.NoChange : function () {
+                              var newE = Entry(_U.replace([["inbox"
+                                                           ,A2(dropAt,
+                                                           cur._0._0,
+                                                           en._0.inbox)]
+                                                          ,["children"
+                                                           ,A3(changeAt,
+                                                           function (ee) {
+                                                              return A2(addInboxItem__,
+                                                              A2(at,
+                                                              cur._0._0,
+                                                              en._0.inbox),
+                                                              ee);
+                                                           },
+                                                           n,
+                                                           en._0.children)]],
+                              en._0));
+                              return A2($Core$Action.Update,
+                              newE,
+                              function () {
+                                 var newI = A2($Basics.min,
+                                 cur._0._0,
+                                 $List.length(en._0.inbox) - 2);
+                                 return _U.cmp(newI,
+                                 0) > -1 ? InInbox({ctor: "_Tuple2"
+                                                   ,_0: newI
+                                                   ,_1: cur._0._1}) : findFirstChildInbox(newE);
+                              }());
+                           }();}
+                      break;}
+                 return $Core$Action.NoChange;
+              }();}
+         _E.Case($moduleName,
+         "between lines 84 and 92");
       }();
    });
    var doEntry = F3(function (action,
@@ -12682,32 +12821,35 @@ Elm.Outline.Entry.make = function (_elm) {
                  switch (cur.ctor)
                  {case "InChild":
                     return function () {
-                         var _v34 = A5($Core$Array.$do,
+                         var _v46 = A5($Core$Array.$do,
                          InText(0),
                          findLastCursor,
                          doEntry(action),
                          en._0.children,
                          cur._0);
-                         switch (_v34.ctor)
+                         switch (_v46.ctor)
                          {case "NoChange":
                             return $Core$Action.NoChange;
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["children"
-                                                ,_v34._0]],
+                                                ,_v46._0]],
                               en._0)),
-                              InChild(_v34._1));}
+                              InChild(_v46._1));}
                          _E.Case($moduleName,
-                         "between lines 64 and 67");
+                         "between lines 98 and 101");
                       }();}
                  return A2(action,en,cur);
               }();}
          _E.Case($moduleName,
-         "between lines 63 and 67");
+         "between lines 97 and 101");
       }();
    });
    var addInboxItem = doEntry(addInboxItem_);
    var promote = doEntry(promote_);
+   var moveInto = function (n) {
+      return doEntry(moveInto_(n));
+   };
    var $do = F3(function (stringAction,
    en,
    cur) {
@@ -12718,13 +12860,13 @@ Elm.Outline.Entry.make = function (_elm) {
                  switch (cur.ctor)
                  {case "InChild":
                     return function () {
-                         var _v44 = A5($Core$Array.$do,
+                         var _v56 = A5($Core$Array.$do,
                          InText(0),
                          findLastCursor,
                          $do(stringAction),
                          en._0.children,
                          cur._0);
-                         switch (_v44.ctor)
+                         switch (_v56.ctor)
                          {case "Delete":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["children"
@@ -12743,18 +12885,18 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["children"
-                                                ,_v44._0]],
+                                                ,_v56._0]],
                               en._0)),
-                              InChild(_v44._1));}
+                              InChild(_v56._1));}
                          _E.Case($moduleName,
-                         "between lines 95 and 102");
+                         "between lines 129 and 136");
                       }();
                     case "InDescription":
                     return function () {
-                         var _v47 = A2(stringAction,
+                         var _v59 = A2(stringAction,
                          en._0.description,
                          cur._0);
-                         switch (_v47.ctor)
+                         switch (_v59.ctor)
                          {case "Delete":
                             return $Core$Action.Delete;
                             case "NoChange":
@@ -12762,17 +12904,17 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["description"
-                                                ,_v47._0]],
+                                                ,_v59._0]],
                               en._0)),
-                              InDescription(_v47._1));}
+                              InDescription(_v59._1));}
                          _E.Case($moduleName,
-                         "between lines 83 and 87");
+                         "between lines 117 and 121");
                       }();
                     case "InInbox":
                     return function () {
-                         var _v50 = A5($Core$Array.$do,
+                         var _v62 = A5($Core$Array.$do,
                          0,
-                         function (_v53) {
+                         function (_v65) {
                             return function () {
                                return 0;
                             }();
@@ -12780,7 +12922,7 @@ Elm.Outline.Entry.make = function (_elm) {
                          stringAction,
                          en._0.inbox,
                          cur._0);
-                         switch (_v50.ctor)
+                         switch (_v62.ctor)
                          {case "Delete":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["inbox"
@@ -12799,18 +12941,18 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["inbox"
-                                                ,_v50._0]],
+                                                ,_v62._0]],
                               en._0)),
-                              InInbox(_v50._1));}
+                              InInbox(_v62._1));}
                          _E.Case($moduleName,
-                         "between lines 87 and 95");
+                         "between lines 121 and 129");
                       }();
                     case "InText":
                     return function () {
-                         var _v55 = A2(stringAction,
+                         var _v67 = A2(stringAction,
                          en._0.text,
                          cur._0);
-                         switch (_v55.ctor)
+                         switch (_v67.ctor)
                          {case "Delete":
                             return $Core$Action.Delete;
                             case "EnterNext":
@@ -12826,40 +12968,40 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "NoChange":
                             return $Core$Action.NoChange;
                             case "Split":
-                            switch (_v55._0.ctor)
+                            switch (_v67._0.ctor)
                               {case "::":
-                                 switch (_v55._0._1.ctor)
+                                 switch (_v67._0._1.ctor)
                                    {case "::":
-                                      switch (_v55._0._1._1.ctor)
+                                      switch (_v67._0._1._1.ctor)
                                         {case "[]":
                                            return A3($Core$Action.Split,
                                              _L.fromArray([A4(entry,
-                                                          _v55._0._0,
+                                                          _v67._0._0,
                                                           "",
                                                           _L.fromArray([]),
                                                           _L.fromArray([]))
                                                           ,Entry(_U.replace([["text"
-                                                                             ,_v55._0._1._0]],
+                                                                             ,_v67._0._1._0]],
                                                           en._0))]),
-                                             _v55._1,
-                                             InText(_v55._2));}
+                                             _v67._1,
+                                             InText(_v67._2));}
                                         return $Debug.crash("Not yet implemented for splits > 2");}
                                    break;}
                               return $Debug.crash("Split has less than two children");
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["text"
-                                                ,_v55._0]],
+                                                ,_v67._0]],
                               en._0)),
-                              InText(_v55._1));}
+                              InText(_v67._1));}
                          _E.Case($moduleName,
-                         "between lines 71 and 83");
+                         "between lines 105 and 117");
                       }();}
                  _E.Case($moduleName,
-                 "between lines 70 and 102");
+                 "between lines 104 and 136");
               }();}
          _E.Case($moduleName,
-         "between lines 70 and 102");
+         "between lines 104 and 136");
       }();
    });
    var enter = $do($Core$String.split);
@@ -12902,6 +13044,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                ,enter: enter
                                ,addInboxItem: addInboxItem
                                ,promote: promote
+                               ,moveInto: moveInto
                                ,$delete: $delete
                                ,goLeft: goLeft
                                ,goRight: goRight
@@ -14494,7 +14637,14 @@ Elm.Keys.make = function (_elm) {
    var fromMeta = function (code) {
       return function () {
          switch (code)
-         {case 65: return Command("a");
+         {case 49: return Command("1");
+            case 50: return Command("2");
+            case 51: return Command("3");
+            case 52: return Command("4");
+            case 53: return Command("5");
+            case 54: return Command("6");
+            case 55: return Command("7");
+            case 65: return Command("a");
             case 68: return Command("d");
             case 80: return Command("p");}
          return Unrecognized(_L.append("Meta-",
