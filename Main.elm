@@ -44,17 +44,6 @@ updateModel action {value,selection} = case action value selection of
 
 ---- INPUT
 
-apk : Keys.KeyInput -> Model -> Model
-apk key last = case key of
-  Keys.Left -> updateModel Entry.goLeft last
-  Keys.Right -> updateModel Entry.goRight last
-  Keys.Down -> updateModel Entry.goNext last
-  Keys.Up -> updateModel Entry.goPrev last
-  Keys.Enter -> updateModel Entry.enter last
-  Keys.Character s -> updateModel (Entry.insert s) last
-  Keys.Backspace -> updateModel Entry.backspace last
-  Keys.Nothing -> last
-
 ---- RENDER
 
 renderDocument : Document -> DocumentCursor -> Html
@@ -79,9 +68,15 @@ data Command =
 
 step : Command -> Model -> Model
 step c m = case c of
+  Key (Keys.Left) -> updateModel Entry.goLeft m
+  Key (Keys.Right) -> updateModel Entry.goRight m
+  Key (Keys.Down) -> updateModel Entry.goNext m
+  Key (Keys.Up) -> updateModel Entry.goPrev m
+  Key (Keys.Enter) -> updateModel Entry.enter m
+  Key (Keys.Character s) -> updateModel (Entry.insert s) m
+  Key (Keys.Backspace) -> updateModel Entry.backspace m
   Key (Keys.Command "a") -> updateModel Entry.addInboxItem m
   Key (Keys.Command "d") -> updateModel Entry.delete m
-  Key k -> apk k m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
