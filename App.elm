@@ -62,6 +62,7 @@ renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" c
 renderDocs = node "div" []
   [ node "p" [] [ text "Cmd-A: add to inbox" ]
   , node "p" [] [ text "Cmd-D: delete" ]
+  , node "p" [] [ text "Cmd-P: promote from inbox" ]
   ]
 
 render : Model -> Html
