@@ -138,6 +138,18 @@ promoteTest = Suite "promote" <|
     `assertEqual` Action.Update (entry "" "" [] [textEntry "a", textEntry "x"]) (InChild (0,InText 0))
   ]
 
+moveIntoTest = Suite "moveInto" <|
+  [ test "moves current inbox item to inbox of specified child" <|
+    Entry.moveInto 1 (entry "" "" ["a","b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
+    `assertEqual` Action.Update (entry "" "" ["b"] [entry "0" "" [] [], entry "1" "" ["a"] []]) (InInbox (0,0))
+  , test "when specified child doesn't exist, does nothing" <|
+    Entry.moveInto 5 (entry "" "" ["a","b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
+      `assertEqual` Action.NoChange
+  , test "moving last inbox item when first child's inbox is empty" <|
+    Entry.moveInto 1 (entry "" "" ["a"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
+      `assertEqual` Action.Update (entry "" "" [] [entry "0" "" [] [], entry "1" "" ["a"] []]) (InChild (1,InInbox (0,9)))
+  ]
+
 suite = Suite "Outline.Entry"
   [ navTest
   , editTest
@@ -145,4 +157,5 @@ suite = Suite "Outline.Entry"
   , enterTest
   , deleteTest
   , promoteTest
+  , moveIntoTest
   ]

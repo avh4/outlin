@@ -49,6 +49,13 @@ step c m = case c of
   Key (Keys.Command "a") -> updateModel Entry.addInboxItem m
   Key (Keys.Command "d") -> updateModel Entry.delete m
   Key (Keys.Command "p") -> updateModel Entry.promote m
+  Key (Keys.Command "1") -> updateModel (Entry.moveInto 0) m
+  Key (Keys.Command "2") -> updateModel (Entry.moveInto 1) m
+  Key (Keys.Command "3") -> updateModel (Entry.moveInto 2) m
+  Key (Keys.Command "4") -> updateModel (Entry.moveInto 3) m
+  Key (Keys.Command "5") -> updateModel (Entry.moveInto 4) m
+  Key (Keys.Command "6") -> updateModel (Entry.moveInto 5) m
+  Key (Keys.Command "7") -> updateModel (Entry.moveInto 6) m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
@@ -60,9 +67,10 @@ renderDocument : Document -> DocumentCursor -> Html
 renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
 
 renderDocs = node "div" []
-  [ node "p" [] [ text "Cmd-A: add to inbox" ]
-  , node "p" [] [ text "Cmd-D: delete" ]
-  , node "p" [] [ text "Cmd-P: promote from inbox" ]
+  [ node "p" [] [ text "⌘A: add to inbox" ]
+  , node "p" [] [ text "⌘D: delete" ]
+  , node "p" [] [ text "⌘P: promote from inbox" ]
+  , node "p" [] [ text "⌘1 - ⌘7: move into …"]
   ]
 
 render : Model -> Html

@@ -2,7 +2,21 @@ module SampleData where
 
 import Outline.Entry as Entry
 
-template = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=["sdfs","sdfsd"], children=[
+template = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
+  [ "sdfs"
+  , "Bacon"
+  , "Freddy"
+  , "Jo-jo"
+  , "Fish"
+  , "Fries"
+  , "Pork"
+  , "Lacey"
+  , "quux"
+  , "sdfsd"
+  , "Billy"
+  , "Camilla"
+  , "baz"
+  ], children=[
   Entry.Entry { text="By time (deadline)", description="", inbox=[], children=[
     Entry.Entry { text="daily", description="", inbox=[], children=[] },
     Entry.Entry { text="weekly", description="", inbox=[], children=[] },
