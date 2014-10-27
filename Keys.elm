@@ -6,6 +6,7 @@ data KeyInput =
   Enter | Backspace |
   Left | Right | Up | Down |
   Character String |
+  Command String |
   Nothing
 
 fromPresses : String -> KeyInput
@@ -22,3 +23,9 @@ fromDowns key = case Debug.watch "key" key of
   39 -> Right
   40 -> Down
   _ -> fst (Nothing, Debug.log "dropped key" key)
+
+fromMeta : Int -> KeyInput
+fromMeta code = case code of
+  65 -> Command "a"
+  68 -> Command "d"
+  _ -> fst (Nothing, Debug.log "dropped key" ("Meta-" ++ show code))

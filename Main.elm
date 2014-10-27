@@ -73,17 +73,15 @@ port downsIn : Signal Int
 port metaIn : Signal Int
 
 data Command =
-  KeyPress String |
-  KeyDown Int |
+  Key Keys.KeyInput |
   KeyMeta Int |
   Loaded String
 
 step : Command -> Model -> Model
 step c m = case c of
-  KeyPress char -> apk (Keys.fromPresses char) m
-  KeyDown code -> apk (Keys.fromDowns code) m
-  KeyMeta 65 -> updateModel Entry.addInboxItem m
-  KeyMeta 68 -> updateModel Entry.delete m
+  Key (Keys.Command "a") -> updateModel Entry.addInboxItem m
+  Key (Keys.Command "d") -> updateModel Entry.delete m
+  Key k -> apk k m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
@@ -91,9 +89,9 @@ step c m = case c of
 
 commands : Signal Command
 commands = merges
-  [ KeyPress <~ pressesIn
-  , KeyDown <~ downsIn
-  , KeyMeta <~ metaIn
+  [ Key <~ (Keys.fromPresses <~ pressesIn)
+  , Key <~ (Keys.fromDowns <~ downsIn)
+  , Key <~ (Keys.fromMeta <~ metaIn)
   , Loaded <~ dropboxIn
   ]
 
