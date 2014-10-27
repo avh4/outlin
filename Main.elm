@@ -15,27 +15,16 @@ import Json.Output
 import Core.Action (Action)
 import Core.Action as Action
 
-
-type Document = Entry.Entry
-
 ---- App
 
----- Test input
-
+type Document = Entry.Entry
 type DocumentCursor = Entry.Cursor
 type Model = { value:Document, selection:DocumentCursor }
-
-liftArrayTuple : ([a], b) -> [(a,b)]
-liftArrayTuple (aa, b) =
-  map (\a -> (a,b)) aa
-
-changeAt : (a -> b) -> (a -> b) -> Int -> [a] -> [b]
-changeAt fn1 fn2 index list =
-  indexedMap (\i item -> if i == index then fn1 item else fn2 item) list
 
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
 updateModel action {value,selection} = case action value selection of
   Action.Update a b -> {value=a, selection=b}
+  -- explicity list the following action results, which are all no-ops on document
   Action.Split _ _ _ -> {value=value, selection=selection}
   Action.Delete -> {value=value, selection=selection}
   Action.EnterNext -> {value=value, selection=selection}
@@ -44,27 +33,10 @@ updateModel action {value,selection} = case action value selection of
 
 ---- INPUT
 
----- RENDER
-
-renderDocument : Document -> DocumentCursor -> Html
-renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
-
-renderDocs = node "div" []
-  [ node "p" [] [ text "Cmd-A: add to inbox" ]
-  , node "p" [] [ text "Cmd-D: delete" ]
-  ]
-
-renderModel : Model -> Html
-renderModel m = node "div" [] [ renderDocs, renderDocument m.value m.selection ]
-
-port pressesIn : Signal String
-port downsIn : Signal Int
-port metaIn : Signal Int
-
-data Command =
-  Key Keys.KeyInput |
-  KeyMeta Int |
-  Loaded String
+data Command
+  = Key Keys.KeyInput
+  | KeyMeta Int
+  | Loaded String
 
 step : Command -> Model -> Model
 step c m = case c of
@@ -82,6 +54,27 @@ step c m = case c of
     x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Extra command" x)
 
+---- RENDER
+
+renderDocument : Document -> DocumentCursor -> Html
+renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
+
+renderDocs = node "div" []
+  [ node "p" [] [ text "Cmd-A: add to inbox" ]
+  , node "p" [] [ text "Cmd-D: delete" ]
+  ]
+
+renderModel : Model -> Html
+renderModel m = node "div" [] [ renderDocs, renderDocument m.value m.selection ]
+
+---- SIGNALS
+
+port pressesIn : Signal String
+port downsIn : Signal Int
+port metaIn : Signal Int
+
+port dropboxIn : Signal String
+
 commands : Signal Command
 commands = merges
   [ Key <~ (Keys.fromPresses <~ pressesIn)
@@ -90,11 +83,11 @@ commands = merges
   , Loaded <~ dropboxIn
   ]
 
-aa = foldp step (Model SampleData.template (Entry.InText 4)) commands
+state = foldp step (Model SampleData.template (Entry.InText 4)) commands
 
-main = (toElement 800 600) <~ (renderModel <~ aa)
+---- OUTPUT SIGNALS
+
+main = (toElement 800 600) <~ (renderModel <~ state)
 
 port dropboxOut : Signal String
-port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ aa
-
-port dropboxIn : Signal String
+port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
