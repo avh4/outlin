@@ -51,7 +51,7 @@ step c m = case c of
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
-  x -> fst (m, Debug.log "Extra command" x)
+  x -> fst (m, Debug.log "Unhandled command" x)
 
 ---- RENDER
 
