@@ -26,4 +26,5 @@ fromMeta : Int -> KeyInput
 fromMeta code = case code of
   65 -> Command "a"
   68 -> Command "d"
+  80 -> Command "p"
   _ -> Unrecognized ("Meta-" ++ show code)

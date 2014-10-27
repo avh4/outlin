@@ -48,6 +48,7 @@ step c m = case c of
   Key (Keys.Backspace) -> updateModel Entry.backspace m
   Key (Keys.Command "a") -> updateModel Entry.addInboxItem m
   Key (Keys.Command "d") -> updateModel Entry.delete m
+  Key (Keys.Command "p") -> updateModel Entry.promote m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)

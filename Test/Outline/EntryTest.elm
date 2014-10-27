@@ -123,4 +123,26 @@ deleteTest = Suite "delete"
       `assertEqual` Action.Update (entry "" "" [] []) (InText 0)
   ]
 
-suite = Suite "Outline.Entry" [navTest, editTest, backspaceTest, enterTest, deleteTest]
+promoteTest = Suite "promote" <|
+  [ test "moves current inbox item to children" <|
+    Entry.promote (entry "" "" ["a","b"] []) (InInbox (0,0))
+    `assertEqual` Action.Update (entry "" "" ["b"] [textEntry "a"]) (InInbox (0,0))
+  , test "makes the new item the first child" <|
+    Entry.promote (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (0,0))
+    `assertEqual` Action.Update (entry "" "" ["b"] [textEntry "a", textEntry "x"]) (InInbox (0,0))
+  , test "with terminal inbox item, moves cursor up" <|
+    Entry.promote (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
+    `assertEqual` Action.Update (entry "" "" ["a"] [textEntry "b", textEntry "x"]) (InInbox (0,0))
+  , test "with the last inbox item, cursor follows to children" <|
+    Entry.promote (entry "" "" ["a"] [textEntry "x"]) (InInbox (0,0))
+    `assertEqual` Action.Update (entry "" "" [] [textEntry "a", textEntry "x"]) (InChild (0,InText 0))
+  ]
+
+suite = Suite "Outline.Entry"
+  [ navTest
+  , editTest
+  , backspaceTest
+  , enterTest
+  , deleteTest
+  , promoteTest
+  ]

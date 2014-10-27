@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -43,12 +43,28 @@ findLastCursor en = case en of
     | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
     | otherwise -> InText 0
 
-addInboxItem : EntryAction
-addInboxItem en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.do (InText 0) (\_ -> InText 0) addInboxItem e.children c of
+addInboxItem_ : EntryAction
+addInboxItem_ en cur = case en of
+  Entry e -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
+
+addInboxItem = doEntry addInboxItem_
+
+promote_ : EntryAction
+promote_ en cur = case en of Entry e -> case cur of
+  InInbox (i,c) -> Action.Update (Entry { e
+    | inbox <- (take i e.inbox) ++ (drop (i+1) e.inbox)
+    , children <- (entry (head <| drop i e.inbox) "" [] []):: e.children
+    }) (let newI = min i (length e.inbox-2) in if newI >= 0 then InInbox (newI,c) else InChild (0,InText c))
+  _ -> Action.NoChange
+
+promote = doEntry promote_
+
+doEntry : EntryAction -> EntryAction
+doEntry action en cur = case en of Entry e -> case cur of
+  InChild c -> case Core.Array.do (InText 0) findLastCursor (doEntry action) e.children c of
     Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
     Action.NoChange -> Action.NoChange
-  _ -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
+  _ -> action en cur
 
 do : StringAction -> EntryAction
 do stringAction en cur = case en of Entry e -> case cur of
