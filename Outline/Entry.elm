@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -43,21 +43,55 @@ findLastCursor en = case en of
     | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
     | otherwise -> InText 0
 
+addInboxItem__ : String -> Entry -> Entry
+addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- [s] ++ e.inbox }
+
 addInboxItem_ : EntryAction
 addInboxItem_ en cur = case en of
-  Entry e -> Action.Update (Entry { e | inbox <- [""] ++ e.inbox }) (InInbox (0,0))
+  Entry e -> Action.Update (addInboxItem__ "" en) (InInbox (0,0))
 
 addInboxItem = doEntry addInboxItem_
+
+dropAt : Int -> [a] -> [a]
+dropAt i list = (take i list) ++ (drop (i+1) list)
+
+changeAt : (a -> a) -> Int -> [a] -> [a]
+changeAt fn i list = indexedMap (\n x -> if n == i then fn x else x) list
+
+at : Int -> [a] -> a
+at i list = head <| drop i list
 
 promote_ : EntryAction
 promote_ en cur = case en of Entry e -> case cur of
   InInbox (i,c) -> Action.Update (Entry { e
-    | inbox <- (take i e.inbox) ++ (drop (i+1) e.inbox)
-    , children <- (entry (head <| drop i e.inbox) "" [] []):: e.children
+    | inbox <- dropAt i e.inbox
+    , children <- (entry (at i e.inbox) "" [] []):: e.children
     }) (let newI = min i (length e.inbox-2) in if newI >= 0 then InInbox (newI,c) else InChild (0,InText c))
   _ -> Action.NoChange
 
 promote = doEntry promote_
+
+countInbox en = case en of Entry e -> length e.inbox
+
+findFirstChildInbox : Entry -> Cursor
+findFirstChildInbox en = case en of
+  Entry e -> e.children
+    |> indexedMap (\i ee -> if countInbox ee > 0 then Just i else Nothing)
+    |> filterMap identity
+    |> head |> \i -> InChild (i,InInbox(0,9))
+
+moveInto_ : Int -> EntryAction
+moveInto_ n en cur = case en of Entry e -> case cur of
+  InInbox (i,c) -> if
+    | length e.children <= n -> Action.NoChange
+    | otherwise -> let newE = (Entry { e
+        | inbox <- dropAt i e.inbox
+        , children <- changeAt (\ee -> addInboxItem__ (at i e.inbox) ee) n e.children
+        })
+      in Action.Update newE (let newI = min i (length e.inbox-2) in if newI >= 0 then InInbox (newI,c) else findFirstChildInbox newE)
+  _ -> Action.NoChange
+
+moveInto n = doEntry (moveInto_ n)
 
 doEntry : EntryAction -> EntryAction
 doEntry action en cur = case en of Entry e -> case cur of
@@ -139,8 +173,8 @@ render value mc = case value of
   Entry e -> node "li" []
     [ Core.String.render e.text (toTextCursor mc)
     , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
-    , node "ol" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc)
-    , node "ul" [] <| Core.Array.render render e.children (toChildrenCursor mc)
+    , node "ul" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc)
+    , node "ol" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]
 
 ---- JSON
