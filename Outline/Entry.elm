@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -46,11 +46,11 @@ findLastCursor en = case en of
 addInboxItem__ : String -> Entry -> Entry
 addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- [s] ++ e.inbox }
 
-addInboxItem_ : EntryAction
-addInboxItem_ en cur = case en of
-  Entry e -> Action.Update (addInboxItem__ "" en) (InInbox (0,0))
+addInboxItem_ : String -> EntryAction
+addInboxItem_ s en cur = case en of
+  Entry e -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
 
-addInboxItem = doEntry addInboxItem_
+addInboxItem = doEntry (addInboxItem_ "")
 
 dropAt : Int -> [a] -> [a]
 dropAt i list = (take i list) ++ (drop (i+1) list)
@@ -71,12 +71,12 @@ promote_ en cur = case en of Entry e -> case cur of
 
 promote = doEntry promote_
 
-countInbox en = case en of Entry e -> length e.inbox
+getInbox en = case en of Entry e -> e.inbox
 
 findFirstChildInbox : Entry -> Cursor
 findFirstChildInbox en = case en of
   Entry e -> e.children
-    |> indexedMap (\i ee -> if countInbox ee > 0 then Just i else Nothing)
+    |> indexedMap (\i ee -> if length (getInbox ee) > 0 then Just i else Nothing)
     |> filterMap identity
     |> head |> \i -> InChild (i,InInbox(0,9))
 
@@ -93,11 +93,40 @@ moveInto_ n en cur = case en of Entry e -> case cur of
 
 moveInto n = doEntry (moveInto_ n)
 
+removeInboxItem : EntryAction
+removeInboxItem en cur = case en of Entry e -> case cur of
+  InInbox (i,c) ->
+    let newE = (Entry { e | inbox <- dropAt i e.inbox })
+        newI = min i (length e.inbox - 2)
+    in Action.Update newE (if newI >= 0 then InInbox (newI,c) else InText 0)
+  _ -> Action.NoChange
+
+updateActiveChild : EntryAction -> EntryAction
+updateActiveChild action en cur = case en of Entry e -> case cur of
+  InChild (n,c) ->
+    let child = at n e.children
+    in case action child c of
+      Action.Update newChild newC ->
+        Action.Update (Entry { e | children <- changeAt (\_ -> newChild) n e.children }) (InChild (n,newC))
+
+missort_ : EntryAction
+missort_ en cur = case en of Entry e -> case cur of
+  InChild (n,InInbox (i,c)) ->
+    let item = e.children |> at n |> getInbox |> at i
+    in case updateActiveChild removeInboxItem en cur of
+      Action.Update en' cur' -> case addInboxItem_ item en' cur' of
+        Action.Update en'' cur'' -> Action.Update en'' cur'
+  _ -> Action.NoChange
+
+missort = doEntry missort_
+
 doEntry : EntryAction -> EntryAction
 doEntry action en cur = case en of Entry e -> case cur of
-  InChild c -> case Core.Array.do (InText 0) findLastCursor (doEntry action) e.children c of
-    Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
-    Action.NoChange -> Action.NoChange
+  InChild c -> case action en cur of
+    Action.NoChange -> case Core.Array.do (InText 0) findLastCursor (doEntry action) e.children c of
+      Action.Update newChildren newChildCur -> Action.Update (Entry {e | children <- newChildren}) (InChild newChildCur)
+      Action.NoChange -> Action.NoChange
+    x -> x
   _ -> action en cur
 
 do : StringAction -> EntryAction
