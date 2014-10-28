@@ -12211,7 +12211,11 @@ Elm.App.make = function (_elm) {
                 ,A3($Html.node,
                 "p",
                 _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘M: Missorted")]))]));
+                _L.fromArray([$Html.text("⌘M: Missorted")]))
+                ,A3($Html.node,
+                "p",
+                _L.fromArray([]),
+                _L.fromArray([$Html.text("⌘Up/Down: move up/down")]))]));
    var renderDocument = F2(function (value,
    cursor) {
       return A2($Outline$Entry.render,
@@ -12305,6 +12309,14 @@ Elm.App.make = function (_elm) {
                         m);
                       case "7": return A2(updateModel,
                         $Outline$Entry.moveInto(6),
+                        m);
+                      case "Down":
+                      return A2(updateModel,
+                        $Outline$Entry.moveChildDown,
+                        m);
+                      case "Up":
+                      return A2(updateModel,
+                        $Outline$Entry.moveChildUp,
                         m);
                       case "a": return A2(updateModel,
                         $Outline$Entry.addInboxItem,
@@ -12512,7 +12524,7 @@ Elm.Outline.Entry.make = function (_elm) {
               entry._0.children),
               "}"))))))));}
          _E.Case($moduleName,
-         "between lines 212 and 217");
+         "between lines 239 and 244");
       }();
    };
    var toChildrenCursor = function (mc) {
@@ -12604,17 +12616,32 @@ Elm.Outline.Entry.make = function (_elm) {
                            value._0.children,
                            toChildrenCursor(mc)))]));}
          _E.Case($moduleName,
-         "between lines 201 and 207");
+         "between lines 228 and 234");
       }();
    });
-   var getInbox = function (en) {
+   var swap = F5(function (ai,
+   a,
+   bi,
+   b,
+   list) {
+      return $List.indexedMap(F2(function (i,
+      x) {
+         return _U.eq(i,
+         ai) ? b : _U.eq(i,bi) ? a : x;
+      }))(list);
+   });
+   var unwrap = function (en) {
       return function () {
          switch (en.ctor)
-         {case "Entry":
-            return en._0.inbox;}
+         {case "Entry": return en._0;}
          _E.Case($moduleName,
-         "on line 74, column 15 to 44");
+         "on line 75, column 13 to 36");
       }();
+   };
+   var getInbox = function (en) {
+      return function (_) {
+         return _.inbox;
+      }(unwrap(en));
    };
    var at = F2(function (i,list) {
       return $List.head(A2($List.drop,
@@ -12662,7 +12689,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  0) > 0 ? $Maybe.Just(i) : $Maybe.Nothing;
               }))(en._0.children))));}
          _E.Case($moduleName,
-         "between lines 77 and 81");
+         "between lines 79 and 83");
       }();
    };
    var InDescription = function (a) {
@@ -12720,13 +12747,15 @@ Elm.Outline.Entry.make = function (_elm) {
       return function () {
          switch (en.ctor)
          {case "Entry":
-            return A2($Core$Action.Update,
-              A2(addInboxItem__,s,en),
-              InInbox({ctor: "_Tuple2"
-                      ,_0: 0
-                      ,_1: 0}));}
+            return function () {
+                 return A2($Core$Action.Update,
+                 A2(addInboxItem__,s,en),
+                 InInbox({ctor: "_Tuple2"
+                         ,_0: 0
+                         ,_1: 0}));
+              }();}
          _E.Case($moduleName,
-         "between lines 50 and 51");
+         "between lines 50 and 52");
       }();
    });
    var promote_ = F2(function (en,
@@ -12768,7 +12797,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Core$Action.NoChange;
               }();}
          _E.Case($moduleName,
-         "between lines 65 and 70");
+         "between lines 66 and 71");
       }();
    });
    var moveInto_ = F3(function (n,
@@ -12816,7 +12845,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Core$Action.NoChange;
               }();}
          _E.Case($moduleName,
-         "between lines 84 and 92");
+         "between lines 86 and 94");
       }();
    });
    var removeInboxItem = F2(function (en,
@@ -12849,7 +12878,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Core$Action.NoChange;
               }();}
          _E.Case($moduleName,
-         "between lines 97 and 102");
+         "between lines 99 and 104");
       }();
    });
    var updateActiveChild = F3(function (action,
@@ -12868,17 +12897,17 @@ Elm.Outline.Entry.make = function (_elm) {
                               cur._0._0,
                               en._0.children);
                               return function () {
-                                 var _v54 = A2(action,
+                                 var _v55 = A2(action,
                                  child,
                                  cur._0._1);
-                                 switch (_v54.ctor)
+                                 switch (_v55.ctor)
                                  {case "Update":
                                     return A2($Core$Action.Update,
                                       Entry(_U.replace([["children"
                                                         ,A3(changeAt,
-                                                        function (_v57) {
+                                                        function (_v58) {
                                                            return function () {
-                                                              return _v54._0;
+                                                              return _v55._0;
                                                            }();
                                                         },
                                                         cur._0._0,
@@ -12886,17 +12915,17 @@ Elm.Outline.Entry.make = function (_elm) {
                                       en._0)),
                                       InChild({ctor: "_Tuple2"
                                               ,_0: cur._0._0
-                                              ,_1: _v54._1}));}
+                                              ,_1: _v55._1}));}
                                  _E.Case($moduleName,
-                                 "between lines 108 and 110");
+                                 "between lines 110 and 112");
                               }();
                            }();}
                       break;}
                  _E.Case($moduleName,
-                 "between lines 105 and 110");
+                 "between lines 107 and 112");
               }();}
          _E.Case($moduleName,
-         "between lines 105 and 110");
+         "between lines 107 and 112");
       }();
    });
    var missort_ = F2(function (en,
@@ -12916,27 +12945,25 @@ Elm.Outline.Entry.make = function (_elm) {
                                    return function () {
                                         var item = at(cur._0._1._0._0)(getInbox(at(cur._0._0)(en._0.children)));
                                         return function () {
-                                           var _v68 = A3(updateActiveChild,
+                                           var _v69 = A3(updateActiveChild,
                                            removeInboxItem,
                                            en,
                                            cur);
-                                           switch (_v68.ctor)
+                                           switch (_v69.ctor)
                                            {case "Update":
                                               return function () {
-                                                   var _v71 = A3(addInboxItem_,
+                                                   var _v72 = A3(addInboxItem_,
                                                    item,
-                                                   _v68._0,
-                                                   _v68._1);
-                                                   switch (_v71.ctor)
+                                                   _v69._0,
+                                                   _v69._1);
+                                                   switch (_v72.ctor)
                                                    {case "Update":
                                                       return A2($Core$Action.Update,
-                                                        _v71._0,
-                                                        _v68._1);}
-                                                   _E.Case($moduleName,
-                                                   "between lines 117 and 119");
+                                                        _v72._0,
+                                                        _v69._1);}
+                                                   return $Core$Action.NoChange;
                                                 }();}
-                                           _E.Case($moduleName,
-                                           "between lines 116 and 119");
+                                           return $Core$Action.NoChange;
                                         }();
                                      }();}
                                 break;}
@@ -12945,7 +12972,48 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Core$Action.NoChange;
               }();}
          _E.Case($moduleName,
-         "between lines 113 and 119");
+         "between lines 115 and 123");
+      }();
+   });
+   var swapChildren = F3(function (produceToIndex,
+   en,
+   cur) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return function () {
+                 switch (cur.ctor)
+                 {case "InChild":
+                    switch (cur._0.ctor)
+                      {case "_Tuple2":
+                         switch (cur._0._1.ctor)
+                           {case "InChild":
+                              return $Core$Action.NoChange;
+                              case "InInbox":
+                              return $Core$Action.NoChange;}
+                           return function () {
+                              var bIndex = $Basics.min($List.length(en._0.children) - 1)($Basics.max(0)(produceToIndex(cur._0._0)));
+                              var b = at(bIndex)(en._0.children);
+                              var aIndex = cur._0._0;
+                              var a = at(aIndex)(en._0.children);
+                              var newChildren = A4(swap,
+                              aIndex,
+                              a,
+                              bIndex,
+                              b)(en._0.children);
+                              return A2($Core$Action.Update,
+                              Entry(_U.replace([["children"
+                                                ,newChildren]],
+                              en._0)),
+                              InChild({ctor: "_Tuple2"
+                                      ,_0: bIndex
+                                      ,_1: cur._0._1}));
+                           }();}
+                      break;}
+                 return $Core$Action.NoChange;
+              }();}
+         _E.Case($moduleName,
+         "between lines 135 and 145");
       }();
    });
    var doEntry = F3(function (action,
@@ -12958,34 +13026,34 @@ Elm.Outline.Entry.make = function (_elm) {
                  switch (cur.ctor)
                  {case "InChild":
                     return function () {
-                         var _v78 = A2(action,en,cur);
-                         switch (_v78.ctor)
+                         var _v87 = A2(action,en,cur);
+                         switch (_v87.ctor)
                          {case "NoChange":
                             return function () {
-                                 var _v79 = A5($Core$Array.$do,
+                                 var _v88 = A5($Core$Array.$do,
                                  InText(0),
                                  findLastCursor,
                                  doEntry(action),
                                  en._0.children,
                                  cur._0);
-                                 switch (_v79.ctor)
+                                 switch (_v88.ctor)
                                  {case "NoChange":
                                     return $Core$Action.NoChange;
                                     case "Update":
                                     return A2($Core$Action.Update,
                                       Entry(_U.replace([["children"
-                                                        ,_v79._0]],
+                                                        ,_v88._0]],
                                       en._0)),
-                                      InChild(_v79._1));}
+                                      InChild(_v88._1));}
                                  _E.Case($moduleName,
-                                 "between lines 126 and 129");
+                                 "between lines 153 and 156");
                               }();}
-                         return _v78;
+                         return _v87;
                       }();}
                  return A2(action,en,cur);
               }();}
          _E.Case($moduleName,
-         "between lines 124 and 130");
+         "between lines 151 and 157");
       }();
    });
    var addInboxItem = doEntry(addInboxItem_(""));
@@ -12994,6 +13062,12 @@ Elm.Outline.Entry.make = function (_elm) {
       return doEntry(moveInto_(n));
    };
    var missort = doEntry(missort_);
+   var moveChildUp = doEntry(swapChildren(function (n) {
+      return n - 1;
+   }));
+   var moveChildDown = doEntry(swapChildren(function (n) {
+      return n + 1;
+   }));
    var $do = F3(function (stringAction,
    en,
    cur) {
@@ -13004,13 +13078,13 @@ Elm.Outline.Entry.make = function (_elm) {
                  switch (cur.ctor)
                  {case "InChild":
                     return function () {
-                         var _v89 = A5($Core$Array.$do,
+                         var _v98 = A5($Core$Array.$do,
                          InText(0),
                          findLastCursor,
                          $do(stringAction),
                          en._0.children,
                          cur._0);
-                         switch (_v89.ctor)
+                         switch (_v98.ctor)
                          {case "Delete":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["children"
@@ -13029,18 +13103,18 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["children"
-                                                ,_v89._0]],
+                                                ,_v98._0]],
                               en._0)),
-                              InChild(_v89._1));}
+                              InChild(_v98._1));}
                          _E.Case($moduleName,
-                         "between lines 158 and 165");
+                         "between lines 185 and 192");
                       }();
                     case "InDescription":
                     return function () {
-                         var _v92 = A2(stringAction,
+                         var _v101 = A2(stringAction,
                          en._0.description,
                          cur._0);
-                         switch (_v92.ctor)
+                         switch (_v101.ctor)
                          {case "Delete":
                             return $Core$Action.Delete;
                             case "NoChange":
@@ -13048,17 +13122,17 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["description"
-                                                ,_v92._0]],
+                                                ,_v101._0]],
                               en._0)),
-                              InDescription(_v92._1));}
+                              InDescription(_v101._1));}
                          _E.Case($moduleName,
-                         "between lines 146 and 150");
+                         "between lines 173 and 177");
                       }();
                     case "InInbox":
                     return function () {
-                         var _v95 = A5($Core$Array.$do,
+                         var _v104 = A5($Core$Array.$do,
                          0,
-                         function (_v98) {
+                         function (_v107) {
                             return function () {
                                return 0;
                             }();
@@ -13066,7 +13140,7 @@ Elm.Outline.Entry.make = function (_elm) {
                          stringAction,
                          en._0.inbox,
                          cur._0);
-                         switch (_v95.ctor)
+                         switch (_v104.ctor)
                          {case "Delete":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["inbox"
@@ -13085,18 +13159,18 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["inbox"
-                                                ,_v95._0]],
+                                                ,_v104._0]],
                               en._0)),
-                              InInbox(_v95._1));}
+                              InInbox(_v104._1));}
                          _E.Case($moduleName,
-                         "between lines 150 and 158");
+                         "between lines 177 and 185");
                       }();
                     case "InText":
                     return function () {
-                         var _v100 = A2(stringAction,
+                         var _v109 = A2(stringAction,
                          en._0.text,
                          cur._0);
-                         switch (_v100.ctor)
+                         switch (_v109.ctor)
                          {case "Delete":
                             return $Core$Action.Delete;
                             case "EnterNext":
@@ -13112,40 +13186,40 @@ Elm.Outline.Entry.make = function (_elm) {
                             case "NoChange":
                             return $Core$Action.NoChange;
                             case "Split":
-                            switch (_v100._0.ctor)
+                            switch (_v109._0.ctor)
                               {case "::":
-                                 switch (_v100._0._1.ctor)
+                                 switch (_v109._0._1.ctor)
                                    {case "::":
-                                      switch (_v100._0._1._1.ctor)
+                                      switch (_v109._0._1._1.ctor)
                                         {case "[]":
                                            return A3($Core$Action.Split,
                                              _L.fromArray([A4(entry,
-                                                          _v100._0._0,
+                                                          _v109._0._0,
                                                           "",
                                                           _L.fromArray([]),
                                                           _L.fromArray([]))
                                                           ,Entry(_U.replace([["text"
-                                                                             ,_v100._0._1._0]],
+                                                                             ,_v109._0._1._0]],
                                                           en._0))]),
-                                             _v100._1,
-                                             InText(_v100._2));}
+                                             _v109._1,
+                                             InText(_v109._2));}
                                         return $Debug.crash("Not yet implemented for splits > 2");}
                                    break;}
                               return $Debug.crash("Split has less than two children");
                             case "Update":
                             return A2($Core$Action.Update,
                               Entry(_U.replace([["text"
-                                                ,_v100._0]],
+                                                ,_v109._0]],
                               en._0)),
-                              InText(_v100._1));}
+                              InText(_v109._1));}
                          _E.Case($moduleName,
-                         "between lines 134 and 146");
+                         "between lines 161 and 173");
                       }();}
                  _E.Case($moduleName,
-                 "between lines 133 and 165");
+                 "between lines 160 and 192");
               }();}
          _E.Case($moduleName,
-         "between lines 133 and 165");
+         "between lines 160 and 192");
       }();
    });
    var enter = $do($Core$String.split);
@@ -13190,6 +13264,8 @@ Elm.Outline.Entry.make = function (_elm) {
                                ,promote: promote
                                ,moveInto: moveInto
                                ,missort: missort
+                               ,moveChildUp: moveChildUp
+                               ,moveChildDown: moveChildDown
                                ,$delete: $delete
                                ,goLeft: goLeft
                                ,goRight: goRight
@@ -14782,7 +14858,13 @@ Elm.Keys.make = function (_elm) {
    var fromMeta = function (code) {
       return function () {
          switch (code)
-         {case 49: return Command("1");
+         {case 37:
+            return Command("Left");
+            case 38: return Command("Up");
+            case 39:
+            return Command("Right");
+            case 40: return Command("Down");
+            case 49: return Command("1");
             case 50: return Command("2");
             case 51: return Command("3");
             case 52: return Command("4");
