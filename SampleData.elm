@@ -3,19 +3,19 @@ module SampleData where
 import Outline.Entry as Entry
 
 template = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
-  [ "sdfs"
-  , "Bacon"
-  , "Freddy"
-  , "Jo-jo"
-  , "Fish"
-  , "Fries"
-  , "Pork"
-  , "Lacey"
-  , "quux"
-  , "sdfsd"
-  , "Billy"
-  , "Camilla"
-  , "baz"
+  [ Entry.Entry { text="sdfs", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Bacon", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Freddy", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Jo-jo", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Fish", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Fries", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Pork", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Lacey", description="", inbox=[], children=[] }
+  , Entry.Entry { text="quux", description="", inbox=[], children=[] }
+  , Entry.Entry { text="sdfsd", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Billy", description="", inbox=[], children=[] }
+  , Entry.Entry { text="Camilla", description="", inbox=[], children=[] }
+  , Entry.Entry { text="baz", description="", inbox=[], children=[] }
   ], children=[
   Entry.Entry { text="By time (deadline)", description="", inbox=[], children=[
     Entry.Entry { text="daily", description="", inbox=[], children=[] },
