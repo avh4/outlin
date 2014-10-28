@@ -161,6 +161,29 @@ missortTest = Suite "missort" <|
     Action.Update (entry "" "" [] [entry "" "" ["a"] [entry "" "" ["b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
   ]
 
+moveChildTest = Suite "moveChild" <|
+  [ test "move child up" <|
+    Entry.moveChildUp (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (2,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","c","b","d"])) (InChild (1,InText 0))
+  , test "move child up does nothing at first child" <|
+    Entry.moveChildUp (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InText 0))
+  , test "move child down" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (2,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","d","c"])) (InChild (3,InText 0))
+  , test "move child down does nothing at last child" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
+  , test "move child when in an inbox does nothing" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InInbox (0,0)))
+    `assertEqual`
+    Action.NoChange
+  ]
+
 suite = Suite "Outline.Entry"
   [ navTest
   , editTest
@@ -170,4 +193,5 @@ suite = Suite "Outline.Entry"
   , promoteTest
   , moveIntoTest
   , missortTest
+  , moveChildTest
   ]

@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -47,8 +47,9 @@ addInboxItem__ : String -> Entry -> Entry
 addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- [s] ++ e.inbox }
 
 addInboxItem_ : String -> EntryAction
-addInboxItem_ s en cur = case en of
-  Entry e -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
+addInboxItem_ s en cur = case en of Entry e -> case cur of
+  -- InChild _ -> Action.NoChange
+  _ -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
 
 addInboxItem = doEntry (addInboxItem_ "")
 
@@ -71,7 +72,8 @@ promote_ en cur = case en of Entry e -> case cur of
 
 promote = doEntry promote_
 
-getInbox en = case en of Entry e -> e.inbox
+unwrap en = case en of Entry e -> e
+getInbox en = unwrap en |> .inbox
 
 findFirstChildInbox : Entry -> Cursor
 findFirstChildInbox en = case en of
@@ -116,9 +118,34 @@ missort_ en cur = case en of Entry e -> case cur of
     in case updateActiveChild removeInboxItem en cur of
       Action.Update en' cur' -> case addInboxItem_ item en' cur' of
         Action.Update en'' cur'' -> Action.Update en'' cur'
+        _ -> Action.NoChange
+      _ -> Action.NoChange
   _ -> Action.NoChange
 
 missort = doEntry missort_
+
+swap : Int -> a -> Int -> a -> [a] -> [a]
+swap ai a bi b list = list |> indexedMap
+  (\i x -> if
+    | i == ai -> b
+    | i == bi -> a
+    | otherwise -> x)
+
+swapChildren : (Int -> Int) -> EntryAction
+swapChildren produceToIndex en cur = case en of Entry e -> case cur of
+  InChild (_,InChild _) -> Action.NoChange
+  InChild (_,InInbox _) -> Action.NoChange
+  InChild (n,c) ->
+    let aIndex = n
+        bIndex = produceToIndex n |> max 0 |> min (length e.children - 1)
+        a = e.children |> at aIndex
+        b = e.children |> at bIndex
+        newChildren = e.children |> swap aIndex a bIndex b
+    in Action.Update (Entry { e | children <- newChildren }) (InChild (bIndex,c))
+  _ -> Action.NoChange
+
+moveChildUp = doEntry <| swapChildren (\n -> n-1)
+moveChildDown = doEntry <| swapChildren (\n -> n+1)
 
 doEntry : EntryAction -> EntryAction
 doEntry action en cur = case en of Entry e -> case cur of

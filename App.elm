@@ -57,6 +57,8 @@ step c m = case c of
   Key (Keys.Command "5") -> updateModel (Entry.moveInto 4) m
   Key (Keys.Command "6") -> updateModel (Entry.moveInto 5) m
   Key (Keys.Command "7") -> updateModel (Entry.moveInto 6) m
+  Key (Keys.Command "Up") -> updateModel Entry.moveChildUp m
+  Key (Keys.Command "Down") -> updateModel Entry.moveChildDown m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
@@ -73,6 +75,7 @@ renderDocs = node "div" []
   , node "p" [] [ text "⌘P: promote from inbox" ]
   , node "p" [] [ text "⌘1 - ⌘7: move into …" ]
   , node "p" [] [ text "⌘M: Missorted" ]
+  , node "p" [] [ text "⌘Up/Down: move up/down" ]
   ]
 
 render : Model -> Html
