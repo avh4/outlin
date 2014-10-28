@@ -159,6 +159,10 @@ missortTest = Suite "missort" <|
     Entry.missort (entry "" "" [] [entry "" "" [] [entry "" "" [textEntry "a",textEntry "b"] []]]) (InChild (0,InChild (0,InInbox (0,InText 0))))
     `assertEqual`
     Action.Update (entry "" "" [] [entry "" "" [textEntry "a"] [entry "" "" [textEntry "b"] []]]) (InChild (0,InChild (0,InInbox (0,InText 0))))
+  , test "moves child to parent's inbox" <|
+    Entry.missort (entry "" "" [] [entry "" "" [] [textEntry "a", textEntry "b"]]) (InChild (0,InChild (0,InText 0)))
+    `assertEqual`
+    Action.Update (entry "" "" [textEntry "a"] [entry "" "" [] [textEntry "b"]]) (InChild (0,InChild (0,InText 0)))
   ]
 
 moveChildTest = Suite "moveChild" <|

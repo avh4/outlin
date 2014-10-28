@@ -72,7 +72,8 @@ promote_ en cur = case en of Entry e -> case cur of
 
 promote = doEntry promote_
 
-getInbox en = case en of Entry e -> e.inbox
+unwrap en = case en of Entry e -> e
+getInbox en = en |> unwrap |> .inbox
 
 findFirstChildInbox : Entry -> Cursor
 findFirstChildInbox en = case en of
@@ -94,6 +95,14 @@ moveInto_ n en cur = case en of Entry e -> case cur of
 
 moveInto n = doEntry (moveInto_ n)
 
+removeChild : EntryAction
+removeChild en cur = case en of Entry e -> case cur of
+  InChild (i,c) ->
+    let newE = (Entry { e | children <- dropAt i e.children })
+        newI = min i (length e.children - 2)
+    in Action.Update newE (if newI >= 0 then InChild (newI,c) else InText 0)
+  _ -> Action.NoChange
+
 removeInboxItem : EntryAction
 removeInboxItem en cur = case en of Entry e -> case cur of
   InInbox (i,c) ->
@@ -112,8 +121,15 @@ updateActiveChild action en cur = case en of Entry e -> case cur of
 
 missort_ : EntryAction
 missort_ en cur = case en of Entry e -> case cur of
+  InChild (n,InChild (_,InChild _)) -> Action.NoChange
+  InChild (n,InChild (_,InInbox _)) -> Action.NoChange
+  InChild (n,InChild (i,c)) ->
+    let item = e.children |> at n |> unwrap |> .children |> at i
+    in case updateActiveChild removeChild en cur of
+      Action.Update en' cur' -> case addInboxItem_ item en' cur' of
+        Action.Update en'' cur'' -> Action.Update en'' cur'
   InChild (n,InInbox (i,c)) ->
-    let item = e.children |> at n |> getInbox |> at i
+    let item = e.children |> at n |> unwrap |> .inbox |> at i
     in case updateActiveChild removeInboxItem en cur of
       Action.Update en' cur' -> case addInboxItem_ item en' cur' of
         Action.Update en'' cur'' -> Action.Update en'' cur'
