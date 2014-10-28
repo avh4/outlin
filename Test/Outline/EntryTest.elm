@@ -55,28 +55,28 @@ navTest = Suite "navigation"
         `assertEqual` Action.Update tree (InChild (0,InChild (0,InText 0)))
     ]
   , Suite "inbox" <|
-    let tree = (entry "" "" ["a","b"] [])
+    let tree = (entry "" "" [textEntry "a",textEntry "b"] [])
     in
     [ test "can go to next inbox item" <|
-      Entry.goNext tree (InInbox (0,0))
-        `assertEqual` Action.Update tree (InInbox (1,0))
+      Entry.goNext tree (InInbox (0,InText 0))
+        `assertEqual` Action.Update tree (InInbox (1,InText 0))
     , test "can enter inbox item" <|
       Entry.goNext tree (InText 0)
-        `assertEqual` Action.Update tree (InInbox (0,0))
+        `assertEqual` Action.Update tree (InInbox (0,InText 0))
     , test "can exit last inbox item into children" <|
-      Entry.goNext (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
-        `assertEqual` Action.Update (entry "" "" ["a","b"] [textEntry "x"]) (InChild (0,InText 0))
+      Entry.goNext (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InInbox (1,InText 0))
+        `assertEqual` Action.Update (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InChild (0,InText 0))
     , test "can exit last inbox item with no children" <|
-      Entry.goNext tree (InInbox (1,0))
+      Entry.goNext tree (InInbox (1,InText 0))
         `assertEqual` Action.EnterNext
     , test "can go to prev inbox item" <|
-      Entry.goPrev tree (InInbox (1,0))
-        `assertEqual` Action.Update tree (InInbox (0,0))
+      Entry.goPrev tree (InInbox (1,InText 0))
+        `assertEqual` Action.Update tree (InInbox (0,InText 0))
     , test "can enter inbox from bottom" <|
-      Entry.goPrev (entry "" "" ["a","b"] [textEntry "x"]) (InChild (0,InText 0))
-        `assertEqual` Action.Update (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
+      Entry.goPrev (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InChild (0,InText 0))
+        `assertEqual` Action.Update (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InInbox (1,InText 0))
     , test "can exit first inbox item" <|
-      Entry.goPrev tree (InInbox (0,0))
+      Entry.goPrev tree (InInbox (0,InText 0))
         `assertEqual` Action.Update tree (InText 0)
     -- , test "can exit last inbox item with no children" <|
     --   Entry.goPrev tree (InInbox (1,0))
@@ -107,10 +107,10 @@ enterTest = Suite "enter"
 
 deleteTest = Suite "delete"
   [ test "can delete an inbox item" <|
-    Entry.delete (entry "" "" ["a", "b"] []) (InInbox (0,0))
-      `assertEqual` Action.Update (entry "" "" ["b"] []) (InInbox (0,0))
+    Entry.delete (entry "" "" [textEntry "a", textEntry "b"] []) (InInbox (0,InText 0))
+      `assertEqual` Action.Update (entry "" "" [textEntry "b"] []) (InInbox (0,InText 0))
   , test "can delete the last inbox item" <|
-    Entry.delete (entry "" "" ["a"] []) (InInbox (0,0))
+    Entry.delete (entry "" "" [textEntry "a"] []) (InInbox (0,InText 0))
       `assertEqual` Action.Update (entry "" "" [] []) (InText 0)
   , test "can delete a child" <|
     Entry.delete (entry "" "" [] [textEntry "a", textEntry "b"]) (InChild (0,InText 0))
@@ -125,40 +125,44 @@ deleteTest = Suite "delete"
 
 promoteTest = Suite "promote" <|
   [ test "moves current inbox item to children" <|
-    Entry.promote (entry "" "" ["a","b"] []) (InInbox (0,0))
-    `assertEqual` Action.Update (entry "" "" ["b"] [textEntry "a"]) (InInbox (0,0))
+    Entry.promote (entry "" "" [textEntry "a",textEntry "b"] []) (InInbox (0,InText 0))
+    `assertEqual` Action.Update (entry "" "" [textEntry "b"] [textEntry "a"]) (InInbox (0,InText 0))
   , test "makes the new item the first child" <|
-    Entry.promote (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (0,0))
-    `assertEqual` Action.Update (entry "" "" ["b"] [textEntry "a", textEntry "x"]) (InInbox (0,0))
+    Entry.promote (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InInbox (0,InText 0))
+    `assertEqual` Action.Update (entry "" "" [textEntry "b"] [textEntry "a", textEntry "x"]) (InInbox (0,InText 0))
   , test "with terminal inbox item, moves cursor up" <|
-    Entry.promote (entry "" "" ["a","b"] [textEntry "x"]) (InInbox (1,0))
-    `assertEqual` Action.Update (entry "" "" ["a"] [textEntry "b", textEntry "x"]) (InInbox (0,0))
+    Entry.promote (entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) (InInbox (1,InText 0))
+    `assertEqual` Action.Update (entry "" "" [textEntry "a"] [textEntry "b", textEntry "x"]) (InInbox (0,InText 0))
   , test "with the last inbox item, cursor follows to children" <|
-    Entry.promote (entry "" "" ["a"] [textEntry "x"]) (InInbox (0,0))
+    Entry.promote (entry "" "" [textEntry "a"] [textEntry "x"]) (InInbox (0,InText 0))
     `assertEqual` Action.Update (entry "" "" [] [textEntry "a", textEntry "x"]) (InChild (0,InText 0))
   ]
 
 moveIntoTest = Suite "moveInto" <|
   [ test "moves current inbox item to inbox of specified child" <|
-    Entry.moveInto 1 (entry "" "" ["a","b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
-    `assertEqual` Action.Update (entry "" "" ["b"] [entry "0" "" [] [], entry "1" "" ["a"] []]) (InInbox (0,0))
+    Entry.moveInto 1 (entry "" "" [textEntry "a",textEntry "b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,InText 0))
+    `assertEqual` Action.Update (entry "" "" [textEntry "b"] [entry "0" "" [] [], entry "1" "" [textEntry "a"] []]) (InInbox (0,InText 0))
   , test "when specified child doesn't exist, does nothing" <|
-    Entry.moveInto 5 (entry "" "" ["a","b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
+    Entry.moveInto 5 (entry "" "" [textEntry "a",textEntry "b"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,InText 0))
       `assertEqual` Action.NoChange
   , test "moving last inbox item when first child's inbox is empty" <|
-    Entry.moveInto 1 (entry "" "" ["a"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,0))
-      `assertEqual` Action.Update (entry "" "" [] [entry "0" "" [] [], entry "1" "" ["a"] []]) (InChild (1,InInbox (0,9)))
+    Entry.moveInto 1 (entry "" "" [textEntry "a"] [entry "0" "" [] [], entry "1" "" [] []]) (InInbox (0,InText 0))
+      `assertEqual` Action.Update (entry "" "" [] [entry "0" "" [] [], entry "1" "" [textEntry "a"] []]) (InChild (1,InInbox (0,InText 9)))
   ]
 
 missortTest = Suite "missort" <|
   [ test "moves inbox item to parent's inbox" <|
-    Entry.missort (entry "" "" [] [entry "" "" ["a","b"] []]) (InChild (0,InInbox (0,0)))
+    Entry.missort (entry "" "" [] [entry "" "" [textEntry "a",textEntry "b"] []]) (InChild (0,InInbox (0,InText 0)))
     `assertEqual`
-    Action.Update (entry "" "" ["a"] [entry "" "" ["b"] []]) (InChild (0,InInbox (0,0)))
+    Action.Update (entry "" "" [textEntry "a"] [entry "" "" [textEntry "b"] []]) (InChild (0,InInbox (0,InText 0)))
   , test "works in nested children" <|
-    Entry.missort (entry "" "" [] [entry "" "" [] [entry "" "" ["a","b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
+    Entry.missort (entry "" "" [] [entry "" "" [] [entry "" "" [textEntry "a",textEntry "b"] []]]) (InChild (0,InChild (0,InInbox (0,InText 0))))
     `assertEqual`
-    Action.Update (entry "" "" [] [entry "" "" ["a"] [entry "" "" ["b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
+    Action.Update (entry "" "" [] [entry "" "" [textEntry "a"] [entry "" "" [textEntry "b"] []]]) (InChild (0,InChild (0,InInbox (0,InText 0))))
+  , test "moves child to parent's inbox" <|
+    Entry.missort (entry "" "" [] [entry "" "" [] [textEntry "a", textEntry "b"]]) (InChild (0,InChild (0,InText 0)))
+    `assertEqual`
+    Action.Update (entry "" "" [textEntry "a"] [entry "" "" [] [textEntry "b"]]) (InChild (0,InChild (0,InText 0)))
   ]
 
 moveChildTest = Suite "moveChild" <|
@@ -179,7 +183,7 @@ moveChildTest = Suite "moveChild" <|
     `assertEqual`
     Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
   , test "move child when in an inbox does nothing" <|
-    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InInbox (0,0)))
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InInbox (0,InText 0)))
     `assertEqual`
     Action.NoChange
   ]

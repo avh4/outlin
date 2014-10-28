@@ -15,23 +15,24 @@ import Debug
 data Base a = Entry {
   text:a,
   description:a,
-  inbox:[a],
+  inbox:[Base a],
   children:[Base a]
   }
 
 type Entry = Base String
 
-entry : String -> String -> [String] -> [Entry] -> Entry
+entry : a -> a -> [Base a] -> [Base a] -> Base a
 entry t d i c = Entry {text=t, description=d, inbox=i, children=c}
 
 data BaseCursor c =
   InText c |
   InDescription c |
-  InInbox (Core.Array.Cursor c) |
+  InInbox (Core.Array.Cursor (BaseCursor c)) |
   InChild (Core.Array.Cursor (BaseCursor c))
 
 type Cursor = BaseCursor Core.String.Cursor
 
+type BaseAction a c = Action (Base a) (BaseCursor c)
 type StringAction = Action String Core.String.Cursor
 type EntryAction = Action Entry Cursor
 
@@ -40,18 +41,17 @@ enter = do Core.String.split
 findLastCursor en = case en of
   Entry e -> if
     | length e.children > 0 -> InChild (-1+length e.children,InText 0)
-    | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
+    | length e.inbox > 0 -> InInbox (-1+length e.inbox,InText 0)
     | otherwise -> InText 0
 
-addInboxItem__ : String -> Entry -> Entry
-addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- [s] ++ e.inbox }
+addInboxItem__ : Base a -> Base a -> Base a
+addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- s :: e.inbox }
 
-addInboxItem_ : String -> EntryAction
-addInboxItem_ s en cur = case en of Entry e -> case cur of
-  -- InChild _ -> Action.NoChange
-  _ -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
+addInboxItem_ : Entry -> EntryAction
+addInboxItem_ s en cur = case en of
+  Entry e -> Action.Update (addInboxItem__ s en) (InInbox (0,InText 0))
 
-addInboxItem = doEntry (addInboxItem_ "")
+addInboxItem = doEntry (addInboxItem_ (entry "" "" [] []))
 
 dropAt : Int -> [a] -> [a]
 dropAt i list = (take i list) ++ (drop (i+1) list)
@@ -66,21 +66,21 @@ promote_ : EntryAction
 promote_ en cur = case en of Entry e -> case cur of
   InInbox (i,c) -> Action.Update (Entry { e
     | inbox <- dropAt i e.inbox
-    , children <- (entry (at i e.inbox) "" [] []):: e.children
-    }) (let newI = min i (length e.inbox-2) in if newI >= 0 then InInbox (newI,c) else InChild (0,InText c))
+    , children <- (at i e.inbox) :: e.children
+    }) (let newI = min i (length e.inbox-2) in if newI >= 0 then InInbox (newI,InText 0) else InChild (0,c))
   _ -> Action.NoChange
 
 promote = doEntry promote_
 
 unwrap en = case en of Entry e -> e
-getInbox en = unwrap en |> .inbox
+getInbox en = en |> unwrap |> .inbox
 
 findFirstChildInbox : Entry -> Cursor
 findFirstChildInbox en = case en of
   Entry e -> e.children
     |> indexedMap (\i ee -> if length (getInbox ee) > 0 then Just i else Nothing)
     |> filterMap identity
-    |> head |> \i -> InChild (i,InInbox(0,9))
+    |> head |> \i -> InChild (i,InInbox(0,InText 9))
 
 moveInto_ : Int -> EntryAction
 moveInto_ n en cur = case en of Entry e -> case cur of
@@ -94,6 +94,14 @@ moveInto_ n en cur = case en of Entry e -> case cur of
   _ -> Action.NoChange
 
 moveInto n = doEntry (moveInto_ n)
+
+removeChild : EntryAction
+removeChild en cur = case en of Entry e -> case cur of
+  InChild (i,c) ->
+    let newE = (Entry { e | children <- dropAt i e.children })
+        newI = min i (length e.children - 2)
+    in Action.Update newE (if newI >= 0 then InChild (newI,c) else InText 0)
+  _ -> Action.NoChange
 
 removeInboxItem : EntryAction
 removeInboxItem en cur = case en of Entry e -> case cur of
@@ -113,8 +121,15 @@ updateActiveChild action en cur = case en of Entry e -> case cur of
 
 missort_ : EntryAction
 missort_ en cur = case en of Entry e -> case cur of
+  InChild (n,InChild (_,InChild _)) -> Action.NoChange
+  InChild (n,InChild (_,InInbox _)) -> Action.NoChange
+  InChild (n,InChild (i,c)) ->
+    let item = e.children |> at n |> unwrap |> .children |> at i
+    in case updateActiveChild removeChild en cur of
+      Action.Update en' cur' -> case addInboxItem_ item en' cur' of
+        Action.Update en'' cur'' -> Action.Update en'' cur'
   InChild (n,InInbox (i,c)) ->
-    let item = e.children |> at n |> getInbox |> at i
+    let item = e.children |> at n |> unwrap |> .inbox |> at i
     in case updateActiveChild removeInboxItem en cur of
       Action.Update en' cur' -> case addInboxItem_ item en' cur' of
         Action.Update en'' cur'' -> Action.Update en'' cur'
@@ -167,14 +182,14 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Split _ _ _ -> Debug.crash "Split has less than two children"
     Action.EnterPrev -> Action.EnterPrev
     Action.EnterNext -> if
-      | length e.inbox > 0 -> Action.Update en <| InInbox (0,0)
+      | length e.inbox > 0 -> Action.Update en <| InInbox (0,InText 0)
       | length e.children > 0 -> Action.Update en <| InChild (0, (InText c))
       | otherwise -> Action.EnterNext
   InDescription c -> case stringAction e.description c of
     Action.Update newV newCur -> Action.Update (Entry { e | description <- newV }) (InDescription newCur)
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-  InInbox c -> case Core.Array.do 0 (\_ -> 0) stringAction e.inbox c of
+  InInbox c -> case Core.Array.do (InText 0) (\_ -> InText 0) (do stringAction) e.inbox c of
     Action.Update newList newCur -> Action.Update (Entry { e | inbox <- newList }) (InInbox newCur)
     Action.Delete -> Action.Update (Entry { e | inbox <- [] }) (InText <| String.length e.text)
     Action.NoChange -> Action.NoChange
@@ -187,7 +202,7 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Delete -> Action.Update (Entry { e | children <- [] }) (InText <| String.length e.text)
     Action.EnterNext -> Action.EnterNext
     Action.EnterPrev -> Action.Update en <| if
-      | length e.inbox > 0 -> InInbox (-1+length e.inbox,0)
+      | length e.inbox > 0 -> InInbox (-1+length e.inbox,InText 0)
       | otherwise -> InText 0
     Action.NoChange -> Action.NoChange
 
@@ -214,7 +229,7 @@ toDescriptionCursor mc = case mc of
   Just (InDescription i) -> Just i
   _ -> Nothing
 
-toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Core.String.Cursor)
+toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
 toInboxCursor mc = case mc of
   Just (InInbox (n,c)) -> Just <| Core.Array.cursor n c
   _ -> Nothing
@@ -229,7 +244,7 @@ render value mc = case value of
   Entry e -> node "li" []
     [ Core.String.render e.text (toTextCursor mc)
     , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
-    , node "ul" [] <| map (\x -> node "li" [] [x]) <| Core.Array.render Core.String.render e.inbox (toInboxCursor mc)
+    , node "ul" [] <| Core.Array.render render e.inbox (toInboxCursor mc)
     , node "ol" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]
 
@@ -239,7 +254,7 @@ toJson : Entry -> String
 toJson entry = case entry of Entry e ->
   "{\"text\":" ++ Core.String.toJson e.text
   ++ ",\"description\":" ++ Core.String.toJson e.description
-  ++ ",\"inbox\":" ++ Core.Array.toJson Core.String.toJson e.inbox
+  ++ ",\"inbox\":" ++ Core.Array.toJson toJson e.inbox
   ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
   ++ "}"
 
@@ -247,7 +262,7 @@ decoder : Json.Decoder.Decoder Entry
 decoder a = Json.Decoder.decode4
   ("text" := Json.Decoder.string)
   ("description" := Json.Decoder.string)
-  ("inbox" := Json.Decoder.listOf Json.Decoder.string)
+  ("inbox" := Json.Decoder.listOf decoder)
   ("children" := Json.Decoder.listOf decoder)
   (\t d i c -> Entry {text=t,description=d,inbox=i,children=c})
   a -- this is to work around https://github.com/elm-lang/Elm/issues/639

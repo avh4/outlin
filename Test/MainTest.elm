@@ -24,7 +24,7 @@ test1 = test "first-use scenario" <|
       [ entry "By time" "" [] []
       , entry "Habits" "" [] []
       ])
-    (InChild (0,InText 6))
+    (InChild (0,InText 0))
 
 test2 = test "sorting in an empty template" <|
   foldl App.step (App.Model
@@ -65,8 +65,8 @@ test2 = test "sorting in an empty template" <|
   App.Model
     ( entry "Tasks" "" []
       [ entry "By time" ""
-        [ "Read voting guide"
-        , "get volunteers for Girl Develop It"
+        [ entry "Read voting guide" "" [] []
+        , entry "get volunteers for Girl Develop It" "" [] []
         ]
         [ entry "daily" "" [] []
         , entry "weekly" "" [] []
@@ -80,17 +80,17 @@ test2 = test "sorting in an empty template" <|
         , entry "monthly" "" [] []
         ]
       , entry "By priority" ""
-        [ "get foam mattress topper"
+        [ entry "get foam mattress topper" "" [] []
         ]
         []
       , entry "By projet" ""
-        [ "Read Illustrated guide to objc_msgSend"
-        , "Watch Strange Loop videos"
+        [ entry "Read Illustrated guide to objc_msgSend" "" [] []
+        , entry "Watch Strange Loop videos" "" [] []
         ]
         []
       ]
     )
-    (InChild (0,InInbox (0,9)))
+    (InChild (0,InInbox (0,InText 9)))
 
 suite = Suite "Integration tests"
   [ test1
