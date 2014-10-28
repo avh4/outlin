@@ -46,14 +46,12 @@ document.onkeydown = function(e) {
   if (mod = modKeys[e.keyCode.toString()]) {
     downMods[mod] = true;
     e.preventDefault();
+  } else if (downMods.meta) {
+    runningElmModule.ports.metaIn.send(e.keyCode);
+    e.preventDefault();
   } else if (specialKeys[e.keyCode.toString()]) {
     runningElmModule.ports.downsIn.send(e.keyCode);
     e.preventDefault();
-  } else {
-    if (downMods.meta) {
-      runningElmModule.ports.metaIn.send(e.keyCode);
-      e.preventDefault();
-    }
   }
 }
 

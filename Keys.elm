@@ -24,6 +24,10 @@ fromDowns code = case code of
 
 fromMeta : Int -> KeyInput
 fromMeta code = case code of
+  37 -> Command "Left"
+  38 -> Command "Up"
+  39 -> Command "Right"
+  40 -> Command "Down"
   49 -> Command "1"
   50 -> Command "2"
   51 -> Command "3"
