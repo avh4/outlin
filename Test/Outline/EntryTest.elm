@@ -161,6 +161,13 @@ missortTest = Suite "missort" <|
     Action.Update (entry "" "" [] [entry "" "" ["a"] [entry "" "" ["b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
   ]
 
+moveChildTest = Suite "moveChild" <|
+  [ test "move child up" <|
+    Entry.moveChildUp (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (2,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","c","b","d"])) (InChild (1,InText 0))
+  ]
+
 suite = Suite "Outline.Entry"
   [ navTest
   , editTest
@@ -170,4 +177,5 @@ suite = Suite "Outline.Entry"
   , promoteTest
   , moveIntoTest
   , missortTest
+  , moveChildTest
   ]

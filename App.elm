@@ -57,6 +57,7 @@ step c m = case c of
   Key (Keys.Command "5") -> updateModel (Entry.moveInto 4) m
   Key (Keys.Command "6") -> updateModel (Entry.moveInto 5) m
   Key (Keys.Command "7") -> updateModel (Entry.moveInto 6) m
+  Key (Keys.Command "Up") -> updateModel Entry.moveChildUp m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
     x -> fst (m, Debug.log "Load failed" x)
