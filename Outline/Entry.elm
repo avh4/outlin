@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -136,14 +136,15 @@ swapChildren produceToIndex en cur = case en of Entry e -> case cur of
   InChild (_,InChild _) -> Action.NoChange
   InChild (n,c) ->
     let aIndex = n
-        bIndex = produceToIndex n
+        bIndex = produceToIndex n |> max 0 |> min (length e.children - 1)
         a = e.children |> at aIndex
         b = e.children |> at bIndex
         newChildren = e.children |> swap aIndex a bIndex b
     in Action.Update (Entry { e | children <- newChildren }) (InChild (bIndex,c))
   _ -> Action.NoChange
 
-moveChildUp = doEntry <| swapChildren (\n -> n-1 |> max 0)
+moveChildUp = doEntry <| swapChildren (\n -> n-1)
+moveChildDown = doEntry <| swapChildren (\n -> n+1)
 
 doEntry : EntryAction -> EntryAction
 doEntry action en cur = case en of Entry e -> case cur of

@@ -166,6 +166,18 @@ moveChildTest = Suite "moveChild" <|
     Entry.moveChildUp (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (2,InText 0))
     `assertEqual`
     Action.Update (entry "" "" [] (map textEntry ["a","c","b","d"])) (InChild (1,InText 0))
+  , test "move child up does nothing at first child" <|
+    Entry.moveChildUp (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InText 0))
+  , test "move child down" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (2,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","d","c"])) (InChild (3,InText 0))
+  , test "move child down does nothing at last child" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
+    `assertEqual`
+    Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
   ]
 
 suite = Suite "Outline.Entry"
