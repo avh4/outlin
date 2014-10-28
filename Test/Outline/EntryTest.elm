@@ -178,6 +178,10 @@ moveChildTest = Suite "moveChild" <|
     Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
     `assertEqual`
     Action.Update (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (3,InText 0))
+  , test "move child when in an inbox does nothing" <|
+    Entry.moveChildDown (entry "" "" [] (map textEntry ["a","b","c","d"])) (InChild (0,InInbox (0,0)))
+    `assertEqual`
+    Action.NoChange
   ]
 
 suite = Suite "Outline.Entry"

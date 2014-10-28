@@ -134,6 +134,7 @@ swap ai a bi b list = list |> indexedMap
 swapChildren : (Int -> Int) -> EntryAction
 swapChildren produceToIndex en cur = case en of Entry e -> case cur of
   InChild (_,InChild _) -> Action.NoChange
+  InChild (_,InInbox _) -> Action.NoChange
   InChild (n,c) ->
     let aIndex = n
         bIndex = produceToIndex n |> max 0 |> min (length e.children - 1)
