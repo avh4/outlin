@@ -47,8 +47,9 @@ addInboxItem__ : String -> Entry -> Entry
 addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- [s] ++ e.inbox }
 
 addInboxItem_ : String -> EntryAction
-addInboxItem_ s en cur = case en of
-  Entry e -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
+addInboxItem_ s en cur = case en of Entry e -> case cur of
+  InChild _ -> Action.NoChange
+  _ -> Action.Update (addInboxItem__ s en) (InInbox (0,0))
 
 addInboxItem = doEntry (addInboxItem_ "")
 
