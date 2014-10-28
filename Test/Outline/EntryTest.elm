@@ -150,6 +150,17 @@ moveIntoTest = Suite "moveInto" <|
       `assertEqual` Action.Update (entry "" "" [] [entry "0" "" [] [], entry "1" "" ["a"] []]) (InChild (1,InInbox (0,9)))
   ]
 
+missortTest = Suite "missort" <|
+  [ test "moves inbox item to parent's inbox" <|
+    Entry.missort (entry "" "" [] [entry "" "" ["a","b"] []]) (InChild (0,InInbox (0,0)))
+    `assertEqual`
+    Action.Update (entry "" "" ["a"] [entry "" "" ["b"] []]) (InChild (0,InInbox (0,0)))
+  , test "works in nested children" <|
+    Entry.missort (entry "" "" [] [entry "" "" [] [entry "" "" ["a","b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
+    `assertEqual`
+    Action.Update (entry "" "" [] [entry "" "" ["a"] [entry "" "" ["b"] []]]) (InChild (0,InChild (0,InInbox (0,0))))
+  ]
+
 suite = Suite "Outline.Entry"
   [ navTest
   , editTest
@@ -158,4 +169,5 @@ suite = Suite "Outline.Entry"
   , deleteTest
   , promoteTest
   , moveIntoTest
+  , missortTest
   ]

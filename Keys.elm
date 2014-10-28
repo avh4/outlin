@@ -24,9 +24,6 @@ fromDowns code = case code of
 
 fromMeta : Int -> KeyInput
 fromMeta code = case code of
-  65 -> Command "a"
-  68 -> Command "d"
-  80 -> Command "p"
   49 -> Command "1"
   50 -> Command "2"
   51 -> Command "3"
@@ -34,4 +31,8 @@ fromMeta code = case code of
   53 -> Command "5"
   54 -> Command "6"
   55 -> Command "7"
+  65 -> Command "a"
+  68 -> Command "d"
+  77 -> Command "m"
+  80 -> Command "p"
   _ -> Unrecognized ("Meta-" ++ show code)

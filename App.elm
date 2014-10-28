@@ -49,6 +49,7 @@ step c m = case c of
   Key (Keys.Command "a") -> updateModel Entry.addInboxItem m
   Key (Keys.Command "d") -> updateModel Entry.delete m
   Key (Keys.Command "p") -> updateModel Entry.promote m
+  Key (Keys.Command "m") -> updateModel Entry.missort m
   Key (Keys.Command "1") -> updateModel (Entry.moveInto 0) m
   Key (Keys.Command "2") -> updateModel (Entry.moveInto 1) m
   Key (Keys.Command "3") -> updateModel (Entry.moveInto 2) m
@@ -70,7 +71,8 @@ renderDocs = node "div" []
   [ node "p" [] [ text "⌘A: add to inbox" ]
   , node "p" [] [ text "⌘D: delete" ]
   , node "p" [] [ text "⌘P: promote from inbox" ]
-  , node "p" [] [ text "⌘1 - ⌘7: move into …"]
+  , node "p" [] [ text "⌘1 - ⌘7: move into …" ]
+  , node "p" [] [ text "⌘M: Missorted" ]
   ]
 
 render : Model -> Html
