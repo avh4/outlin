@@ -20,41 +20,6 @@
 </style>
 <body></body>
 <script>
-var runningElmModule = Elm.fullscreen(Elm.Main, {
-  dropboxIn: ""
-});
-
-// ---- DROPBOX
-
-var client = new Dropbox.Client({ key: "mjplyqeks6z3js8" });
-
-client.authenticate(function(error, client) {
-  if (error) {
-    return alert(error);
-  }
-  console.log("Dropbox is authorized");
-  client.readFile("outlin.json", function(error, data) {
-    if (error) {
-      return alert(error);
-    }
-    console.log("Read outlin.json from Dropbox");
-    runningElmModule.ports.dropboxIn.send(data);
-  });
-
-  var writeToken = null;
-  runningElmModule.ports.dropboxOut.subscribe(function(json) {
-    console.log("Got " + json.slice(0, 100));
-    if (writeToken) clearTimeout(writeToken);
-    writeToken = setTimeout(function() {
-      client.writeFile("outlin.json", json, function(error, stat) {
-        if (error) {
-          return alert(error);
-        }
-        console.log("outlin.json saved as revision " + stat.versionTag);
-      });
-    }, 5000);
-  });
-});
-
+var runningElmModule = Elm.fullscreen(Elm.Main);
 </script>
 </html>

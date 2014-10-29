@@ -4,6 +4,7 @@ import Html (Html, text, node, toElement)
 import Html.Attributes (class)
 
 import Keys
+import Dropbox
 import Outline.Entry as Entry
 import SampleData
 
@@ -12,12 +13,12 @@ import App (Command(..), Model)
 
 ---- SIGNALS
 
-port dropboxIn : Signal String
+dropbox = Dropbox.client "mjplyqeks6z3js8"
 
 commands : Signal Command
 commands = merges
   [ Key <~ Keys.lastPressed
-  , Loaded <~ dropboxIn
+  , Loaded <~ dropbox.read "outlin.json"
   ]
 
 state = foldp App.step (Model SampleData.template (Entry.InText 4)) commands
@@ -26,5 +27,6 @@ state = foldp App.step (Model SampleData.template (Entry.InText 4)) commands
 
 main = (toElement 800 600) <~ (App.render <~ state)
 
-port dropboxOut : Signal String
-port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
+jsonOutput = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
+
+toDropbox = dropbox.write "outlin.json" jsonOutput
