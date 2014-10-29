@@ -12,9 +12,6 @@ import App (Command(..), Model)
 
 ---- SIGNALS
 
-port downsIn : Signal Int
-port metaIn : Signal Int
-
 port dropboxIn : Signal String
 
 commands : Signal Command
