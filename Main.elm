@@ -12,7 +12,6 @@ import App (Command(..), Model)
 
 ---- SIGNALS
 
-port pressesIn : Signal String
 port downsIn : Signal Int
 port metaIn : Signal Int
 
@@ -20,9 +19,7 @@ port dropboxIn : Signal String
 
 commands : Signal Command
 commands = merges
-  [ Key <~ (Keys.fromPresses <~ pressesIn)
-  , Key <~ (Keys.fromDowns <~ downsIn)
-  , Key <~ (Keys.fromMeta <~ metaIn)
+  [ Key <~ Keys.lastPressed
   , Loaded <~ dropboxIn
   ]
 

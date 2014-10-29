@@ -8,7 +8,8 @@
     "dependencies": {
         "lambdatoast/elm-json": "0.3.4",
         "deadfoxygrandpa/Elm-Test": "0.3.4",
-        "evancz/elm-html": "0.2.1"
+        "evancz/elm-html": "0.2.1",
+        "avh4/elm-keys": "0.0.0"
     },
     "repository": "https://github.com/USER/PROJECT.git"
 }
