@@ -7,6 +7,7 @@ import Keys
 import Dropbox
 import Outline.Entry as Entry
 import SampleData
+import Window
 
 import App
 import App (Command(..), Model)
@@ -25,7 +26,7 @@ state = foldp App.step (Model SampleData.template (Entry.InText 4)) commands
 
 ---- OUTPUT SIGNALS
 
-main = (toElement 800 600) <~ (App.render <~ state)
+main = App.render <~ Window.dimensions ~ state
 
 jsonOutput = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
 

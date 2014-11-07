@@ -8,11 +8,14 @@ import Keys
 import Char
 import Debug
 import Outline.Entry as Entry
+import Outline.Entry (Entry)
 import Json.Decoder
 import Json.Process
 import Json.Output
 import Core.Action (Action)
 import Core.Action as Action
+import Color (..)
+import Text
 
 ---- App
 
@@ -66,17 +69,59 @@ step c m = case c of
 
 ---- RENDER
 
-renderDocument : Document -> DocumentCursor -> Html
-renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
+hintText : String -> Element
+hintText s = s |> toText |> Text.italic |> Text.color (hsl 0 0 0.7) |> leftAligned
 
-renderDocs = node "div" []
-  [ node "p" [] [ text "⌘A: add to inbox" ]
-  , node "p" [] [ text "⌘D: delete" ]
-  , node "p" [] [ text "⌘P: promote from inbox" ]
-  , node "p" [] [ text "⌘1 - ⌘7: move into …" ]
-  , node "p" [] [ text "⌘M: Missorted" ]
-  , node "p" [] [ text "⌘Up/Down: move up/down" ]
+inboxItem : Entry -> Element
+inboxItem e = plainText (Entry.unwrap e).text
+
+leftPanel : (Int,Int) -> Entry -> Element
+leftPanel (w,h) en =
+  let e = Entry.unwrap en
+  in flow down (
+  [ subtitle (w,h) en
+  , "⌘A: add to inbox" |> hintText
+  ] ++ map inboxItem e.inbox)
+  |> container w h topLeft
+
+child : Int -> Entry -> Element
+child i c = flow right
+  [ "⌘" ++ (show <| i+1) ++ " " |> hintText
+  , plainText (Entry.unwrap c).text
   ]
 
-render : Model -> Html
-render m = node "div" [] [ renderDocs, renderDocument m.value m.selection ]
+rightPanel : (Int,Int) -> Entry -> Element
+rightPanel (w,h) en =
+  let e = Entry.unwrap en
+  in flow down (
+  [ "⌘P: promote from inbox" |> hintText
+  ] ++ indexedMap child e.children)
+  |> container w h topLeft
+
+title : (Int,Int) -> Entry -> Element
+title (w,h) en = Entry.unwrap en |> .text |> plainText |> container w 30 midLeft |> color red
+
+subtitle : (Int,Int) -> Entry -> Element
+subtitle (w,h) en = Entry.unwrap en |> .text |> plainText |> container w 30 midLeft |> color green
+
+footer (w,h) = flow right (map (\x -> asText x) 
+  [ "⌘D: delete"
+  , "⌘M: Missorted"
+  , "⌘Up/Down: move up/down"
+  ])
+  |> container w 40 midLeft |> color (hsl 0 0 0.8)
+
+
+render : (Int,Int) -> Model -> Element
+render (w,h) m =
+  let f = footer (w,h)
+      header = title (w,h) m.value
+      mh = h - (heightOf f) - (heightOf header)
+  in flow down
+  [ header
+  , flow right
+    [ leftPanel (toFloat w/2 |> floor,mh) m.value
+    , rightPanel (toFloat w/2 |> floor,mh) m.value
+    ]
+  , f
+  ]
