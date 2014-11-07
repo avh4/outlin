@@ -1,4 +1,4 @@
-module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, unwrap) where
+module Outline.Entry (Base(Entry), Entry, BaseCursor(..), Cursor, entry, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, render, decoder, toJson) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -220,34 +220,34 @@ goPrev = do (Action.always Action.EnterPrev)
 
 ---- RENDER
 
--- toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
--- toTextCursor mc = case mc of
---   Just (InText i) -> Just i
---   _ -> Nothing
---
--- toDescriptionCursor : Maybe Cursor -> Maybe Core.String.Cursor
--- toDescriptionCursor mc = case mc of
---   Just (InDescription i) -> Just i
---   _ -> Nothing
---
--- toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
--- toInboxCursor mc = case mc of
---   Just (InInbox (n,c)) -> Just <| Core.Array.cursor n c
---   _ -> Nothing
---
--- toChildrenCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
--- toChildrenCursor mc = case mc of
---   Just (InChild (n,c)) -> Just <| Core.Array.cursor n c
---   _ -> Nothing
---
--- render : Entry -> Maybe Cursor -> Html
--- render value mc = case value of
---   Entry e -> node "li" []
---     [ Core.String.render e.text (toTextCursor mc)
---     , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
---     , node "ul" [] <| Core.Array.render render e.inbox (toInboxCursor mc)
---     , node "ol" [] <| Core.Array.render render e.children (toChildrenCursor mc)
---     ]
+toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toTextCursor mc = case mc of
+  Just (InText i) -> Just i
+  _ -> Nothing
+
+toDescriptionCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toDescriptionCursor mc = case mc of
+  Just (InDescription i) -> Just i
+  _ -> Nothing
+
+toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
+toInboxCursor mc = case mc of
+  Just (InInbox (n,c)) -> Just <| Core.Array.cursor n c
+  _ -> Nothing
+
+toChildrenCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
+toChildrenCursor mc = case mc of
+  Just (InChild (n,c)) -> Just <| Core.Array.cursor n c
+  _ -> Nothing
+
+render : Entry -> Maybe Cursor -> Html
+render value mc = case value of
+  Entry e -> node "li" []
+    [ Core.String.render e.text (toTextCursor mc)
+    , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
+    , node "ul" [] <| Core.Array.render render e.inbox (toInboxCursor mc)
+    , node "ol" [] <| Core.Array.render render e.children (toChildrenCursor mc)
+    ]
 
 ---- JSON
 

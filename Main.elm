@@ -7,10 +7,10 @@ import Keys
 import Dropbox
 import Outline.Entry as Entry
 import SampleData
-import Window
 
 import App
-import App (Command(..), Model)
+import App (Command(..))
+import Outline.Document as Document
 
 ---- SIGNALS
 
@@ -22,11 +22,11 @@ commands = merges
   , Loaded <~ dropbox.read "outlin.json"
   ]
 
-state = foldp App.step (Model SampleData.template (Entry.InText 4)) commands
+state = foldp App.step (Document.Zipper SampleData.template (Entry.InText 4)) commands
 
 ---- OUTPUT SIGNALS
 
-main = App.render <~ Window.dimensions ~ state
+main = (toElement 800 600) <~ (App.render <~ state)
 
 jsonOutput = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
 
