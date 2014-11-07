@@ -1,4 +1,4 @@
-module Core.String (Cursor, insert, backspace, goLeft, goRight, delete, split, render, toJson) where
+module Core.String (Value, Zipper, insert, backspace, goLeft, goRight, delete, split, render, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -8,8 +8,7 @@ import Html (Html, node, text)
 import Html.Attributes (class)
 
 type Value = String
-type Cursor = Int
-type Subs = {}
+type Zipper = (String,Int)
 
 update char value cursor =
   (String.left cursor value)
@@ -19,10 +18,10 @@ update char value cursor =
 move char value cursor =
   cursor + String.length char
 
-insert : String -> Action String Cursor
+insert : String -> Action String Int
 insert s (v,c) = Action.Update ((update s v c),(move s v c))
 
-backspace : Action String Cursor
+backspace : Action String Int
 backspace (v,c) = case (v,c) of
   (_, 0) -> Action.NoChange
   _ -> Action.Update ((String.left (c-1) v ++ String.dropLeft c v),(c-1))
@@ -32,10 +31,10 @@ goRight = Action.nav (\v c -> min (String.length v) (c+1))
 
 delete = Action.always Action.Delete
 
-split : Action String Cursor
+split : Action String Int
 split (s,n) = Action.Split [String.left n s] (String.dropLeft n s, 0) []
 
-render : String -> Maybe Cursor -> Html
+render : String -> Maybe Int -> Html
 render value msel = case msel of
   Just cursor -> node "span" [] [
     text <| String.left cursor value,
@@ -46,8 +45,8 @@ render value msel = case msel of
 
 ---- JSON
 
-walk : (Value -> a) -> Subs -> Value -> a
-walk fn _ = fn
+walk : (Value -> a) -> Value -> a
+walk fn = fn
 
 quoteQuote = replace All (regex "\"") (\_ -> "&quot;")
 quoteNewline = replace All (regex "\n") (\_ -> "\\n")
@@ -55,4 +54,4 @@ quoteNewline = replace All (regex "\n") (\_ -> "\\n")
 quote s = s |> quoteQuote |> quoteNewline
 
 toJson : String -> String
-toJson = walk (\s -> "\"" ++ quote s ++ "\"") {}
+toJson = walk (\s -> "\"" ++ quote s ++ "\"")

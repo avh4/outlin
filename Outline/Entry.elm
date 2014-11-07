@@ -30,10 +30,10 @@ data BaseCursor c =
   InInbox (Core.Array.Cursor (BaseCursor c)) |
   InChild (Core.Array.Cursor (BaseCursor c))
 
-type Cursor = BaseCursor Core.String.Cursor
+type Cursor = BaseCursor Int
 
 type BaseAction a c = Action (Base a) (BaseCursor c)
-type StringAction = Action String Core.String.Cursor
+type StringAction = Action String Int
 type EntryAction = Action Entry Cursor
 
 type Zipper = (Entry, Cursor)
@@ -220,12 +220,12 @@ goPrev = do (Action.always Action.EnterPrev)
 
 ---- RENDER
 
-toTextCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toTextCursor : Maybe Cursor -> Maybe Int
 toTextCursor mc = case mc of
   Just (InText i) -> Just i
   _ -> Nothing
 
-toDescriptionCursor : Maybe Cursor -> Maybe Core.String.Cursor
+toDescriptionCursor : Maybe Cursor -> Maybe Int
 toDescriptionCursor mc = case mc of
   Just (InDescription i) -> Just i
   _ -> Nothing
