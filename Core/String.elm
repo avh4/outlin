@@ -33,7 +33,7 @@ goRight = Action.nav (\v c -> min (String.length v) (c+1))
 delete = Action.always Action.Delete
 
 split : Action String Cursor
-split s n = Action.Split [String.left n s, String.dropLeft n s] 1 0
+split s n = Action.Split [String.left n s] (String.dropLeft n s, 0) []
 
 render : String -> Maybe Cursor -> Html
 render value msel = case msel of

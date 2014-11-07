@@ -20,7 +20,7 @@ at i list = list |> drop i |> head
 do : c -> (v -> c) -> Action v c -> Action [v] (Cursor c)
 do nextCursor prevCursor action vs (i,c) = case action (at i vs) c of
   Action.Update (newV,newC) -> Action.Update ((replaceAt newV i vs),(i,newC))
-  Action.Split newVs newI newC -> Action.Update (((take i vs) ++ newVs ++ (drop (i+1) vs)),(newI+i, newC))
+  Action.Split left (newV,newC) right -> Action.Update (((take i vs) ++ reverse left ++ [newV] ++ right ++ (drop (i+1) vs)),(i+(length left), newC))
   Action.Delete -> if
     | length vs > 1 -> Action.Update (((take i vs) ++ (drop (i+1) vs)),(min i <| -2+length vs,c))
     | otherwise -> Action.Delete
@@ -34,7 +34,7 @@ do nextCursor prevCursor action vs (i,c) = case action (at i vs) c of
 
 split_ : (v -> c -> (v, v, c)) -> Action v c
 split_ fn = \v c -> case fn v c of
-  (v1, v2, innerC) -> Action.Split [v1, v2] 1 innerC
+  (v1, v2, innerC) -> Action.Split [v1] (v2,innerC) []
 
 split : c -> (v -> c) -> (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
 split nextCursor prevCursor fn = do nextCursor prevCursor (split_ fn)

@@ -99,7 +99,7 @@ editTest = Suite "basic editing"
 enterTest = Suite "enter"
   [ test "can split an Entry" <|
     Entry.enter (textEntry "ab") (InText 1)
-      `assertEqual` Action.Split [textEntry "a", textEntry "b"] 1 (InText 0)
+      `assertEqual` Action.Split [textEntry "a"] (textEntry "b",(InText 0)) []
   , test "can split a child Entry" <|
     Entry.enter (entry "" "" [] [textEntry "ab"]) (InChild (0,InText 1))
       `assertEqual` Action.Update ((entry "" "" [] [textEntry "a", textEntry "b"]),(InChild (1, InText 0)))

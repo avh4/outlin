@@ -2,7 +2,7 @@ module Core.Action (Action, nav, change, always, Result(..)) where
 
 data Result v c =
   Update (v,c) |
-  Split [v] Int c |
+  Split [v] (v,c) [v] |
   Delete |
   EnterPrev | EnterNext |
   NoChange

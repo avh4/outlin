@@ -179,9 +179,8 @@ do stringAction en cur = case en of Entry e -> case cur of
     Action.Update (newV,newCur) -> Action.Update ((Entry { e | text <- newV }),(InText newCur))
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-    Action.Split (left :: right :: []) newI c -> Action.Split [entry left "" [] [], Entry {e | text <- right}] newI (InText c)
-    Action.Split (_ :: _ :: _) _ _ -> Debug.crash "Not yet implemented for splits > 2"
-    Action.Split _ _ _ -> Debug.crash "Split has less than two children"
+    Action.Split (left :: []) (right,c) [] -> Action.Split [entry left "" [] []] (Entry {e | text <- right},InText c) []
+    Action.Split _ _ _ -> Debug.crash "Split not yet implemented for all cases"
     Action.EnterPrev -> Action.EnterPrev
     Action.EnterNext -> if
       | length e.inbox > 0 -> Action.Update (en,InInbox (0,InText 0))
