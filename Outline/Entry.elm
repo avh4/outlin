@@ -220,15 +220,15 @@ goPrev = do (Action.always Action.EnterPrev)
 
 ---- RENDER
 
-toTextCursor : Maybe Cursor -> Maybe Int
-toTextCursor mc = case mc of
-  Just (InText i) -> Just i
-  _ -> Nothing
+renderText : String -> Maybe Cursor -> Html
+renderText v mc = case mc of
+  Just (InText i) -> Core.String.renderZipper (v,i)
+  _ -> Core.String.renderValue v
 
-toDescriptionCursor : Maybe Cursor -> Maybe Int
-toDescriptionCursor mc = case mc of
-  Just (InDescription i) -> Just i
-  _ -> Nothing
+renderDescription : String -> Maybe Cursor -> Html
+renderDescription v mc = case mc of
+  Just (InDescription i) -> Core.String.renderZipper (v,i)
+  _ -> Core.String.renderValue v
 
 toInboxCursor : Maybe Cursor -> Maybe (Core.Array.Cursor Cursor)
 toInboxCursor mc = case mc of
@@ -243,8 +243,8 @@ toChildrenCursor mc = case mc of
 render : Entry -> Maybe Cursor -> Html
 render value mc = case value of
   Entry e -> node "li" []
-    [ Core.String.render e.text (toTextCursor mc)
-    , node "i" [] [ Core.String.render e.description (toDescriptionCursor mc)]
+    [ renderText e.text mc
+    , node "i" [] [ renderDescription e.description mc ]
     , node "ul" [] <| Core.Array.render render e.inbox (toInboxCursor mc)
     , node "ol" [] <| Core.Array.render render e.children (toChildrenCursor mc)
     ]

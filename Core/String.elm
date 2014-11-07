@@ -1,4 +1,4 @@
-module Core.String (Value, Zipper, insert, backspace, goLeft, goRight, delete, split, render, toJson) where
+module Core.String (Value, Zipper, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson) where
 
 import Core.Action (Action)
 import Core.Action as Action
@@ -34,14 +34,14 @@ delete = Action.always Action.Delete
 split : Action String Int
 split (s,n) = Action.Split [String.left n s] (String.dropLeft n s, 0) []
 
-render : String -> Maybe Int -> Html
-render value msel = case msel of
-  Just cursor -> node "span" [] [
-    text <| String.left cursor value,
-    node "span" [ class "cursor" ] [ text "^" ],
-    text <| String.dropLeft cursor value ]
-  Nothing -> node "span" [] [ text value ]
+renderValue : Value -> Html
+renderValue value = text value
 
+renderZipper : Zipper -> Html
+renderZipper (value,cursor) = node "span" [] [
+  text <| String.left cursor value,
+  node "span" [ class "cursor" ] [ text "^" ],
+  text <| String.dropLeft cursor value ]
 
 ---- JSON
 
