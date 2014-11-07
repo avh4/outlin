@@ -7,9 +7,10 @@ import App
 import App (Command(..))
 import Keys (KeyInput(..))
 import Outline.Entry (entry, BaseCursor(..))
+import Outline.Document as Document
 
 test1 = test "first-use scenario" <|
-  foldl App.step (App.Zipper (entry "" "" [] []) (InText 0))
+  foldl App.step (Document.Zipper (entry "" "" [] []) (InText 0))
     [ Key (Character "Tasks")
     , Key (Command "a") -- add
     , Key (Character "By time")
@@ -19,7 +20,7 @@ test1 = test "first-use scenario" <|
     , Key (Command "p")
     ]
   `assertEqual`
-  App.Zipper
+  Document.Zipper
     (entry "Tasks" "" []
       [ entry "By time" "" [] []
       , entry "Habits" "" [] []
@@ -27,7 +28,7 @@ test1 = test "first-use scenario" <|
     (InChild (0,InText 0))
 
 test2 = test "sorting in an empty template" <|
-  foldl App.step (App.Zipper
+  foldl App.step (Document.Zipper
       ( entry "Tasks" "" []
         [ entry "By time" "" []
           [ entry "daily" "" [] []
@@ -62,7 +63,7 @@ test2 = test "sorting in an empty template" <|
     , Key (Command "1") -- voting guide -> time
     ]
   `assertEqual`
-  App.Zipper
+  Document.Zipper
     ( entry "Tasks" "" []
       [ entry "By time" ""
         [ entry "Read voting guide" "" [] []

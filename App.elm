@@ -16,12 +16,9 @@ import Core.Action (Action)
 import Core.Action as Action
 import Color (..)
 import Text
+import Outline.Document as Document
 
 ---- App
-
-type Document = Entry.Entry
-type DocumentCursor = Entry.Cursor
-type Zipper = { value:Document, selection:DocumentCursor }
 
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
 updateModel action {value,selection} = case action value selection of
@@ -40,7 +37,7 @@ data Command
   | KeyMeta Int
   | Loaded String
 
-step : Command -> Zipper -> Zipper
+step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
   Key (Keys.Left) -> updateModel Entry.goLeft m
   Key (Keys.Right) -> updateModel Entry.goRight m
@@ -112,7 +109,7 @@ footer (w,h) = flow right (map (\x -> asText x)
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
 
-render : (Int,Int) -> Zipper -> Element
+render : (Int,Int) -> Document.Zipper -> Element
 render (w,h) m =
   let f = footer (w,h)
       header = title (w,h) m.value
