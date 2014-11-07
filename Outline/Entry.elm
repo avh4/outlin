@@ -50,7 +50,7 @@ addInboxItem__ : Base a -> Base a -> Base a
 addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- s :: e.inbox }
 
 addInboxItem_ : Entry -> EntryAction
-addInboxItem_ s en cur = case en of
+addInboxItem_ s (en,cur) = case en of
   Entry e -> Action.Update ((addInboxItem__ s en),(InInbox (0,InText 0)))
 
 addInboxItem = doEntry (addInboxItem_ (entry "" "" [] []))
@@ -65,7 +65,7 @@ at : Int -> [a] -> a
 at i list = head <| drop i list
 
 promote_ : EntryAction
-promote_ en cur = case en of Entry e -> case cur of
+promote_ (en,cur) = case en of Entry e -> case cur of
   InInbox (i,c) -> Action.Update ((Entry { e
     | inbox <- dropAt i e.inbox
     , children <- (at i e.inbox) :: e.children
@@ -85,7 +85,7 @@ findFirstChildInbox en = case en of
     |> head |> \i -> InChild (i,InInbox(0,InText 9))
 
 moveInto_ : Int -> EntryAction
-moveInto_ n en cur = case en of Entry e -> case cur of
+moveInto_ n (en,cur) = case en of Entry e -> case cur of
   InInbox (i,c) -> if
     | length e.children <= n -> Action.NoChange
     | otherwise -> let newE = (Entry { e
@@ -98,7 +98,7 @@ moveInto_ n en cur = case en of Entry e -> case cur of
 moveInto n = doEntry (moveInto_ n)
 
 removeChild : EntryAction
-removeChild en cur = case en of Entry e -> case cur of
+removeChild (en,cur) = case en of Entry e -> case cur of
   InChild (i,c) ->
     let newE = (Entry { e | children <- dropAt i e.children })
         newI = min i (length e.children - 2)
@@ -106,7 +106,7 @@ removeChild en cur = case en of Entry e -> case cur of
   _ -> Action.NoChange
 
 removeInboxItem : EntryAction
-removeInboxItem en cur = case en of Entry e -> case cur of
+removeInboxItem (en,cur) = case en of Entry e -> case cur of
   InInbox (i,c) ->
     let newE = (Entry { e | inbox <- dropAt i e.inbox })
         newI = min i (length e.inbox - 2)
@@ -114,26 +114,26 @@ removeInboxItem en cur = case en of Entry e -> case cur of
   _ -> Action.NoChange
 
 updateActiveChild : EntryAction -> EntryAction
-updateActiveChild action en cur = case en of Entry e -> case cur of
+updateActiveChild action (en,cur) = case en of Entry e -> case cur of
   InChild (n,c) ->
     let child = at n e.children
-    in case action child c of
+    in case action (child,c) of
       Action.Update (newChild,newC) ->
         Action.Update ((Entry { e | children <- changeAt (\_ -> newChild) n e.children }),(InChild (n,newC)))
 
 missort_ : EntryAction
-missort_ en cur = case en of Entry e -> case cur of
+missort_ (en,cur) = case en of Entry e -> case cur of
   InChild (n,InChild (_,InChild _)) -> Action.NoChange
   InChild (n,InChild (_,InInbox _)) -> Action.NoChange
   InChild (n,InChild (i,c)) ->
     let item = e.children |> at n |> unwrap |> .children |> at i
-    in case updateActiveChild removeChild en cur of
-      Action.Update (en',cur') -> case addInboxItem_ item en' cur' of
+    in case updateActiveChild removeChild (en,cur) of
+      Action.Update (en',cur') -> case addInboxItem_ item (en',cur') of
         Action.Update (en'',cur'') -> Action.Update (en'',cur')
   InChild (n,InInbox (i,c)) ->
     let item = e.children |> at n |> unwrap |> .inbox |> at i
-    in case updateActiveChild removeInboxItem en cur of
-      Action.Update (en',cur') -> case addInboxItem_ item en' cur' of
+    in case updateActiveChild removeInboxItem (en,cur) of
+      Action.Update (en',cur') -> case addInboxItem_ item (en',cur') of
         Action.Update (en'',cur'') -> Action.Update (en'',cur')
         _ -> Action.NoChange
       _ -> Action.NoChange
@@ -149,7 +149,7 @@ swap ai a bi b list = list |> indexedMap
     | otherwise -> x)
 
 swapChildren : (Int -> Int) -> EntryAction
-swapChildren produceToIndex en cur = case en of Entry e -> case cur of
+swapChildren produceToIndex (en,cur) = case en of Entry e -> case cur of
   InChild (_,InChild _) -> Action.NoChange
   InChild (_,InInbox _) -> Action.NoChange
   InChild (n,c) ->
@@ -165,17 +165,17 @@ moveChildUp = doEntry <| swapChildren (\n -> n-1)
 moveChildDown = doEntry <| swapChildren (\n -> n+1)
 
 doEntry : EntryAction -> EntryAction
-doEntry action en cur = case en of Entry e -> case cur of
-  InChild c -> case action en cur of
-    Action.NoChange -> case Core.Array.do (InText 0) findLastCursor (doEntry action) e.children c of
+doEntry action (en,cur) = case en of Entry e -> case cur of
+  InChild c -> case action (en,cur) of
+    Action.NoChange -> case Core.Array.do (InText 0) findLastCursor (doEntry action) (e.children,c) of
       Action.Update (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
       Action.NoChange -> Action.NoChange
     x -> x
-  _ -> action en cur
+  _ -> action (en,cur)
 
 do : StringAction -> EntryAction
-do stringAction en cur = case en of Entry e -> case cur of
-  InText c -> case stringAction e.text c of
+do stringAction (en,cur) = case en of Entry e -> case cur of
+  InText c -> case stringAction (e.text,c) of
     Action.Update (newV,newCur) -> Action.Update ((Entry { e | text <- newV }),(InText newCur))
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
@@ -186,11 +186,11 @@ do stringAction en cur = case en of Entry e -> case cur of
       | length e.inbox > 0 -> Action.Update (en,InInbox (0,InText 0))
       | length e.children > 0 -> Action.Update (en,InChild (0, (InText c)))
       | otherwise -> Action.EnterNext
-  InDescription c -> case stringAction e.description c of
+  InDescription c -> case stringAction (e.description,c) of
     Action.Update (newV,newCur) -> Action.Update ((Entry { e | description <- newV }),(InDescription newCur))
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-  InInbox c -> case Core.Array.do (InText 0) (\_ -> InText 0) (do stringAction) e.inbox c of
+  InInbox c -> case Core.Array.do (InText 0) (\_ -> InText 0) (do stringAction) (e.inbox,c) of
     Action.Update (newList,newCur) -> Action.Update ((Entry { e | inbox <- newList }),(InInbox newCur))
     Action.Delete -> Action.Update ((Entry { e | inbox <- [] }),(InText <| String.length e.text))
     Action.NoChange -> Action.NoChange
@@ -198,7 +198,7 @@ do stringAction en cur = case en of Entry e -> case cur of
       | length e.children > 0 -> Action.Update (en,InChild (0,InText 0))
       | otherwise -> Action.EnterNext
     Action.EnterPrev -> Action.Update (en,InText 0)
-  InChild c -> case Core.Array.do (InText 0) findLastCursor (do stringAction) e.children c of
+  InChild c -> case Core.Array.do (InText 0) findLastCursor (do stringAction) (e.children,c) of
     Action.Update (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
     Action.Delete -> Action.Update ((Entry { e | children <- [] }),(InText <| String.length e.text))
     Action.EnterNext -> Action.EnterNext
