@@ -12,17 +12,17 @@ stringSplit = (\s n -> (String.left n s, String.dropLeft n s, 0))
 
 splitTest = Suite "split"
   [ Array.split 0 (\_ -> 0) stringSplit ["ab"] (0,1)
-      `equals` Action.Update ["a", "b"] (1,0)
+      `equals` Action.Update (["a", "b"],(1,0))
   , Array.split 0 (\_ -> 0) stringSplit ["a", "xy", "b"] (1,1)
-      `equals` Action.Update ["a", "x", "y", "b"] (2,0)
+      `equals` Action.Update (["a", "x", "y", "b"],(2,0))
   , Array.do 0 (\_ -> 0) (Action.always Action.Delete) ["a", "b"] (0,0)
-      `equals` Action.Update ["b"] (0,0)
+      `equals` Action.Update (["b"],(0,0))
   , test "can delete the last item" <|
     Array.do 0 (\_ -> 0) (Action.always Action.Delete) ["a"] (0,0)
       `assertEqual` Action.Delete
   , test "can delete the terminal item" <|
     Array.do 0 (\_ -> 0) (Action.always Action.Delete) ["a", "b"] (1,0)
-      `assertEqual` Action.Update ["a"] (0,0)
+      `assertEqual` Action.Update (["a"],(0,0))
   ]
 
 doTest = Suite "do" <|
@@ -31,22 +31,22 @@ doTest = Suite "do" <|
   in
   [ test "EnterNext goes to next item" <|
     goNext ["a","b"] (0,0)
-      `assertEqual` Action.Update ["a","b"] (1,0)
+      `assertEqual` Action.Update (["a","b"],(1,0))
   , test "EnterNext from last item goes out" <|
     goNext ["a","b"] (1,0)
       `assertEqual` Action.EnterNext
   , test "EnterNext uses nextCursor" <|
     goNext ["a","b"] (0,7)
-      `assertEqual` Action.Update ["a","b"] (1,0)
+      `assertEqual` Action.Update (["a","b"],(1,0))
   , test "EnterPrev goes to prev item" <|
     goPrev ["a","b"] (1,0)
-      `assertEqual` Action.Update ["a","b"] (0,9)
+      `assertEqual` Action.Update (["a","b"],(0,9))
   , test "EnterPrev from last item goes out" <|
     goPrev ["a","b"] (0,0)
       `assertEqual` Action.EnterPrev
   , test "EnterNext uses prevCursor" <|
     goPrev ["a","b"] (1,7)
-      `assertEqual` Action.Update ["a","b"] (0,9)
+      `assertEqual` Action.Update (["a","b"],(0,9))
   ]
 
 suite = Suite "Core.Array" [doTest, splitTest]

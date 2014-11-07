@@ -19,16 +19,16 @@ at i list = list |> drop i |> head
 -- TODO: instead of passing in nextCursor/prevCursor eagerly, can we flip it around so that there is an ActionResult that has a function : c -> Array.Cursor c
 do : c -> (v -> c) -> Action v c -> Action [v] (Cursor c)
 do nextCursor prevCursor action vs (i,c) = case action (at i vs) c of
-  Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
-  Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
+  Action.Update (newV,newC) -> Action.Update ((replaceAt newV i vs),(i,newC))
+  Action.Split newVs newI newC -> Action.Update (((take i vs) ++ newVs ++ (drop (i+1) vs)),(newI+i, newC))
   Action.Delete -> if
-    | length vs > 1 -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (min i <| -2+length vs,c)
+    | length vs > 1 -> Action.Update (((take i vs) ++ (drop (i+1) vs)),(min i <| -2+length vs,c))
     | otherwise -> Action.Delete
   Action.EnterNext -> if
-    | length vs > i+1 -> Action.Update vs (i+1, nextCursor)
+    | length vs > i+1 -> Action.Update (vs,(i+1, nextCursor))
     | otherwise -> Action.EnterNext
   Action.EnterPrev -> if
-    | i > 0 -> Action.Update vs (i-1, prevCursor (at (i-1) vs))
+    | i > 0 -> Action.Update (vs,(i-1, prevCursor (at (i-1) vs)))
     | otherwise -> Action.EnterPrev
   Action.NoChange -> Action.NoChange
 

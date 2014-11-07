@@ -22,7 +22,7 @@ import Outline.Document as Document
 
 updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
 updateModel action {value,selection} = case action value selection of
-  Action.Update a b -> {value=a, selection=b}
+  Action.Update (a,b) -> {value=a, selection=b}
   -- explicity list the following action results, which are all no-ops on document
   Action.Split _ _ _ -> {value=value, selection=selection}
   Action.Delete -> {value=value, selection=selection}

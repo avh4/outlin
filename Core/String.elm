@@ -20,12 +20,12 @@ move char value cursor =
   cursor + String.length char
 
 insert : String -> Action String Cursor
-insert s v c = Action.Update (update s v c) (move s v c)
+insert s v c = Action.Update ((update s v c),(move s v c))
 
 backspace : Action String Cursor
 backspace v c = case (v,c) of
   (_, 0) -> Action.NoChange
-  _ -> Action.Update (String.left (c-1) v ++ String.dropLeft c v) (c-1)
+  _ -> Action.Update ((String.left (c-1) v ++ String.dropLeft c v),(c-1))
 
 goLeft = Action.nav (\_ c -> if c > 0 then c-1 else c)
 goRight = Action.nav (\v c -> min (String.length v) (c+1))
