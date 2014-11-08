@@ -3,8 +3,10 @@ module Core.Array (Cursor, cursor, do, split, render, toJson) where
 import Core.Action as Action
 
 type Value a = [a]
-type Cursor a = (Int, a)
+type Cursor c = (Int, c)
+type Zipper a c = ([a],(Int,c))
 type Subs a = {child:a}
+type Result a c = Action.Result (Value a) (Zipper a c)
 
 cursor n c = (n, c)
 
@@ -16,7 +18,7 @@ at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
 -- TODO: instead of passing in nextCursor/prevCursor eagerly, can we flip it around so that there is an ActionResult that has a function : c -> Array.Cursor c
-do : c -> (v -> c) -> ((v,c) -> Action.Result v (v,c)) -> ([v],Cursor c) -> Action.Result [v] ([v],Cursor c)
+do : c -> (v -> c) -> ((v,c) -> Action.Result v (v,c)) -> Zipper v c -> Result v c
 do nextCursor prevCursor action (vs,(i,c)) = case action ((at i vs),c) of
   Action.Update (newV,newC) -> Action.Update ((replaceAt newV i vs),(i,newC))
   Action.Split left (newV,newC) right -> Action.Update (((take i vs) ++ reverse left ++ [newV] ++ right ++ (drop (i+1) vs)),(i+(length left), newC))
@@ -35,7 +37,7 @@ split_ : (v -> c -> (v, v, c)) -> (v,c) -> Action.Result v (v,c)
 split_ fn = \(v,c) -> case fn v c of
   (v1, v2, innerC) -> Action.Split [v1] (v2,innerC) []
 
-split : c -> (v -> c) -> (v -> c -> (v, v, c)) -> ([v],Cursor c) -> Action.Result [v] ([v],Cursor c)
+split : c -> (v -> c) -> (v -> c -> (v, v, c)) -> Zipper v c -> Result v c
 split nextCursor prevCursor fn = do nextCursor prevCursor (split_ fn)
 
 render : (val -> Maybe cur -> out) -> [val] -> Maybe (Cursor cur) -> [out]
