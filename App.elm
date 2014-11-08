@@ -11,7 +11,6 @@ import Outline.Entry as Entry
 import Json.Decoder
 import Json.Process
 import Json.Output
-import Core.Action (Action)
 import Core.Action as Action
 import Color (..)
 import Text
@@ -19,7 +18,7 @@ import Outline.Document as Document
 
 ---- App
 
-updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
+updateModel : ((val,cur) -> Action.Result val (val,cur)) -> {value:val, selection:cur} -> {value:val, selection:cur}
 updateModel action {value,selection} = case action (value,selection) of
   Action.Update (a,b) -> {value=a, selection=b}
   -- explicity list the following action results, which are all no-ops on document

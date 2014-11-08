@@ -1,6 +1,5 @@
 module Core.String (Value, Zipper, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson) where
 
-import Core.Action (Action)
 import Core.Action as Action
 import String
 import Regex (..)

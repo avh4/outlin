@@ -8,7 +8,6 @@ import String
 import Json.Decoder
 import Json.Decoder (..)
 import Json.Output
-import Core.Action (Action)
 import Core.Action as Action
 import Debug
 
@@ -32,9 +31,9 @@ data BaseCursor c =
 
 type Cursor = BaseCursor Int
 
-type BaseAction a c = Action (Base a) (BaseCursor c)
-type StringAction = Action String Int
-type EntryAction = Action Entry Cursor
+type BaseAction a c = (Base a,BaseCursor c) -> Action.Result (Base a) (Base a,BaseCursor c)
+type StringAction = (String,Int) -> Action.Result String (String,Int)
+type EntryAction = (Entry,Cursor) -> Action.Result Entry (Entry,Cursor)
 
 type Zipper = (Entry, Cursor)
 
