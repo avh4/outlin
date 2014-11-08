@@ -9,6 +9,7 @@ import Html.Attributes (class)
 
 type Value = String
 type Zipper = (String,Int)
+type Result = Action.Result Value Zipper
 
 update char value cursor =
   (String.left cursor value)
@@ -18,10 +19,10 @@ update char value cursor =
 move char value cursor =
   cursor + String.length char
 
-insert : String -> Action String Int
+insert : String -> Zipper -> Result
 insert s (v,c) = Action.Update ((update s v c),(move s v c))
 
-backspace : Action String Int
+backspace : Zipper -> Result
 backspace (v,c) = case (v,c) of
   (_, 0) -> Action.NoChange
   _ -> Action.Update ((String.left (c-1) v ++ String.dropLeft c v),(c-1))
@@ -31,7 +32,7 @@ goRight = Action.nav (\v c -> min (String.length v) (c+1))
 
 delete = Action.always Action.Delete
 
-split : Action String Int
+split : Zipper -> Result
 split (s,n) = Action.Split [String.left n s] (String.dropLeft n s, 0) []
 
 renderValue : Value -> Html
