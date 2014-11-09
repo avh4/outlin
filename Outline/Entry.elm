@@ -166,8 +166,9 @@ moveChildDown = doEntry <| swapChildren (\n -> n+1)
 doEntry : EntryAction -> EntryAction
 doEntry action (en,cur) = case en of Entry e -> case cur of
   InChild c -> case action (en,cur) of
-    Action.NoChange -> case Core.Array.do (InText 0) findLastCursor (doEntry action) (e.children,c) of
-      Action.Update (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
+    Action.NoChange -> case Core.Array.do (InText 0) findLastCursor (doEntry action) (Core.Array.zipper e.children c) of
+      Action.Update z -> case Core.Array.unzipper z of
+        (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
       Action.NoChange -> Action.NoChange
     x -> x
   _ -> action (en,cur)
@@ -189,16 +190,18 @@ do stringAction (en,cur) = case en of Entry e -> case cur of
     Action.Update (newV,newCur) -> Action.Update ((Entry { e | description <- newV }),(InDescription newCur))
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-  InInbox c -> case Core.Array.do (InText 0) (\_ -> InText 0) (do stringAction) (e.inbox,c) of
-    Action.Update (newList,newCur) -> Action.Update ((Entry { e | inbox <- newList }),(InInbox newCur))
+  InInbox c -> case Core.Array.do (InText 0) (\_ -> InText 0) (do stringAction) (Core.Array.zipper e.inbox c) of
+    Action.Update z -> case Core.Array.unzipper z of
+      (newList,newCur) -> Action.Update ((Entry { e | inbox <- newList }),(InInbox newCur))
     Action.Delete -> Action.Update ((Entry { e | inbox <- [] }),(InText <| String.length e.text))
     Action.NoChange -> Action.NoChange
     Action.EnterNext -> if
       | length e.children > 0 -> Action.Update (en,InChild (0,InText 0))
       | otherwise -> Action.EnterNext
     Action.EnterPrev -> Action.Update (en,InText 0)
-  InChild c -> case Core.Array.do (InText 0) findLastCursor (do stringAction) (e.children,c) of
-    Action.Update (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
+  InChild c -> case Core.Array.do (InText 0) findLastCursor (do stringAction) (Core.Array.zipper e.children c) of
+    Action.Update z -> case Core.Array.unzipper z of
+      (newChildren,newChildCur) -> Action.Update ((Entry {e | children <- newChildren}),(InChild newChildCur))
     Action.Delete -> Action.Update ((Entry { e | children <- [] }),(InText <| String.length e.text))
     Action.EnterNext -> Action.EnterNext
     Action.EnterPrev -> Action.Update (en,if

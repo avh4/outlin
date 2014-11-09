@@ -11,42 +11,42 @@ import String
 stringSplit = \s n -> (String.left n s, String.dropLeft n s, 0)
 
 splitTest = Suite "split"
-  [ Array.split 0 (\_ -> 0) stringSplit (["ab"],(0,1))
-      `equals` Action.Update (["a", "b"],(1,0))
-  , Array.split 0 (\_ -> 0) stringSplit (["a", "xy", "b"],(1,1))
-      `equals` Action.Update (["a", "x", "y", "b"],(2,0))
-  , Array.do 0 (\_ -> 0) (Action.always Action.Delete) (["a", "b"],(0,0))
-      `equals` Action.Update (["b"],(0,0))
+  [ Array.split 0 (\_ -> 0) stringSplit ([],("ab",1),[])
+      `equals` Action.Update (["a"],("b",0),[])
+  , Array.split 0 (\_ -> 0) stringSplit (["a"],("xy",1),["b"])
+      `equals` Action.Update (["x","a"],("y",0),["b"])
+  , Array.do 0 (\_ -> 0) (Action.always Action.Delete) ([],("a",0),["b"])
+      `equals` Action.Update ([],("b",0),[])
   , test "can delete the last item" <|
-    Array.do 0 (\_ -> 0) (Action.always Action.Delete) (["a"],(0,0))
+    Array.do 0 (\_ -> 0) (Action.always Action.Delete) ([],("a",0),[])
       `assertEqual` Action.Delete
   , test "can delete the terminal item" <|
-    Array.do 0 (\_ -> 0) (Action.always Action.Delete) (["a", "b"],(1,0))
-      `assertEqual` Action.Update (["a"],(0,0))
+    Array.do 0 (\_ -> 0) (Action.always Action.Delete) (["a"], ("b",0), [])
+      `assertEqual` Action.Update ([], ("a",0), [])
   ]
 
 doTest = Suite "do" <|
-  let goNext = \v c -> Array.do 0 (\_ -> 9) (Action.always Action.EnterNext) (v,c)
-      goPrev = \v c -> Array.do 0 (\_ -> 9) (Action.always Action.EnterPrev) (v,c)
+  let goNext = \z -> Array.do 0 (\_ -> 9) (Action.always Action.EnterNext) z
+      goPrev = \z -> Array.do 0 (\_ -> 9) (Action.always Action.EnterPrev) z
   in
   [ test "EnterNext goes to next item" <|
-    goNext ["a","b"] (0,0)
-      `assertEqual` Action.Update (["a","b"],(1,0))
+    goNext ([],("a",0),["b"])
+      `assertEqual` Action.Update (["a"],("b",0),[])
   , test "EnterNext from last item goes out" <|
-    goNext ["a","b"] (1,0)
+    goNext (["a"],("b",0),[])
       `assertEqual` Action.EnterNext
   , test "EnterNext uses nextCursor" <|
-    goNext ["a","b"] (0,7)
-      `assertEqual` Action.Update (["a","b"],(1,0))
+    goNext ([],("a",7),["b"])
+      `assertEqual` Action.Update (["a"],("b",0),[])
   , test "EnterPrev goes to prev item" <|
-    goPrev ["a","b"] (1,0)
-      `assertEqual` Action.Update (["a","b"],(0,9))
+    goPrev (["a"],("b",0),[])
+      `assertEqual` Action.Update ([],("a",9),["b"])
   , test "EnterPrev from last item goes out" <|
-    goPrev ["a","b"] (0,0)
+    goPrev ([],("a",0),["b"])
       `assertEqual` Action.EnterPrev
   , test "EnterNext uses prevCursor" <|
-    goPrev ["a","b"] (1,7)
-      `assertEqual` Action.Update (["a","b"],(0,9))
+    goPrev (["a"],("b",7),[])
+      `assertEqual` Action.Update ([],("a",9),["b"])
   ]
 
 suite = Suite "Core.Array" [doTest, splitTest]
