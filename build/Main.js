@@ -10286,6 +10286,65 @@ ElmRuntime.Render.Utils = function() {
           addTransform: addTransform,
           removeTransform: removeTransform};
 };
+Elm.Native.Dropbox = {};
+Elm.Native.Dropbox.make = function(elm) {
+  elm.Native = elm.Native || {};
+  elm.Native.Dropbox = elm.Native.Dropbox || {};
+  if (elm.Native.Dropbox.values) return elm.Native.Dropbox.values;
+
+  // Imports
+  var Signal = Elm.Native.Signal.make(elm);
+
+  function client(apiKey) {
+    var client = new Dropbox.Client({ key: apiKey });
+
+    client.authenticate(function(error, client) {
+      if (error) {
+        return alert(error);
+      }
+      console.log("elm-dropbox: Dropbox is authorized");
+    });
+
+    function read(filename) {
+      var output = Signal.constant("");
+
+      client.readFile(filename, function(error, data) {
+        if (error) {
+          return alert(error);
+        }
+        console.log("elm-dropbox: " + filename + ": Read from Dropbox");
+        elm.notify(output.id, data);
+      });
+
+      return output;
+    }
+
+    function write(filename, dataSignal) {
+      var isFirst = true;
+      var writeToken = null;
+      var handler = function(data) {
+        if (isFirst) return isFirst = false;
+        console.log("elm-dropbox: " + filename + ": Writing...", data.slice(0, 100));
+        if (writeToken) clearTimeout(writeToken);
+        writeToken = setTimeout(function() {
+          client.writeFile(filename, data, function(error, stat) {
+            if (error) {
+              return alert(error);
+            }
+            console.log("elm-dropbox: " + filename + ": Wrote revision " + stat.versionTag);
+          });
+        }, 5000);
+      }
+      Signal.lift(handler)(dataSignal);
+    }
+
+    return { read: read, write: F2(write) };
+  }
+
+  return elm.Native.Dropbox.values = {
+    client: client
+  };
+};
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = createHash
 
@@ -12085,6 +12144,69 @@ Elm.Native.Html.make = function(elm) {
 },{"data-set":2,"dom-delegator":8,"virtual-dom/create-element":15,"virtual-dom/diff":16,"virtual-dom/patch":20,"vtree/is-vhook":34,"vtree/vnode":38,"vtree/vtext":39}],41:[function(require,module,exports){
 
 },{}]},{},[40]);
+Elm.Native.Keys = {};
+Elm.Native.Keys.make = function(elm) {
+  elm.Native = elm.Native || {};
+  elm.Native.Keys = elm.Native.Keys || {};
+  if (elm.Native.Keys.values) return elm.Native.Keys.values;
+
+  // Imports
+  var Signal = Elm.Native.Signal.make(elm);
+
+  var pressesIn = Signal.constant("");
+  var downsIn = Signal.constant(0);
+  var metaIn = Signal.constant(0);
+
+  var specialKeys = {
+    '8': 'backspace',
+    '37': 'left',
+    '38': 'up',
+    '39': 'right',
+    '40': 'down'
+  };
+
+  var modKeys = {
+    '91': 'meta'
+  };
+
+  var downMods = {};
+
+  document.onkeydown = function(e) {
+    var mod;
+    if (mod = modKeys[e.keyCode.toString()]) {
+      downMods[mod] = true;
+      e.preventDefault();
+    } else if (downMods.meta) {
+      elm.notify(metaIn.id, e.keyCode);
+      e.preventDefault();
+    } else if (specialKeys[e.keyCode.toString()]) {
+      elm.notify(downsIn.id, e.keyCode)
+      e.preventDefault();
+    }
+  }
+
+  document.onkeypress = function(e) {
+    var evt = evt || window.event;
+    var charCode = evt.which || evt.keyCode;
+    var charTyped = String.fromCharCode(charCode);
+    elm.notify(pressesIn.id, charTyped);
+    e.preventDefault();
+  }
+
+  document.onkeyup = function(e) {
+    var mod;
+    if (mod = modKeys[e.keyCode.toString()]) {
+      downMods[mod] = false;
+      e.preventDefault();
+    }
+  }
+
+  return elm.Native.Keys.values = {
+    pressesIn: pressesIn,
+    downsIn: downsIn,
+    metaIn: metaIn
+  };
+};
 Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {
    "use strict";
@@ -12100,71 +12222,45 @@ Elm.Main.make = function (_elm) {
    $moduleName = "Main",
    $App = Elm.App.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Html = Elm.Html.make(_elm),
+   $Dropbox = Elm.Dropbox.make(_elm),
    $Keys = Elm.Keys.make(_elm),
-   $Native$Json = Elm.Native.Json.make(_elm),
-   $Native$Ports = Elm.Native.Ports.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
    $SampleData = Elm.SampleData.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var dropboxIn = $Native$Ports.portIn("dropboxIn",
-   $Native$Ports.incomingSignal(function (v) {
-      return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _E.raise("invalid input, expecting JSString but got " + v);
-   }));
-   var metaIn = $Native$Ports.portIn("metaIn",
-   $Native$Ports.incomingSignal(function (v) {
-      return typeof v === "number" ? v : _E.raise("invalid input, expecting JSNumber but got " + v);
-   }));
-   var downsIn = $Native$Ports.portIn("downsIn",
-   $Native$Ports.incomingSignal(function (v) {
-      return typeof v === "number" ? v : _E.raise("invalid input, expecting JSNumber but got " + v);
-   }));
-   var pressesIn = $Native$Ports.portIn("pressesIn",
-   $Native$Ports.incomingSignal(function (v) {
-      return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _E.raise("invalid input, expecting JSString but got " + v);
-   }));
+   $Signal = Elm.Signal.make(_elm),
+   $Window = Elm.Window.make(_elm);
+   var initialDocument = $Outline$Entry.textZipper($SampleData.template);
+   var dropbox = $Dropbox.client("sy8pzlg66rwnv7n");
    var commands = $Signal.merges(_L.fromArray([A2($Signal._op["<~"],
                                               $App.Key,
-                                              A2($Signal._op["<~"],
-                                              $Keys.fromPresses,
-                                              pressesIn))
-                                              ,A2($Signal._op["<~"],
-                                              $App.Key,
-                                              A2($Signal._op["<~"],
-                                              $Keys.fromDowns,
-                                              downsIn))
-                                              ,A2($Signal._op["<~"],
-                                              $App.Key,
-                                              A2($Signal._op["<~"],
-                                              $Keys.fromMeta,
-                                              metaIn))
+                                              $Keys.lastPressed)
                                               ,A2($Signal._op["<~"],
                                               $App.Loaded,
-                                              dropboxIn)]));
+                                              dropbox.read("outlin.json"))]));
    var state = A3($Signal.foldp,
    $App.step,
-   A2($App.Model,
-   $SampleData.template,
-   $Outline$Entry.InText(4)),
+   initialDocument,
    commands);
-   var main = A2($Signal._op["<~"],
-   A2($Html.toElement,800,600),
+   var main = A2($Signal._op["~"],
    A2($Signal._op["<~"],
    $App.render,
-   state));
-   var dropboxOut = $Native$Ports.portOut("dropboxOut",
-   $Native$Ports.outgoingSignal(function (v) {
-      return v;
-   }),
-   $Signal.dropRepeats(A2($Signal._op["<~"],
+   $Window.dimensions),
+   state);
+   var jsonOutput = $Signal.dropRepeats(A2($Signal._op["<~"],
    function (x) {
-      return $Outline$Entry.toJson(x.value);
+      return $Outline$Entry.toJson($Outline$Entry.toValue(x));
    },
-   state)));
+   state));
+   var toDropbox = A2(dropbox.write,
+   "outlin.json",
+   jsonOutput);
    _elm.Main.values = {_op: _op
+                      ,dropbox: dropbox
                       ,commands: commands
+                      ,initialDocument: initialDocument
                       ,state: state
-                      ,main: main};
+                      ,main: main
+                      ,jsonOutput: jsonOutput
+                      ,toDropbox: toDropbox};
    return _elm.Main.values;
 };Elm.App = Elm.App || {};
 Elm.App.make = function (_elm) {
@@ -12180,59 +12276,262 @@ Elm.App.make = function (_elm) {
    _E = _N.Error.make(_elm),
    $moduleName = "App",
    $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
    $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Json$Decoder = Elm.Json.Decoder.make(_elm),
    $Json$Output = Elm.Json.Output.make(_elm),
    $Json$Process = Elm.Json.Process.make(_elm),
    $Keys = Elm.Keys.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Outline$Entry = Elm.Outline.Entry.make(_elm);
-   var renderDocs = A3($Html.node,
-   "div",
-   _L.fromArray([]),
-   _L.fromArray([A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘A: add to inbox")]))
-                ,A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘D: delete")]))
-                ,A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘P: promote from inbox")]))
-                ,A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘1 - ⌘7: move into …")]))
-                ,A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘M: Missorted")]))
-                ,A3($Html.node,
-                "p",
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("⌘Up/Down: move up/down")]))]));
-   var renderDocument = F2(function (value,
-   cursor) {
-      return A2($Outline$Entry.render,
-      value,
-      $Maybe.Just(A2($Debug.watch,
-      "cursor",
-      cursor)));
-   });
-   var render = function (m) {
-      return A3($Html.node,
-      "div",
-      _L.fromArray([]),
-      _L.fromArray([renderDocs
-                   ,A2(renderDocument,
-                   m.value,
-                   m.selection)]));
+   $List = Elm.List.make(_elm),
+   $Outline$Document = Elm.Outline.Document.make(_elm),
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $String = Elm.String.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var findFocus = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InChild":
+            return findFocus($Core$Array.active(z._0.children));}
+         return z;
+      }();
    };
+   var footer = function (_v2) {
+      return function () {
+         switch (_v2.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.color(A3($Color.hsl,
+              0,
+              0,
+              0.8))(A3($Graphics$Element.container,
+              _v2._0,
+              40,
+              $Graphics$Element.midLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.right,
+              A2($List.map,
+              function (x) {
+                 return $Text.asText(x);
+              },
+              _L.fromArray(["⌘D: delete"
+                           ,"⌘M: Missorted"
+                           ,"⌘Up/Down: move up/down"])))));}
+         _E.Case($moduleName,
+         "between lines 138 and 143");
+      }();
+   };
+   var title = F2(function (_v6,
+   s) {
+      return function () {
+         switch (_v6.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.color($Color.red)(A3($Graphics$Element.container,
+              _v6._0,
+              30,
+              $Graphics$Element.midLeft)($Text.plainText(s)));}
+         _E.Case($moduleName,
+         "on line 136, column 17 to 70");
+      }();
+   });
+   var inboxItemV = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Text.plainText(v._0.text);}
+         _E.Case($moduleName,
+         "on line 86, column 16 to 61");
+      }();
+   };
+   var hintText = function (s) {
+      return $Text.leftAligned($Text.color(A3($Color.hsl,
+      0,
+      0,
+      0.7))($Text.italic($Text.toText(s))));
+   };
+   var leftPanel$ = F4(function (_v12,
+   textElement,
+   descriptionElement,
+   inboxElements) {
+      return function () {
+         switch (_v12.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v12._0,
+              _v12._1,
+              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              _L.append(_L.fromArray([$Graphics$Element.color($Color.green)(A3($Graphics$Element.container,
+                                     _v12._0,
+                                     30,
+                                     $Graphics$Element.midLeft)(textElement))
+                                     ,$Graphics$Element.color($Color.yellow)(A3($Graphics$Element.container,
+                                     _v12._0,
+                                     30,
+                                     $Graphics$Element.midLeft)(descriptionElement))
+                                     ,hintText("⌘A: add to inbox")]),
+              inboxElements)));}
+         _E.Case($moduleName,
+         "between lines 89 and 94");
+      }();
+   });
+   var child = F2(function (i,e) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      _L.fromArray([hintText(_L.append("⌘",
+                   _L.append($String.show(i + 1),
+                   " ")))
+                   ,e]));
+   });
+   var rightPanel$ = F2(function (_v16,
+   childElements) {
+      return function () {
+         switch (_v16.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v16._0,
+              _v16._1,
+              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              _L.append(_L.fromArray([hintText("⌘P: promote from inbox")]),
+              A2($List.indexedMap,
+              child,
+              childElements))));}
+         _E.Case($moduleName,
+         "between lines 124 and 127");
+      }();
+   });
+   var rightPanel = F2(function (size,
+   z) {
+      return function () {
+         return function () {
+            var _v21 = $Outline$Entry.toValue(z);
+            switch (_v21.ctor)
+            {case "Entry":
+               return A2(rightPanel$,
+                 size,
+                 $List.map($Text.plainText)($List.map(function (en) {
+                    return function () {
+                       switch (en.ctor)
+                       {case "Entry":
+                          return en._0.text;}
+                       _E.Case($moduleName,
+                       "on line 133, column 34 to 68");
+                    }();
+                 })(_v21._0.children)));}
+            _E.Case($moduleName,
+            "between lines 131 and 133");
+         }();
+      }();
+   });
+   var textCursor = F2(function (fn,
+   z) {
+      return function () {
+         var _v25 = $Core$String.toTuple(z);
+         switch (_v25.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.flow,
+              $Graphics$Element.right,
+              _L.fromArray([fn(_v25._0)
+                           ,$Text.plainText("^")
+                           ,fn(_v25._1)]));}
+         _E.Case($moduleName,
+         "between lines 70 and 75");
+      }();
+   });
+   var inboxItem = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InText":
+            return A2(textCursor,
+              $Text.plainText,
+              z._0.text);}
+         return $Text.plainText($Outline$Entry.textValue(z));
+      }();
+   };
+   var leftPanel = F2(function (size,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InDescription":
+            return A4(leftPanel$,
+              size,
+              $Text.plainText(z._0.text),
+              textCursor($Text.plainText)(z._0.description),
+              A2($List.map,
+              inboxItemV,
+              z._0.inbox));
+            case "InInbox":
+            return A4(leftPanel$,
+              size,
+              $Text.plainText(z._0.text),
+              $Text.plainText(z._0.description),
+              A3($Core$Array.map,
+              inboxItemV,
+              inboxItem,
+              z._0.inbox));
+            case "InText":
+            return A4(leftPanel$,
+              size,
+              textCursor($Text.plainText)(z._0.text),
+              $Text.plainText(z._0.description),
+              A2($List.map,
+              inboxItemV,
+              z._0.inbox));}
+         return function () {
+            var _v34 = $Outline$Entry.toValue(z);
+            switch (_v34.ctor)
+            {case "Entry":
+               return A4(leftPanel$,
+                 size,
+                 $Text.plainText(_v34._0.text),
+                 $Text.plainText(_v34._0.description),
+                 A2($List.map,
+                 inboxItemV,
+                 _v34._0.inbox));}
+            _E.Case($moduleName,
+            "between lines 111 and 115");
+         }();
+      }();
+   });
+   var render = F2(function (_v36,
+   z) {
+      return function () {
+         switch (_v36.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var focus = findFocus(z);
+                 var header = A2(title,
+                 {ctor: "_Tuple2"
+                 ,_0: _v36._0
+                 ,_1: _v36._1},
+                 $Outline$Entry.textValue(z));
+                 var f = footer({ctor: "_Tuple2"
+                                ,_0: _v36._0
+                                ,_1: _v36._1});
+                 var mh = _v36._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
+                 return A2($Graphics$Element.flow,
+                 $Graphics$Element.down,
+                 _L.fromArray([header
+                              ,A2($Graphics$Element.flow,
+                              $Graphics$Element.right,
+                              _L.fromArray([A2(leftPanel,
+                                           {ctor: "_Tuple2"
+                                           ,_0: $Basics.floor($Basics.toFloat(_v36._0) / 2)
+                                           ,_1: mh},
+                                           focus)
+                                           ,A2(rightPanel,
+                                           {ctor: "_Tuple2"
+                                           ,_0: $Basics.floor($Basics.toFloat(_v36._0) / 2)
+                                           ,_1: mh},
+                                           focus)]))
+                              ,f]));
+              }();}
+         _E.Case($moduleName,
+         "between lines 152 and 163");
+      }();
+   });
    var Loaded = function (a) {
       return {ctor: "Loaded"
              ,_0: a};
@@ -12245,34 +12544,18 @@ Elm.App.make = function (_elm) {
       return {ctor: "Key",_0: a};
    };
    var updateModel = F2(function (action,
-   _v0) {
+   z) {
       return function () {
-         return function () {
-            var _v2 = A2(action,
-            _v0.value,
-            _v0.selection);
-            switch (_v2.ctor)
-            {case "Delete": return {_: {}
-                                   ,selection: _v0.selection
-                                   ,value: _v0.value};
-               case "EnterNext": return {_: {}
-                                        ,selection: _v0.selection
-                                        ,value: _v0.value};
-               case "EnterPrev": return {_: {}
-                                        ,selection: _v0.selection
-                                        ,value: _v0.value};
-               case "NoChange": return {_: {}
-                                       ,selection: _v0.selection
-                                       ,value: _v0.value};
-               case "Split": return {_: {}
-                                    ,selection: _v0.selection
-                                    ,value: _v0.value};
-               case "Update": return {_: {}
-                                     ,selection: _v2._1
-                                     ,value: _v2._0};}
-            _E.Case($moduleName,
-            "between lines 24 and 31");
-         }();
+         var _v40 = action(z);
+         switch (_v40.ctor)
+         {case "Delete": return z;
+            case "EnterNext": return z;
+            case "EnterPrev": return z;
+            case "NoChange": return z;
+            case "Split": return z;
+            case "Update": return _v40._0;}
+         _E.Case($moduleName,
+         "between lines 24 and 31");
       }();
    });
    var step = F2(function (c,m) {
@@ -12354,18 +12637,17 @@ Elm.App.make = function (_elm) {
               break;
             case "Loaded":
             return function () {
-                 var _v13 = A2($Json$Process.into,
+                 var _v50 = A2($Json$Process.into,
                  $Json$Decoder.fromString(c._0),
                  $Outline$Entry.decoder);
-                 switch (_v13.ctor)
-                 {case "Success": return {_: {}
-                                         ,selection: $Outline$Entry.InText(0)
-                                         ,value: _v13._0};}
+                 switch (_v50.ctor)
+                 {case "Success":
+                    return $Outline$Entry.textZipper(_v50._0);}
                  return $Basics.fst({ctor: "_Tuple2"
                                     ,_0: m
                                     ,_1: A2($Debug.log,
                                     "Load failed",
-                                    _v13)});
+                                    _v50)});
               }();}
          return $Basics.fst({ctor: "_Tuple2"
                             ,_0: m
@@ -12374,20 +12656,24 @@ Elm.App.make = function (_elm) {
                             c)});
       }();
    });
-   var Model = F2(function (a,b) {
-      return {_: {}
-             ,selection: b
-             ,value: a};
-   });
    _elm.App.values = {_op: _op
-                     ,Model: Model
                      ,updateModel: updateModel
                      ,Key: Key
                      ,KeyMeta: KeyMeta
                      ,Loaded: Loaded
                      ,step: step
-                     ,renderDocument: renderDocument
-                     ,renderDocs: renderDocs
+                     ,textCursor: textCursor
+                     ,hintText: hintText
+                     ,inboxItem: inboxItem
+                     ,inboxItemV: inboxItemV
+                     ,leftPanel$: leftPanel$
+                     ,leftPanel: leftPanel
+                     ,child: child
+                     ,rightPanel$: rightPanel$
+                     ,rightPanel: rightPanel
+                     ,title: title
+                     ,footer: footer
+                     ,findFocus: findFocus
                      ,render: render};
    return _elm.App.values;
 };Elm.SampleData = Elm.SampleData || {};
@@ -12534,6 +12820,24 @@ Elm.SampleData.make = function (_elm) {
                             ,template: template};
    return _elm.SampleData.values;
 };Elm.Outline = Elm.Outline || {};
+Elm.Outline.Document = Elm.Outline.Document || {};
+Elm.Outline.Document.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Document = _elm.Outline.Document || {};
+   if (_elm.Outline.Document.values)
+   return _elm.Outline.Document.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _A = _N.Array.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Outline.Document",
+   $Outline$Entry = Elm.Outline.Entry.make(_elm);
+   _elm.Outline.Document.values = {_op: _op};
+   return _elm.Outline.Document.values;
+};Elm.Outline = Elm.Outline || {};
 Elm.Outline.Entry = Elm.Outline.Entry || {};
 Elm.Outline.Entry.make = function (_elm) {
    "use strict";
@@ -12552,12 +12856,9 @@ Elm.Outline.Entry.make = function (_elm) {
    $Core$Action = Elm.Core.Action.make(_elm),
    $Core$Array = Elm.Core.Array.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
    $Json$Decoder = Elm.Json.Decoder.make(_elm),
    $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $String = Elm.String.make(_elm);
+   $Maybe = Elm.Maybe.make(_elm);
    var toJson = function (entry) {
       return function () {
          switch (entry.ctor)
@@ -12576,96 +12877,9 @@ Elm.Outline.Entry.make = function (_elm) {
               entry._0.children),
               "}"))))))));}
          _E.Case($moduleName,
-         "between lines 254 and 259");
+         "between lines 307 and 312");
       }();
    };
-   var toChildrenCursor = function (mc) {
-      return function () {
-         switch (mc.ctor)
-         {case "Just":
-            switch (mc._0.ctor)
-              {case "InChild":
-                 switch (mc._0._0.ctor)
-                   {case "_Tuple2":
-                      return $Maybe.Just(A2($Core$Array.cursor,
-                        mc._0._0._0,
-                        mc._0._0._1));}
-                   break;}
-              break;}
-         return $Maybe.Nothing;
-      }();
-   };
-   var toInboxCursor = function (mc) {
-      return function () {
-         switch (mc.ctor)
-         {case "Just":
-            switch (mc._0.ctor)
-              {case "InInbox":
-                 switch (mc._0._0.ctor)
-                   {case "_Tuple2":
-                      return $Maybe.Just(A2($Core$Array.cursor,
-                        mc._0._0._0,
-                        mc._0._0._1));}
-                   break;}
-              break;}
-         return $Maybe.Nothing;
-      }();
-   };
-   var toDescriptionCursor = function (mc) {
-      return function () {
-         switch (mc.ctor)
-         {case "Just":
-            switch (mc._0.ctor)
-              {case "InDescription":
-                 return $Maybe.Just(mc._0._0);}
-              break;}
-         return $Maybe.Nothing;
-      }();
-   };
-   var toTextCursor = function (mc) {
-      return function () {
-         switch (mc.ctor)
-         {case "Just":
-            switch (mc._0.ctor)
-              {case "InText":
-                 return $Maybe.Just(mc._0._0);}
-              break;}
-         return $Maybe.Nothing;
-      }();
-   };
-   var render = F2(function (value,
-   mc) {
-      return function () {
-         switch (value.ctor)
-         {case "Entry":
-            return A3($Html.node,
-              "li",
-              _L.fromArray([]),
-              _L.fromArray([A2($Core$String.render,
-                           value._0.text,
-                           toTextCursor(mc))
-                           ,A3($Html.node,
-                           "i",
-                           _L.fromArray([]),
-                           _L.fromArray([A2($Core$String.render,
-                           value._0.description,
-                           toDescriptionCursor(mc))]))
-                           ,A2($Html.node,
-                           "ul",
-                           _L.fromArray([]))(A3($Core$Array.render,
-                           render,
-                           value._0.inbox,
-                           toInboxCursor(mc)))
-                           ,A2($Html.node,
-                           "ol",
-                           _L.fromArray([]))(A3($Core$Array.render,
-                           render,
-                           value._0.children,
-                           toChildrenCursor(mc)))]));}
-         _E.Case($moduleName,
-         "between lines 243 and 249");
-      }();
-   });
    var swap = F5(function (ai,
    a,
    bi,
@@ -12677,12 +12891,58 @@ Elm.Outline.Entry.make = function (_elm) {
          ai) ? b : _U.eq(i,bi) ? a : x;
       }))(list);
    });
+   var tryMap2 = F3(function (fn,
+   list,
+   $default) {
+      return function () {
+         switch (list.ctor)
+         {case "::": return function () {
+                 var _v5 = fn(list._0);
+                 switch (_v5.ctor)
+                 {case "Just":
+                    return $Maybe.Just(_v5._0);
+                    case "Nothing":
+                    return A3(tryMap2,
+                      fn,
+                      list._1,
+                      $default);}
+                 _E.Case($moduleName,
+                 "between lines 143 and 146");
+              }();
+            case "[]": return $default;}
+         _E.Case($moduleName,
+         "between lines 142 and 146");
+      }();
+   });
+   var tryMap = F3(function (fn,
+   list,
+   $default) {
+      return function () {
+         switch (list.ctor)
+         {case "::": return function () {
+                 var _v10 = fn(list._0);
+                 switch (_v10.ctor)
+                 {case "Just": return _v10._0;
+                    case "Nothing":
+                    return A3(tryMap,
+                      fn,
+                      list._1,
+                      $default);}
+                 _E.Case($moduleName,
+                 "between lines 136 and 139");
+              }();
+            case "[]": return $default;}
+         _E.Case($moduleName,
+         "between lines 135 and 139");
+      }();
+   });
+   var $try = tryMap($Basics.identity);
    var unwrap = function (en) {
       return function () {
          switch (en.ctor)
          {case "Entry": return en._0;}
          _E.Case($moduleName,
-         "on line 75, column 13 to 36");
+         "on line 104, column 13 to 36");
       }();
    };
    var getInbox = function (en) {
@@ -12716,10 +12976,94 @@ Elm.Outline.Entry.make = function (_elm) {
       return {ctor: "InChild"
              ,_0: a};
    };
+   var childZipper = F2(function (fn,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return InChild(_U.replace([["children"
+                                       ,fn(v._0.children)]],
+              v._0));}
+         _E.Case($moduleName,
+         "on line 50, column 20 to 82");
+      }();
+   });
+   var childZipperAt = F3(function (i,
+   fn,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return InChild(_U.replace([["children"
+                                       ,A3($Core$Array.zipperAt,
+                                       i,
+                                       fn,
+                                       v._0.children)]],
+              v._0));}
+         _E.Case($moduleName,
+         "on line 53, column 24 to 108");
+      }();
+   });
+   var swapChildren = F2(function (fn,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InChild":
+            return function () {
+                 var _v20 = $Core$Array.active(z._0.children);
+                 switch (_v20.ctor)
+                 {case "InChild":
+                    return $Core$Action.NoChange;
+                    case "InInbox":
+                    return $Core$Action.NoChange;}
+                 return function () {
+                    var _v23 = fn(z._0.children);
+                    switch (_v23.ctor)
+                    {case "Just":
+                       return $Core$Action.Update(InChild(_U.replace([["children"
+                                                                      ,_v23._0]],
+                         z._0)));
+                       case "Nothing":
+                       return $Core$Action.Update(InChild(z._0));}
+                    _E.Case($moduleName,
+                    "between lines 202 and 205");
+                 }();
+              }();}
+         return $Core$Action.NoChange;
+      }();
+   });
    var InInbox = function (a) {
       return {ctor: "InInbox"
              ,_0: a};
    };
+   var inboxZipper = F2(function (fn,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return InInbox(_U.replace([["inbox"
+                                       ,fn(v._0.inbox)]],
+              v._0));}
+         _E.Case($moduleName,
+         "on line 56, column 20 to 76");
+      }();
+   });
+   var inboxZipperAt = F3(function (i,
+   fn,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return InInbox(_U.replace([["inbox"
+                                       ,A3($Core$Array.zipperAt,
+                                       i,
+                                       fn,
+                                       v._0.inbox)]],
+              v._0));}
+         _E.Case($moduleName,
+         "on line 59, column 24 to 102");
+      }();
+   });
    var InDescription = function (a) {
       return {ctor: "InDescription"
              ,_0: a};
@@ -12728,42 +13072,165 @@ Elm.Outline.Entry.make = function (_elm) {
       return {ctor: "InText"
              ,_0: a};
    };
+   var textZipper = function (en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return InText(_U.replace([["text"
+                                      ,$Core$String.endZipper(en._0.text)]],
+              en._0));}
+         _E.Case($moduleName,
+         "on line 44, column 17 to 90");
+      }();
+   };
+   var firstInboxZipper = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return function () {
+                 var _v33 = v._0.inbox;
+                 switch (_v33.ctor)
+                 {case "::":
+                    return $Maybe.Just(InInbox(_U.replace([["inbox"
+                                                           ,A2($Core$Array.firstZipper,
+                                                           textZipper,
+                                                           v._0.inbox)]],
+                      v._0)));}
+                 return $Maybe.Nothing;
+              }();}
+         _E.Case($moduleName,
+         "between lines 108 and 111");
+      }();
+   };
+   var firstChildInboxZipper = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Maybe.map(function (x) {
+                 return InChild(_U.replace([["children"
+                                            ,x]],
+                 v._0));
+              })(A2($Core$Array.firstZipperThat,
+              firstInboxZipper,
+              v._0.children));}
+         _E.Case($moduleName,
+         "between lines 130 and 132");
+      }();
+   };
+   var moveToInboxOfFirstChildOrNext = function (en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return A3($Maybe.maybe,
+              $Core$Action.EnterNext,
+              $Core$Action.Update,
+              firstChildInboxZipper(en));}
+         _E.Case($moduleName,
+         "between lines 152 and 153");
+      }();
+   };
+   var lastInboxZipper = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return function () {
+                 var _v42 = v._0.inbox;
+                 switch (_v42.ctor)
+                 {case "::":
+                    return $Maybe.Just(InInbox(_U.replace([["inbox"
+                                                           ,A2($Core$Array.lastZipper,
+                                                           textZipper,
+                                                           v._0.inbox)]],
+                      v._0)));}
+                 return $Maybe.Nothing;
+              }();}
+         _E.Case($moduleName,
+         "between lines 114 and 117");
+      }();
+   };
+   var firstChildZipper = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Maybe.map(function (x) {
+                 return InChild(_U.replace([["children"
+                                            ,x]],
+                 v._0));
+              })(A2($Core$Array.firstZipperThat,
+              function (x) {
+                 return $Maybe.Just(textZipper(x));
+              },
+              v._0.children));}
+         _E.Case($moduleName,
+         "between lines 120 and 122");
+      }();
+   };
+   var lastChildZipper = function (v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Maybe.map(function (x) {
+                 return InChild(_U.replace([["children"
+                                            ,x]],
+                 v._0));
+              })(A2($Core$Array.lastZipperThat,
+              function (x) {
+                 return $Maybe.Just(textZipper(x));
+              },
+              v._0.children));}
+         _E.Case($moduleName,
+         "between lines 125 and 127");
+      }();
+   };
+   var textZipperAt = F2(function (i,
+   en) {
+      return function () {
+         switch (en.ctor)
+         {case "Entry":
+            return InText(_U.replace([["text"
+                                      ,A2($Core$String.zipperAt,
+                                      i,
+                                      en._0.text)]],
+              en._0));}
+         _E.Case($moduleName,
+         "on line 47, column 21 to 95");
+      }();
+   });
    var findLastCursor = function (en) {
       return function () {
          switch (en.ctor)
          {case "Entry":
             return _U.cmp($List.length(en._0.children),
-              0) > 0 ? InChild({ctor: "_Tuple2"
-                               ,_0: -1 + $List.length(en._0.children)
-                               ,_1: InText(0)}) : _U.cmp($List.length(en._0.inbox),
-              0) > 0 ? InInbox({ctor: "_Tuple2"
-                               ,_0: -1 + $List.length(en._0.inbox)
-                               ,_1: InText(0)}) : InText(0);}
+              0) > 0 ? InChild(_U.replace([["children"
+                                           ,A2($Core$Array.lastZipper,
+                                           findLastCursor,
+                                           en._0.children)]],
+              en._0)) : _U.cmp($List.length(en._0.inbox),
+              0) > 0 ? InInbox(_U.replace([["inbox"
+                                           ,A2($Core$Array.lastZipper,
+                                           findLastCursor,
+                                           en._0.inbox)]],
+              en._0)) : InText(_U.replace([["text"
+                                           ,$Core$String.endZipper(en._0.text)]],
+              en._0));}
          _E.Case($moduleName,
-         "between lines 41 and 45");
-      }();
-   };
-   var findFirstChildInbox = function (en) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function (i) {
-                 return InChild({ctor: "_Tuple2"
-                                ,_0: i
-                                ,_1: InInbox({ctor: "_Tuple2"
-                                             ,_0: 0
-                                             ,_1: InText(9)})});
-              }($List.head($List.filterMap($Basics.identity)($List.indexedMap(F2(function (i,
-              ee) {
-                 return _U.cmp($List.length(getInbox(ee)),
-                 0) > 0 ? $Maybe.Just(i) : $Maybe.Nothing;
-              }))(en._0.children))));}
-         _E.Case($moduleName,
-         "between lines 79 and 83");
+         "between lines 62 and 66");
       }();
    };
    var Entry = function (a) {
       return {ctor: "Entry",_0: a};
+   };
+   var emptyEntry = Entry({_: {}
+                          ,children: _L.fromArray([])
+                          ,description: ""
+                          ,inbox: _L.fromArray([])
+                          ,text: ""});
+   var textEntry = function (t) {
+      return Entry({_: {}
+                   ,children: _L.fromArray([])
+                   ,description: ""
+                   ,inbox: _L.fromArray([])
+                   ,text: t});
    };
    var entry = F4(function (t,
    d,
@@ -12775,6 +13242,264 @@ Elm.Outline.Entry.make = function (_elm) {
                    ,inbox: i
                    ,text: t});
    });
+   var toValue = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InChild":
+            return Entry(_U.replace([["children"
+                                     ,A2($Core$Array.toValue,
+                                     toValue,
+                                     z._0.children)]],
+              z._0));
+            case "InDescription":
+            return Entry(_U.replace([["description"
+                                     ,$Core$String.toValue(z._0.description)]],
+              z._0));
+            case "InInbox":
+            return Entry(_U.replace([["inbox"
+                                     ,A2($Core$Array.toValue,
+                                     toValue,
+                                     z._0.inbox)]],
+              z._0));
+            case "InText":
+            return Entry(_U.replace([["text"
+                                     ,$Core$String.toValue(z._0.text)]],
+              z._0));}
+         _E.Case($moduleName,
+         "between lines 33 and 37");
+      }();
+   };
+   var textValue = function (z) {
+      return function () {
+         var _v58 = toValue(z);
+         switch (_v58.ctor)
+         {case "Entry":
+            return _v58._0.text;}
+         _E.Case($moduleName,
+         "between lines 40 and 41");
+      }();
+   };
+   var addInboxItem_ = F2(function (newEntry,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InInbox":
+            return $Core$Action.Update(InInbox(_U.replace([["inbox"
+                                                           ,A2($Core$Array.firstZipper,
+                                                           textZipper,
+                                                           A2($List._op["::"],
+                                                           newEntry,
+                                                           A2($Core$Array.toValue,
+                                                           toValue,
+                                                           z._0.inbox)))]],
+              z._0)));
+            case "InText":
+            return $Core$Action.Update(InInbox(_U.replace([["text"
+                                                           ,$Core$String.toValue(z._0.text)]
+                                                          ,["inbox"
+                                                           ,A2($Core$Array.firstZipper,
+                                                           textZipper,
+                                                           A2($List._op["::"],
+                                                           newEntry,
+                                                           z._0.inbox))]],
+              z._0)));}
+         return $Core$Action.NoChange;
+      }();
+   });
+   var promote_ = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InInbox":
+            return function () {
+                 var i = $Core$Array.active(z._0.inbox);
+                 return function () {
+                    var _v65 = A2($Core$Array.remove,
+                    textZipper,
+                    z._0.inbox);
+                    switch (_v65.ctor)
+                    {case "Just":
+                       return $Core$Action.Update(InInbox(_U.replace([["inbox"
+                                                                      ,_v65._0]
+                                                                     ,["children"
+                                                                      ,A2($List._op["::"],
+                                                                      toValue(i),
+                                                                      z._0.children)]],
+                         z._0)));
+                       case "Nothing":
+                       return $Core$Action.Update(InChild(_U.replace([["inbox"
+                                                                      ,_L.fromArray([])]
+                                                                     ,["children"
+                                                                      ,A3($Core$Array.zipper,
+                                                                      _L.fromArray([]),
+                                                                      i,
+                                                                      z._0.children)]],
+                         z._0)));}
+                    _E.Case($moduleName,
+                    "between lines 91 and 100");
+                 }();
+              }();}
+         return $Core$Action.NoChange;
+      }();
+   };
+   var doEntry = F2(function (action,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InChild":
+            return function () {
+                 var _v69 = action(z);
+                 switch (_v69.ctor)
+                 {case "NoChange":
+                    return function () {
+                         var _v70 = A5($Core$Array.$do,
+                         toValue,
+                         textZipper,
+                         findLastCursor,
+                         doEntry(action),
+                         z._0.children);
+                         switch (_v70.ctor)
+                         {case "NoChange":
+                            return $Core$Action.NoChange;
+                            case "Update":
+                            return $Core$Action.Update(InChild(_U.replace([["children"
+                                                                           ,_v70._0]],
+                              z._0)));}
+                         _E.Case($moduleName,
+                         "between lines 213 and 216");
+                      }();}
+                 return _v69;
+              }();}
+         return action(z);
+      }();
+   });
+   var addInboxItem = doEntry(addInboxItem_(emptyEntry));
+   var promote = doEntry(promote_);
+   var moveChildUp = doEntry(swapChildren($Core$Array.moveUp));
+   var moveChildDown = doEntry(swapChildren($Core$Array.moveDown));
+   var $do = F2(function (stringAction,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InChild":
+            return function () {
+                 var _v77 = A5($Core$Array.$do,
+                 toValue,
+                 textZipper,
+                 findLastCursor,
+                 $do(stringAction),
+                 z._0.children);
+                 switch (_v77.ctor)
+                 {case "Delete":
+                    return $Core$Action.Update(InText(_U.replace([["children"
+                                                                  ,_L.fromArray([])]
+                                                                 ,["text"
+                                                                  ,$Core$String.endZipper(z._0.text)]],
+                      z._0)));
+                    case "EnterNext":
+                    return $Core$Action.EnterNext;
+                    case "EnterPrev":
+                    return A2($try,
+                      _L.fromArray([$Maybe.map($Core$Action.Update)(lastInboxZipper(toValue(z)))]),
+                      $Core$Action.Update(textZipper(toValue(z))));
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Update":
+                    return $Core$Action.Update(InChild(_U.replace([["children"
+                                                                   ,_v77._0]],
+                      z._0)));}
+                 _E.Case($moduleName,
+                 "between lines 243 and 250");
+              }();
+            case "InDescription":
+            return function () {
+                 var _v79 = stringAction(z._0.description);
+                 switch (_v79.ctor)
+                 {case "Delete":
+                    return $Core$Action.Delete;
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Update":
+                    return $Core$Action.Update(InDescription(_U.replace([["description"
+                                                                         ,_v79._0]],
+                      z._0)));}
+                 _E.Case($moduleName,
+                 "between lines 231 and 235");
+              }();
+            case "InInbox":
+            return function () {
+                 var _v81 = A5($Core$Array.$do,
+                 toValue,
+                 textZipper,
+                 textZipper,
+                 $do(stringAction),
+                 z._0.inbox);
+                 switch (_v81.ctor)
+                 {case "Delete":
+                    return $Core$Action.Update(InText(_U.replace([["inbox"
+                                                                  ,_L.fromArray([])]
+                                                                 ,["text"
+                                                                  ,$Core$String.endZipper(z._0.text)]],
+                      z._0)));
+                    case "EnterNext":
+                    return A2($try,
+                      _L.fromArray([$Maybe.map($Core$Action.Update)(firstChildZipper(toValue(z)))]),
+                      $Core$Action.EnterNext);
+                    case "EnterPrev":
+                    return $Core$Action.Update(textZipper(toValue(z)));
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Update":
+                    return $Core$Action.Update(InInbox(_U.replace([["inbox"
+                                                                   ,_v81._0]],
+                      z._0)));}
+                 _E.Case($moduleName,
+                 "between lines 235 and 243");
+              }();
+            case "InText":
+            return function () {
+                 var _v83 = stringAction(z._0.text);
+                 switch (_v83.ctor)
+                 {case "Delete":
+                    return $Core$Action.Delete;
+                    case "EnterNext":
+                    return A2($try,
+                      _L.fromArray([$Maybe.map($Core$Action.Update)(firstInboxZipper(toValue(z)))
+                                   ,$Maybe.map($Core$Action.Update)(firstChildZipper(toValue(z)))]),
+                      $Core$Action.EnterNext);
+                    case "EnterPrev":
+                    return $Core$Action.EnterPrev;
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return A3($Core$Action.Split,
+                      A2($List.map,textEntry,_v83._0),
+                      InText(_U.replace([["text"
+                                         ,_v83._1]],
+                      z._0)),
+                      A2($List.map,
+                      textEntry,
+                      _v83._2));
+                    case "Update":
+                    return $Core$Action.Update(InText(_U.replace([["text"
+                                                                  ,_v83._0]],
+                      z._0)));}
+                 _E.Case($moduleName,
+                 "between lines 221 and 231");
+              }();}
+         _E.Case($moduleName,
+         "between lines 220 and 250");
+      }();
+   });
+   var goLeft = $do($Core$String.goLeft);
+   var goRight = $do($Core$String.goRight);
+   var backspace = $do($Core$String.backspace);
+   var $delete = $do($Core$String.$delete);
+   var insert = function (s) {
+      return $do($Core$String.insert(s));
+   };
+   var enter = $do($Core$String.split);
+   var goNext = $do($Core$Action.always($Core$Action.EnterNext));
+   var goPrev = $do($Core$Action.always($Core$Action.EnterPrev));
    var addInboxItem__ = F2(function (s,
    en) {
       return function () {
@@ -12786,572 +13511,174 @@ Elm.Outline.Entry.make = function (_elm) {
                                      en._0.inbox)]],
               en._0));}
          _E.Case($moduleName,
-         "on line 48, column 23 to 80");
+         "on line 69, column 23 to 80");
       }();
    });
-   var addInboxItem_ = F3(function (s,
-   en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return A2($Core$Action.Update,
-              A2(addInboxItem__,s,en),
-              InInbox({ctor: "_Tuple2"
-                      ,_0: 0
-                      ,_1: InText(0)}));}
-         _E.Case($moduleName,
-         "between lines 51 and 52");
-      }();
+   var appendToInboxOfChild = F3(function (n,
+   v,
+   children) {
+      return A3($Core$Array.mapAt,
+      n,
+      function (_v90) {
+         return function () {
+            switch (_v90.ctor)
+            {case "Entry":
+               return Entry(_U.replace([["inbox"
+                                        ,A2($Core$Array.prepend,
+                                        v,
+                                        _v90._0.inbox)]],
+                 _v90._0));}
+            _E.Case($moduleName,
+            "on line 156, column 71 to 120");
+         }();
+      },
+      children);
    });
-   var promote_ = F2(function (en,
-   cur) {
+   var moveInto_ = F2(function (n,
+   z) {
       return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InInbox":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         return A2($Core$Action.Update,
-                           Entry(_U.replace([["inbox"
-                                             ,A2(dropAt,
-                                             cur._0._0,
-                                             en._0.inbox)]
-                                            ,["children"
-                                             ,A2($List._op["::"],
-                                             A2(at,cur._0._0,en._0.inbox),
-                                             en._0.children)]],
-                           en._0)),
-                           function () {
-                              var newI = A2($Basics.min,
-                              cur._0._0,
-                              $List.length(en._0.inbox) - 2);
-                              return _U.cmp(newI,
-                              0) > -1 ? InInbox({ctor: "_Tuple2"
-                                                ,_0: newI
-                                                ,_1: InText(0)}) : InChild({ctor: "_Tuple2"
-                                                                           ,_0: 0
-                                                                           ,_1: cur._0._1});
-                           }());}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 66 and 71");
-      }();
-   });
-   var moveInto_ = F3(function (n,
-   en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InInbox":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         return _U.cmp($List.length(en._0.children),
-                           n) < 1 ? $Core$Action.NoChange : function () {
-                              var newE = Entry(_U.replace([["inbox"
-                                                           ,A2(dropAt,
-                                                           cur._0._0,
-                                                           en._0.inbox)]
-                                                          ,["children"
-                                                           ,A3(changeAt,
-                                                           function (ee) {
-                                                              return A2(addInboxItem__,
-                                                              A2(at,
-                                                              cur._0._0,
-                                                              en._0.inbox),
-                                                              ee);
-                                                           },
-                                                           n,
-                                                           en._0.children)]],
-                              en._0));
-                              return A2($Core$Action.Update,
-                              newE,
-                              function () {
-                                 var newI = A2($Basics.min,
-                                 cur._0._0,
-                                 $List.length(en._0.inbox) - 2);
-                                 return _U.cmp(newI,
-                                 0) > -1 ? InInbox({ctor: "_Tuple2"
-                                                   ,_0: newI
-                                                   ,_1: cur._0._1}) : findFirstChildInbox(newE);
-                              }());
-                           }();}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 86 and 94");
-      }();
-   });
-   var removeChild = F2(function (en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InChild":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         return function () {
-                              var newI = A2($Basics.min,
-                              cur._0._0,
-                              $List.length(en._0.children) - 2);
-                              var newE = Entry(_U.replace([["children"
-                                                           ,A2(dropAt,
-                                                           cur._0._0,
-                                                           en._0.children)]],
-                              en._0));
-                              return A2($Core$Action.Update,
-                              newE,
-                              _U.cmp(newI,
-                              0) > -1 ? InChild({ctor: "_Tuple2"
-                                                ,_0: newI
-                                                ,_1: cur._0._1}) : InText(0));
-                           }();}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 99 and 104");
-      }();
-   });
-   var removeInboxItem = F2(function (en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InInbox":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         return function () {
-                              var newI = A2($Basics.min,
-                              cur._0._0,
-                              $List.length(en._0.inbox) - 2);
-                              var newE = Entry(_U.replace([["inbox"
-                                                           ,A2(dropAt,
-                                                           cur._0._0,
-                                                           en._0.inbox)]],
-                              en._0));
-                              return A2($Core$Action.Update,
-                              newE,
-                              _U.cmp(newI,
-                              0) > -1 ? InInbox({ctor: "_Tuple2"
-                                                ,_0: newI
-                                                ,_1: cur._0._1}) : InText(0));
-                           }();}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 107 and 112");
-      }();
-   });
-   var updateActiveChild = F3(function (action,
-   en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InChild":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         return function () {
-                              var child = A2(at,
-                              cur._0._0,
-                              en._0.children);
-                              return function () {
-                                 var _v60 = A2(action,
-                                 child,
-                                 cur._0._1);
-                                 switch (_v60.ctor)
-                                 {case "Update":
-                                    return A2($Core$Action.Update,
-                                      Entry(_U.replace([["children"
-                                                        ,A3(changeAt,
-                                                        function (_v63) {
-                                                           return function () {
-                                                              return _v60._0;
-                                                           }();
-                                                        },
-                                                        cur._0._0,
-                                                        en._0.children)]],
-                                      en._0)),
-                                      InChild({ctor: "_Tuple2"
-                                              ,_0: cur._0._0
-                                              ,_1: _v60._1}));}
-                                 _E.Case($moduleName,
-                                 "between lines 118 and 120");
-                              }();
-                           }();}
-                      break;}
+         switch (z.ctor)
+         {case "InInbox":
+            return _U.cmp(n,
+              $List.length(z._0.children)) > -1 ? $Core$Action.NoChange : function () {
+                 var _v95 = A2($Core$Array.remove,
+                 textZipper,
+                 z._0.inbox);
+                 switch (_v95.ctor)
+                 {case "Just":
+                    return $Core$Action.Update(InInbox(_U.replace([["inbox"
+                                                                   ,_v95._0]
+                                                                  ,["children"
+                                                                   ,A3(appendToInboxOfChild,
+                                                                   n,
+                                                                   toValue($Core$Array.active(z._0.inbox)),
+                                                                   z._0.children)]],
+                      z._0)));
+                    case "Nothing":
+                    return moveToInboxOfFirstChildOrNext(Entry(_U.replace([["inbox"
+                                                                           ,_L.fromArray([])]
+                                                                          ,["children"
+                                                                           ,A3(appendToInboxOfChild,
+                                                                           n,
+                                                                           toValue($Core$Array.active(z._0.inbox)),
+                                                                           z._0.children)]],
+                      z._0)));}
                  _E.Case($moduleName,
-                 "between lines 115 and 120");
+                 "between lines 162 and 165");
               }();}
-         _E.Case($moduleName,
-         "between lines 115 and 120");
+         return $Core$Action.NoChange;
       }();
    });
-   var missort_ = F2(function (en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InChild":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         switch (cur._0._1.ctor)
-                           {case "InChild":
-                              switch (cur._0._1._0.ctor)
-                                {case "_Tuple2":
-                                   switch (cur._0._1._0._1.ctor)
-                                     {case "InChild":
-                                        return $Core$Action.NoChange;
-                                        case "InInbox":
-                                        return $Core$Action.NoChange;}
-                                     return function () {
-                                        var item = at(cur._0._1._0._0)(function (_) {
-                                           return _.children;
-                                        }(unwrap(at(cur._0._0)(en._0.children))));
-                                        return function () {
-                                           var _v79 = A3(updateActiveChild,
-                                           removeChild,
-                                           en,
-                                           cur);
-                                           switch (_v79.ctor)
-                                           {case "Update":
-                                              return function () {
-                                                   var _v82 = A3(addInboxItem_,
-                                                   item,
-                                                   _v79._0,
-                                                   _v79._1);
-                                                   switch (_v82.ctor)
-                                                   {case "Update":
-                                                      return A2($Core$Action.Update,
-                                                        _v82._0,
-                                                        _v79._1);}
-                                                   _E.Case($moduleName,
-                                                   "between lines 129 and 131");
-                                                }();}
-                                           _E.Case($moduleName,
-                                           "between lines 128 and 131");
-                                        }();
-                                     }();}
-                                break;
-                              case "InInbox":
-                              switch (cur._0._1._0.ctor)
-                                {case "_Tuple2":
-                                   return function () {
-                                        var item = at(cur._0._1._0._0)(function (_) {
-                                           return _.inbox;
-                                        }(unwrap(at(cur._0._0)(en._0.children))));
-                                        return function () {
-                                           var _v85 = A3(updateActiveChild,
-                                           removeInboxItem,
-                                           en,
-                                           cur);
-                                           switch (_v85.ctor)
-                                           {case "Update":
-                                              return function () {
-                                                   var _v88 = A3(addInboxItem_,
-                                                   item,
-                                                   _v85._0,
-                                                   _v85._1);
-                                                   switch (_v88.ctor)
-                                                   {case "Update":
-                                                      return A2($Core$Action.Update,
-                                                        _v88._0,
-                                                        _v85._1);}
-                                                   return $Core$Action.NoChange;
-                                                }();}
-                                           return $Core$Action.NoChange;
-                                        }();
-                                     }();}
-                                break;}
-                           break;}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 123 and 138");
-      }();
-   });
-   var swapChildren = F3(function (produceToIndex,
-   en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InChild":
-                    switch (cur._0.ctor)
-                      {case "_Tuple2":
-                         switch (cur._0._1.ctor)
-                           {case "InChild":
-                              return $Core$Action.NoChange;
-                              case "InInbox":
-                              return $Core$Action.NoChange;}
-                           return function () {
-                              var bIndex = $Basics.min($List.length(en._0.children) - 1)($Basics.max(0)(produceToIndex(cur._0._0)));
-                              var b = at(bIndex)(en._0.children);
-                              var aIndex = cur._0._0;
-                              var a = at(aIndex)(en._0.children);
-                              var newChildren = A4(swap,
-                              aIndex,
-                              a,
-                              bIndex,
-                              b)(en._0.children);
-                              return A2($Core$Action.Update,
-                              Entry(_U.replace([["children"
-                                                ,newChildren]],
-                              en._0)),
-                              InChild({ctor: "_Tuple2"
-                                      ,_0: bIndex
-                                      ,_1: cur._0._1}));
-                           }();}
-                      break;}
-                 return $Core$Action.NoChange;
-              }();}
-         _E.Case($moduleName,
-         "between lines 150 and 160");
-      }();
-   });
-   var doEntry = F3(function (action,
-   en,
-   cur) {
-      return function () {
-         switch (en.ctor)
-         {case "Entry":
-            return function () {
-                 switch (cur.ctor)
-                 {case "InChild":
-                    return function () {
-                         var _v103 = A2(action,
-                         en,
-                         cur);
-                         switch (_v103.ctor)
-                         {case "NoChange":
-                            return function () {
-                                 var _v104 = A5($Core$Array.$do,
-                                 InText(0),
-                                 findLastCursor,
-                                 doEntry(action),
-                                 en._0.children,
-                                 cur._0);
-                                 switch (_v104.ctor)
-                                 {case "NoChange":
-                                    return $Core$Action.NoChange;
-                                    case "Update":
-                                    return A2($Core$Action.Update,
-                                      Entry(_U.replace([["children"
-                                                        ,_v104._0]],
-                                      en._0)),
-                                      InChild(_v104._1));}
-                                 _E.Case($moduleName,
-                                 "between lines 168 and 171");
-                              }();}
-                         return _v103;
-                      }();}
-                 return A2(action,en,cur);
-              }();}
-         _E.Case($moduleName,
-         "between lines 166 and 172");
-      }();
-   });
-   var addInboxItem = doEntry(addInboxItem_(A4(entry,
-   "",
-   "",
-   _L.fromArray([]),
-   _L.fromArray([]))));
-   var promote = doEntry(promote_);
    var moveInto = function (n) {
       return doEntry(moveInto_(n));
    };
-   var missort = doEntry(missort_);
-   var moveChildUp = doEntry(swapChildren(function (n) {
-      return n - 1;
-   }));
-   var moveChildDown = doEntry(swapChildren(function (n) {
-      return n + 1;
-   }));
-   var $do = F3(function (stringAction,
-   en,
-   cur) {
+   var missort_ = function (z) {
       return function () {
-         switch (en.ctor)
-         {case "Entry":
+         switch (z.ctor)
+         {case "InChild":
             return function () {
-                 switch (cur.ctor)
+                 var _v99 = $Core$Array.active(z._0.children);
+                 switch (_v99.ctor)
                  {case "InChild":
                     return function () {
-                         var _v114 = A5($Core$Array.$do,
-                         InText(0),
-                         findLastCursor,
-                         $do(stringAction),
-                         en._0.children,
-                         cur._0);
-                         switch (_v114.ctor)
-                         {case "Delete":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["children"
-                                                ,_L.fromArray([])]],
-                              en._0)),
-                              InText($String.length(en._0.text)));
-                            case "EnterNext":
-                            return $Core$Action.EnterNext;
-                            case "EnterPrev":
-                            return $Core$Action.Update(en)(_U.cmp($List.length(en._0.inbox),
-                              0) > 0 ? InInbox({ctor: "_Tuple2"
-                                               ,_0: -1 + $List.length(en._0.inbox)
-                                               ,_1: InText(0)}) : InText(0));
-                            case "NoChange":
+                         var _v102 = $Core$Array.active(_v99._0.children);
+                         switch (_v102.ctor)
+                         {case "InChild":
                             return $Core$Action.NoChange;
-                            case "Update":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["children"
-                                                ,_v114._0]],
-                              en._0)),
-                              InChild(_v114._1));}
-                         _E.Case($moduleName,
-                         "between lines 200 and 207");
-                      }();
-                    case "InDescription":
-                    return function () {
-                         var _v117 = A2(stringAction,
-                         en._0.description,
-                         cur._0);
-                         switch (_v117.ctor)
-                         {case "Delete":
-                            return $Core$Action.Delete;
-                            case "NoChange":
-                            return $Core$Action.NoChange;
-                            case "Update":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["description"
-                                                ,_v117._0]],
-                              en._0)),
-                              InDescription(_v117._1));}
-                         _E.Case($moduleName,
-                         "between lines 188 and 192");
+                            case "InInbox":
+                            return $Core$Action.NoChange;}
+                         return function () {
+                            var item = toValue($Core$Array.active(_v99._0.children));
+                            var withNewInbox = _U.replace([["inbox"
+                                                           ,A2($Core$Array.prepend,
+                                                           item,
+                                                           z._0.inbox)]],
+                            z._0);
+                            return function () {
+                               var _v105 = A2($Core$Array.remove,
+                               textZipper,
+                               _v99._0.children);
+                               switch (_v105.ctor)
+                               {case "Just":
+                                  return $Core$Action.Update(InChild(_U.replace([["children"
+                                                                                 ,A2($Core$Array.update,
+                                                                                 InChild(_U.replace([["children"
+                                                                                                     ,_v105._0]],
+                                                                                 _v99._0)),
+                                                                                 z._0.children)]],
+                                    withNewInbox)));
+                                  case "Nothing":
+                                  return $Core$Action.Update(A2(inboxZipper,
+                                    $Core$Array.firstZipper(textZipper),
+                                    Entry(_U.replace([["children"
+                                                      ,A2($Core$Array.toValue,
+                                                      function (z) {
+                                                         return function () {
+                                                            switch (z.ctor)
+                                                            {case "InChild":
+                                                               return Entry(_U.replace([["children"
+                                                                                        ,_L.fromArray([])]],
+                                                                 z._0));}
+                                                            _E.Case($moduleName,
+                                                            "on line 184, column 149 to 204");
+                                                         }();
+                                                      },
+                                                      z._0.children)]],
+                                    withNewInbox))));}
+                               _E.Case($moduleName,
+                               "between lines 182 and 185");
+                            }();
+                         }();
                       }();
                     case "InInbox":
                     return function () {
-                         var _v120 = A5($Core$Array.$do,
-                         InText(0),
-                         function (_v123) {
-                            return function () {
-                               return InText(0);
-                            }();
-                         },
-                         $do(stringAction),
-                         en._0.inbox,
-                         cur._0);
-                         switch (_v120.ctor)
-                         {case "Delete":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["inbox"
-                                                ,_L.fromArray([])]],
-                              en._0)),
-                              InText($String.length(en._0.text)));
-                            case "EnterNext":
-                            return _U.cmp($List.length(en._0.children),
-                              0) > 0 ? $Core$Action.Update(en)(InChild({ctor: "_Tuple2"
-                                                                       ,_0: 0
-                                                                       ,_1: InText(0)})) : $Core$Action.EnterNext;
-                            case "EnterPrev":
-                            return $Core$Action.Update(en)(InText(0));
-                            case "NoChange":
-                            return $Core$Action.NoChange;
-                            case "Update":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["inbox"
-                                                ,_v120._0]],
-                              en._0)),
-                              InInbox(_v120._1));}
-                         _E.Case($moduleName,
-                         "between lines 192 and 200");
-                      }();
-                    case "InText":
-                    return function () {
-                         var _v125 = A2(stringAction,
-                         en._0.text,
-                         cur._0);
-                         switch (_v125.ctor)
-                         {case "Delete":
-                            return $Core$Action.Delete;
-                            case "EnterNext":
-                            return _U.cmp($List.length(en._0.inbox),
-                              0) > 0 ? $Core$Action.Update(en)(InInbox({ctor: "_Tuple2"
-                                                                       ,_0: 0
-                                                                       ,_1: InText(0)})) : _U.cmp($List.length(en._0.children),
-                              0) > 0 ? $Core$Action.Update(en)(InChild({ctor: "_Tuple2"
-                                                                       ,_0: 0
-                                                                       ,_1: InText(cur._0)})) : $Core$Action.EnterNext;
-                            case "EnterPrev":
-                            return $Core$Action.EnterPrev;
-                            case "NoChange":
-                            return $Core$Action.NoChange;
-                            case "Split":
-                            switch (_v125._0.ctor)
-                              {case "::":
-                                 switch (_v125._0._1.ctor)
-                                   {case "::":
-                                      switch (_v125._0._1._1.ctor)
-                                        {case "[]":
-                                           return A3($Core$Action.Split,
-                                             _L.fromArray([A4(entry,
-                                                          _v125._0._0,
-                                                          "",
-                                                          _L.fromArray([]),
-                                                          _L.fromArray([]))
-                                                          ,Entry(_U.replace([["text"
-                                                                             ,_v125._0._1._0]],
-                                                          en._0))]),
-                                             _v125._1,
-                                             InText(_v125._2));}
-                                        return $Debug.crash("Not yet implemented for splits > 2");}
-                                   break;}
-                              return $Debug.crash("Split has less than two children");
-                            case "Update":
-                            return A2($Core$Action.Update,
-                              Entry(_U.replace([["text"
-                                                ,_v125._0]],
-                              en._0)),
-                              InText(_v125._1));}
-                         _E.Case($moduleName,
-                         "between lines 176 and 188");
+                         var item = toValue($Core$Array.active(_v99._0.inbox));
+                         var withNewInbox = _U.replace([["inbox"
+                                                        ,A2($Core$Array.prepend,
+                                                        item,
+                                                        z._0.inbox)]],
+                         z._0);
+                         return function () {
+                            var _v109 = A2($Core$Array.remove,
+                            textZipper,
+                            _v99._0.inbox);
+                            switch (_v109.ctor)
+                            {case "Just":
+                               return $Core$Action.Update(InChild(_U.replace([["children"
+                                                                              ,A2($Core$Array.update,
+                                                                              InInbox(_U.replace([["inbox"
+                                                                                                  ,_v109._0]],
+                                                                              _v99._0)),
+                                                                              z._0.children)]],
+                                 withNewInbox)));
+                               case "Nothing":
+                               return $Core$Action.Update(A2(inboxZipper,
+                                 $Core$Array.firstZipper(textZipper),
+                                 Entry(_U.replace([["children"
+                                                   ,A2($Core$Array.toValue,
+                                                   function (z) {
+                                                      return function () {
+                                                         switch (z.ctor)
+                                                         {case "InInbox":
+                                                            return Entry(_U.replace([["inbox"
+                                                                                     ,_L.fromArray([])]],
+                                                              z._0));}
+                                                         _E.Case($moduleName,
+                                                         "on line 176, column 147 to 199");
+                                                      }();
+                                                   },
+                                                   z._0.children)]],
+                                 withNewInbox))));}
+                            _E.Case($moduleName,
+                            "between lines 174 and 177");
+                         }();
                       }();}
-                 _E.Case($moduleName,
-                 "between lines 175 and 207");
+                 return $Core$Action.NoChange;
               }();}
-         _E.Case($moduleName,
-         "between lines 175 and 207");
+         return $Core$Action.NoChange;
       }();
-   });
-   var enter = $do($Core$String.split);
-   var goLeft = $do($Core$String.goLeft);
-   var goRight = $do($Core$String.goRight);
-   var backspace = $do($Core$String.backspace);
-   var $delete = $do($Core$String.$delete);
-   var insert = function (s) {
-      return $do($Core$String.insert(s));
    };
-   var goNext = $do($Core$Action.always($Core$Action.EnterNext));
-   var goPrev = $do($Core$Action.always($Core$Action.EnterPrev));
+   var missort = doEntry(missort_);
    var decoder = function (a) {
       return A6($Json$Decoder.decode4,
       A2($Json$Decoder._op[":="],
@@ -13376,7 +13703,6 @@ Elm.Outline.Entry.make = function (_elm) {
       a);
    };
    _elm.Outline.Entry.values = {_op: _op
-                               ,entry: entry
                                ,insert: insert
                                ,backspace: backspace
                                ,enter: enter
@@ -13391,9 +13717,18 @@ Elm.Outline.Entry.make = function (_elm) {
                                ,goRight: goRight
                                ,goNext: goNext
                                ,goPrev: goPrev
-                               ,render: render
                                ,decoder: decoder
                                ,toJson: toJson
+                               ,emptyEntry: emptyEntry
+                               ,entry: entry
+                               ,childZipper: childZipper
+                               ,textZipper: textZipper
+                               ,inboxZipper: inboxZipper
+                               ,toValue: toValue
+                               ,textZipperAt: textZipperAt
+                               ,childZipperAt: childZipperAt
+                               ,inboxZipperAt: inboxZipperAt
+                               ,textValue: textValue
                                ,Entry: Entry
                                ,InText: InText
                                ,InDescription: InDescription
@@ -13420,7 +13755,6 @@ Elm.Core.String.make = function (_elm) {
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
    $Regex = Elm.Regex.make(_elm),
    $String = Elm.String.make(_elm);
    var quoteNewline = A3($Regex.replace,
@@ -13442,54 +13776,55 @@ Elm.Core.String.make = function (_elm) {
    var quote = function (s) {
       return quoteNewline(quoteQuote(s));
    };
-   var walk = F2(function (fn,
-   _v4) {
-      return function () {
-         return fn;
-      }();
-   });
-   var toJson = A2(walk,
-   function (s) {
+   var walk = function (fn) {
+      return fn;
+   };
+   var toJson = walk(function (s) {
       return _L.append("\"",
       _L.append(quote(s),"\""));
-   },
-   {_: {}});
-   var render = F2(function (value,
-   msel) {
+   });
+   var renderZipper = function (_v4) {
       return function () {
-         switch (msel.ctor)
-         {case "Just":
+         switch (_v4.ctor)
+         {case "_Tuple2":
             return A3($Html.node,
               "span",
               _L.fromArray([]),
               _L.fromArray([$Html.text(A2($String.left,
-                           msel._0,
-                           value))
+                           _v4._1,
+                           _v4._0))
                            ,A3($Html.node,
                            "span",
                            _L.fromArray([$Html$Attributes.$class("cursor")]),
                            _L.fromArray([$Html.text("^")]))
                            ,$Html.text(A2($String.dropLeft,
-                           msel._0,
-                           value))]));
-            case "Nothing":
-            return A3($Html.node,
-              "span",
-              _L.fromArray([]),
-              _L.fromArray([$Html.text(value)]));}
+                           _v4._1,
+                           _v4._0))]));}
          _E.Case($moduleName,
-         "between lines 39 and 44");
+         "between lines 62 and 65");
       }();
-   });
-   var split = F2(function (s,n) {
-      return A3($Core$Action.Split,
-      _L.fromArray([A2($String.left,
-                   n,
-                   s)
-                   ,A2($String.dropLeft,n,s)]),
-      1,
-      0);
-   });
+   };
+   var renderValue = function (value) {
+      return $Html.text(value);
+   };
+   var split = function (_v8) {
+      return function () {
+         switch (_v8.ctor)
+         {case "_Tuple2":
+            return A3($Core$Action.Split,
+              _L.fromArray([A2($String.left,
+              _v8._1,
+              _v8._0)]),
+              {ctor: "_Tuple2"
+              ,_0: A2($String.dropLeft,
+              _v8._1,
+              _v8._0)
+              ,_1: 0},
+              _L.fromArray([]));}
+         _E.Case($moduleName,
+         "on line 56, column 15 to 73");
+      }();
+   };
    var $delete = $Core$Action.always($Core$Action.Delete);
    var goRight = $Core$Action.nav(F2(function (v,
    c) {
@@ -13497,33 +13832,40 @@ Elm.Core.String.make = function (_elm) {
       $String.length(v),
       c + 1);
    }));
-   var goLeft = $Core$Action.nav(F2(function (_v8,
+   var goLeft = $Core$Action.nav(F2(function (_v12,
    c) {
       return function () {
          return _U.cmp(c,
          0) > 0 ? c - 1 : c;
       }();
    }));
-   var backspace = F2(function (v,
-   c) {
+   var backspace = function (_v14) {
       return function () {
-         var _v10 = {ctor: "_Tuple2"
-                    ,_0: v
-                    ,_1: c};
-         switch (_v10.ctor)
+         switch (_v14.ctor)
          {case "_Tuple2":
-            switch (_v10._1)
-              {case 0:
-                 return $Core$Action.NoChange;}
-              break;}
-         return A2($Core$Action.Update,
-         _L.append(A2($String.left,
-         c - 1,
-         v),
-         A2($String.dropLeft,c,v)),
-         c - 1);
+            return function () {
+                 var _v18 = {ctor: "_Tuple2"
+                            ,_0: _v14._0
+                            ,_1: _v14._1};
+                 switch (_v18.ctor)
+                 {case "_Tuple2":
+                    switch (_v18._1)
+                      {case 0:
+                         return $Core$Action.NoChange;}
+                      break;}
+                 return $Core$Action.Update({ctor: "_Tuple2"
+                                            ,_0: _L.append(A2($String.left,
+                                            _v14._1 - 1,
+                                            _v14._0),
+                                            A2($String.dropLeft,
+                                            _v14._1,
+                                            _v14._0))
+                                            ,_1: _v14._1 - 1});
+              }();}
+         _E.Case($moduleName,
+         "between lines 46 and 48");
       }();
-   });
+   };
    var move = F3(function ($char,
    value,
    cursor) {
@@ -13540,14 +13882,85 @@ Elm.Core.String.make = function (_elm) {
       cursor,
       value)));
    });
-   var insert = F3(function (s,
-   v,
-   c) {
-      return A2($Core$Action.Update,
-      A3(update,s,v,c),
-      A3(move,s,v,c));
+   var insert = F2(function (s,
+   _v21) {
+      return function () {
+         switch (_v21.ctor)
+         {case "_Tuple2":
+            return $Core$Action.Update({ctor: "_Tuple2"
+                                       ,_0: A3(update,
+                                       s,
+                                       _v21._0,
+                                       _v21._1)
+                                       ,_1: A3(move,
+                                       s,
+                                       _v21._0,
+                                       _v21._1)});}
+         _E.Case($moduleName,
+         "on line 43, column 18 to 60");
+      }();
    });
-   var Subs = {_: {}};
+   var toTuple = function (_v25) {
+      return function () {
+         switch (_v25.ctor)
+         {case "_Tuple2":
+            return {ctor: "_Tuple2"
+                   ,_0: A2($String.left,
+                   _v25._1,
+                   _v25._0)
+                   ,_1: A2($String.dropLeft,
+                   _v25._1,
+                   _v25._0)};}
+         _E.Case($moduleName,
+         "on line 29, column 18 to 54");
+      }();
+   };
+   var toValue = function (_v29) {
+      return function () {
+         switch (_v29.ctor)
+         {case "_Tuple2":
+            return _v29._0;}
+         _E.Case($moduleName,
+         "on line 26, column 17 to 18");
+      }();
+   };
+   var zipperAt = F2(function (i,
+   s) {
+      return {ctor: "_Tuple2"
+             ,_0: s
+             ,_1: i};
+   });
+   var zipper = F2(function (left,
+   right) {
+      return {ctor: "_Tuple2"
+             ,_0: _L.append(left,right)
+             ,_1: $String.length(left)};
+   });
+   var endZipper = function (v) {
+      return {ctor: "_Tuple2"
+             ,_0: v
+             ,_1: $String.length(v)};
+   };
+   var startZipper = function (v) {
+      return {ctor: "_Tuple2"
+             ,_0: v
+             ,_1: 0};
+   };
+   var split_ = function (_v33) {
+      return function () {
+         switch (_v33.ctor)
+         {case "_Tuple2":
+            return {ctor: "_Tuple2"
+                   ,_0: A2($String.left,
+                   _v33._1,
+                   _v33._0)
+                   ,_1: startZipper(A2($String.dropLeft,
+                   _v33._1,
+                   _v33._0))};}
+         _E.Case($moduleName,
+         "on line 32, column 17 to 67");
+      }();
+   };
    _elm.Core.String.values = {_op: _op
                              ,insert: insert
                              ,backspace: backspace
@@ -13555,8 +13968,16 @@ Elm.Core.String.make = function (_elm) {
                              ,goRight: goRight
                              ,$delete: $delete
                              ,split: split
-                             ,render: render
-                             ,toJson: toJson};
+                             ,renderValue: renderValue
+                             ,renderZipper: renderZipper
+                             ,toJson: toJson
+                             ,startZipper: startZipper
+                             ,endZipper: endZipper
+                             ,toValue: toValue
+                             ,split_: split_
+                             ,zipper: zipper
+                             ,zipperAt: zipperAt
+                             ,toTuple: toTuple};
    return _elm.Core.String.values;
 };Elm.Core = Elm.Core || {};
 Elm.Core.Array = Elm.Core.Array || {};
@@ -13578,13 +13999,11 @@ Elm.Core.Array.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm);
    var walk = F3(function (wrapFn,
-   _v0,
+   child,
    list) {
-      return function () {
-         return wrapFn(A2($List.map,
-         _v0.child,
-         list));
-      }();
+      return wrapFn(A2($List.map,
+      child,
+      list));
    });
    var toJson = function (fn) {
       return A2(walk,
@@ -13593,50 +14012,366 @@ Elm.Core.Array.make = function (_elm) {
          _L.append(A2($List.join,",",vs),
          "]"));
       },
-      {_: {},child: fn});
+      fn);
    };
-   var render = F3(function (fn,
-   list,
-   msel) {
+   var map = F3(function (valueFn,
+   zipperFn,
+   _v0) {
       return function () {
-         switch (msel.ctor)
-         {case "Just":
-            switch (msel._0.ctor)
-              {case "_Tuple2":
-                 return A2($List.indexedMap,
-                   F2(function (i,x) {
-                      return A2(fn,
-                      x,
-                      _U.eq(i,
-                      msel._0._0) ? $Maybe.Just(msel._0._1) : $Maybe.Nothing);
-                   }),
-                   list);}
-              break;
-            case "Nothing":
-            return A2($List.map,
-              function (x) {
-                 return A2(fn,
-                 x,
-                 $Maybe.Nothing);
-              },
-              list);}
+         switch (_v0.ctor)
+         {case "_Tuple3":
+            return _L.append(A2($List.map,
+              valueFn,
+              $List.reverse(_v0._0)),
+              _L.append(_L.fromArray([zipperFn(_v0._1)]),
+              A2($List.map,valueFn,_v0._2)));}
          _E.Case($moduleName,
-         "between lines 43 and 45");
+         "between lines 111 and 113");
       }();
    });
-   var split_ = F3(function (fn,
-   v,
-   c) {
+   var update = F2(function ($new,
+   _v5) {
       return function () {
-         var _v6 = A2(fn,v,c);
-         switch (_v6.ctor)
+         switch (_v5.ctor)
          {case "_Tuple3":
-            return A3($Core$Action.Split,
-              _L.fromArray([_v6._0,_v6._1]),
-              1,
-              _v6._2);}
+            return {ctor: "_Tuple3"
+                   ,_0: _v5._0
+                   ,_1: $new
+                   ,_2: _v5._2};}
          _E.Case($moduleName,
-         "between lines 36 and 37");
+         "on line 107, column 30 to 44");
+      }();
+   });
+   var moveDown = function (_v10) {
+      return function () {
+         switch (_v10.ctor)
+         {case "_Tuple3":
+            return function () {
+                 switch (_v10._2.ctor)
+                 {case "::":
+                    return $Maybe.Just({ctor: "_Tuple3"
+                                       ,_0: A2($List._op["::"],
+                                       _v10._2._0,
+                                       _v10._0)
+                                       ,_1: _v10._1
+                                       ,_2: _v10._2._1});
+                    case "[]":
+                    return $Maybe.Nothing;}
+                 _E.Case($moduleName,
+                 "between lines 102 and 104");
+              }();}
+         _E.Case($moduleName,
+         "between lines 102 and 104");
+      }();
+   };
+   var moveUp = function (_v18) {
+      return function () {
+         switch (_v18.ctor)
+         {case "_Tuple3":
+            return function () {
+                 switch (_v18._0.ctor)
+                 {case "::":
+                    return $Maybe.Just({ctor: "_Tuple3"
+                                       ,_0: _v18._0._1
+                                       ,_1: _v18._1
+                                       ,_2: A2($List._op["::"],
+                                       _v18._0._0,
+                                       _v18._2)});
+                    case "[]":
+                    return $Maybe.Nothing;}
+                 _E.Case($moduleName,
+                 "between lines 97 and 99");
+              }();}
+         _E.Case($moduleName,
+         "between lines 97 and 99");
+      }();
+   };
+   var split_ = F2(function (fn,
+   z) {
+      return function () {
+         var _v26 = fn(z);
+         switch (_v26.ctor)
+         {case "_Tuple2":
+            return A3($Core$Action.Split,
+              _L.fromArray([_v26._0]),
+              _v26._1,
+              _L.fromArray([]));}
+         _E.Case($moduleName,
+         "between lines 90 and 91");
+      }();
+   });
+   var $do = F5(function (toVal,
+   nextFn,
+   prevFn,
+   action,
+   _v29) {
+      return function () {
+         switch (_v29.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var _v34 = action(_v29._1);
+                 switch (_v34.ctor)
+                 {case "Delete":
+                    return function () {
+                         switch (_v29._2.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: _v29._0
+                                                       ,_1: nextFn(_v29._2._0)
+                                                       ,_2: _v29._2._1});
+                            case "[]": return function () {
+                                 switch (_v29._0.ctor)
+                                 {case "::":
+                                    return $Core$Action.Update({ctor: "_Tuple3"
+                                                               ,_0: _v29._0._1
+                                                               ,_1: prevFn(_v29._0._0)
+                                                               ,_2: _v29._2});
+                                    case "[]":
+                                    return $Core$Action.Delete;}
+                                 _E.Case($moduleName,
+                                 "between lines 78 and 81");
+                              }();}
+                         _E.Case($moduleName,
+                         "between lines 76 and 81");
+                      }();
+                    case "EnterNext":
+                    return function () {
+                         switch (_v29._2.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: A2($List._op["::"],
+                                                       toVal(_v29._1),
+                                                       _v29._0)
+                                                       ,_1: nextFn(_v29._2._0)
+                                                       ,_2: _v29._2._1});
+                            case "[]":
+                            return $Core$Action.EnterNext;}
+                         _E.Case($moduleName,
+                         "between lines 81 and 84");
+                      }();
+                    case "EnterPrev":
+                    return function () {
+                         switch (_v29._0.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: _v29._0._1
+                                                       ,_1: prevFn(_v29._0._0)
+                                                       ,_2: A2($List._op["::"],
+                                                       toVal(_v29._1),
+                                                       _v29._2)});
+                            case "[]":
+                            return $Core$Action.EnterPrev;}
+                         _E.Case($moduleName,
+                         "between lines 84 and 87");
+                      }();
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return $Core$Action.Update({ctor: "_Tuple3"
+                                               ,_0: _L.append($List.reverse(_v34._0),
+                                               _v29._0)
+                                               ,_1: _v34._1
+                                               ,_2: _L.append(_v34._2,
+                                               _v29._2)});
+                    case "Update":
+                    return $Core$Action.Update({ctor: "_Tuple3"
+                                               ,_0: _v29._0
+                                               ,_1: _v34._0
+                                               ,_2: _v29._2});}
+                 _E.Case($moduleName,
+                 "between lines 73 and 87");
+              }();}
+         _E.Case($moduleName,
+         "between lines 73 and 87");
+      }();
+   });
+   var split = F4(function (toVal,
+   nextCursor,
+   prevCursor,
+   fn) {
+      return A4($do,
+      toVal,
+      nextCursor,
+      prevCursor,
+      split_(fn));
+   });
+   var remove = F2(function (fn,
+   _v51) {
+      return function () {
+         switch (_v51.ctor)
+         {case "_Tuple3":
+            return function () {
+                 switch (_v51._2.ctor)
+                 {case "::":
+                    return $Maybe.Just({ctor: "_Tuple3"
+                                       ,_0: _v51._0
+                                       ,_1: fn(_v51._2._0)
+                                       ,_2: _v51._2._1});
+                    case "[]": return function () {
+                         switch (_v51._0.ctor)
+                         {case "::":
+                            return $Maybe.Just({ctor: "_Tuple3"
+                                               ,_0: _v51._0._1
+                                               ,_1: fn(_v51._0._0)
+                                               ,_2: _v51._2});
+                            case "[]":
+                            return $Maybe.Nothing;}
+                         _E.Case($moduleName,
+                         "between lines 67 and 69");
+                      }();}
+                 _E.Case($moduleName,
+                 "between lines 65 and 69");
+              }();}
+         _E.Case($moduleName,
+         "between lines 65 and 69");
+      }();
+   });
+   var lastZipper = F2(function (fn,
+   list) {
+      return function () {
+         var _raw = $List.reverse(list),
+         $ = _raw.ctor === "::" ? _raw : _E.Case($moduleName,
+         "on line 56, column 42 to 54"),
+         cur = $._0,
+         tail = $._1;
+         return {ctor: "_Tuple3"
+                ,_0: tail
+                ,_1: fn(cur)
+                ,_2: _L.fromArray([])};
+      }();
+   });
+   var firstZipperThat = F2(function (fn,
+   vs) {
+      return function () {
+         switch (vs.ctor)
+         {case "::": return function () {
+                 var _v65 = fn(vs._0);
+                 switch (_v65.ctor)
+                 {case "Just":
+                    return $Maybe.Just({ctor: "_Tuple3"
+                                       ,_0: _L.fromArray([])
+                                       ,_1: _v65._0
+                                       ,_2: vs._1});
+                    case "Nothing":
+                    return function () {
+                         var _v67 = A2(firstZipperThat,
+                         fn,
+                         vs._1);
+                         switch (_v67.ctor)
+                         {case "Just":
+                            switch (_v67._0.ctor)
+                              {case "_Tuple3":
+                                 return $Maybe.Just({ctor: "_Tuple3"
+                                                    ,_0: A2($List._op["::"],
+                                                    vs._0,
+                                                    _v67._0._0)
+                                                    ,_1: _v67._0._1
+                                                    ,_2: _v67._0._2});}
+                              break;
+                            case "Nothing":
+                            return $Maybe.Nothing;}
+                         _E.Case($moduleName,
+                         "between lines 50 and 53");
+                      }();}
+                 _E.Case($moduleName,
+                 "between lines 48 and 53");
+              }();
+            case "[]":
+            return $Maybe.Nothing;}
+         _E.Case($moduleName,
+         "between lines 47 and 53");
+      }();
+   });
+   var lastZipperThat = F2(function (fn,
+   vs) {
+      return function () {
+         var _v72 = A2(firstZipperThat,
+         fn,
+         $List.reverse(vs));
+         switch (_v72.ctor)
+         {case "Just":
+            switch (_v72._0.ctor)
+              {case "_Tuple3":
+                 return $Maybe.Just({ctor: "_Tuple3"
+                                    ,_0: _v72._0._2
+                                    ,_1: _v72._0._1
+                                    ,_2: _v72._0._0});}
+              break;
+            case "Nothing":
+            return $Maybe.Nothing;}
+         _E.Case($moduleName,
+         "between lines 59 and 61");
+      }();
+   });
+   var firstZipper = F2(function (fn,
+   _v77) {
+      return function () {
+         switch (_v77.ctor)
+         {case "::":
+            return {ctor: "_Tuple3"
+                   ,_0: _L.fromArray([])
+                   ,_1: fn(_v77._0)
+                   ,_2: _v77._1};}
+         _E.Case($moduleName,
+         "on line 44, column 33 to 47");
+      }();
+   });
+   var zipperAt = F3(function (i,
+   fn,
+   vs) {
+      return {ctor: "_Tuple3"
+             ,_0: $List.reverse($List.take(i)(vs))
+             ,_1: fn($List.head($List.drop(i)(vs)))
+             ,_2: $List.drop(i + 1)(vs)};
+   });
+   var zipper = F3(function (left,
+   cur,
+   right) {
+      return {ctor: "_Tuple3"
+             ,_0: left
+             ,_1: cur
+             ,_2: right};
+   });
+   var active = function (_v81) {
+      return function () {
+         switch (_v81.ctor)
+         {case "_Tuple3":
+            return _v81._1;}
+         _E.Case($moduleName,
+         "on line 30, column 18 to 19");
+      }();
+   };
+   var prepend = F2(function (v,
+   vs) {
+      return A2($List._op["::"],
+      v,
+      vs);
+   });
+   var append = F2(function (v,
+   vs) {
+      return _L.append(vs,
+      _L.fromArray([v]));
+   });
+   var mapAt = F3(function (n,
+   fn,
+   vs) {
+      return A2($List.indexedMap,
+      F2(function (i,v) {
+         return _U.eq(i,
+         n) ? fn(v) : v;
+      }),
+      vs);
+   });
+   var toValue = F2(function (fn,
+   _v86) {
+      return function () {
+         switch (_v86.ctor)
+         {case "_Tuple3":
+            return _L.append($List.reverse(_v86._0),
+              _L.append(_L.fromArray([fn(_v86._1)]),
+              _v86._2));}
+         _E.Case($moduleName,
+         "on line 18, column 31 to 64");
       }();
    });
    var at = F2(function (i,list) {
@@ -13652,95 +14387,26 @@ Elm.Core.Array.make = function (_elm) {
       }),
       list);
    });
-   var $do = F5(function (nextCursor,
-   prevCursor,
-   action,
-   vs,
-   _v10) {
-      return function () {
-         switch (_v10.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var _v14 = A2(action,
-                 A2(at,_v10._0,vs),
-                 _v10._1);
-                 switch (_v14.ctor)
-                 {case "Delete":
-                    return _U.cmp($List.length(vs),
-                      1) > 0 ? A2($Core$Action.Update,
-                      _L.append(A2($List.take,
-                      _v10._0,
-                      vs),
-                      A2($List.drop,_v10._0 + 1,vs)),
-                      {ctor: "_Tuple2"
-                      ,_0: $Basics.min(_v10._0)(-2 + $List.length(vs))
-                      ,_1: _v10._1}) : $Core$Action.Delete;
-                    case "EnterNext":
-                    return _U.cmp($List.length(vs),
-                      _v10._0 + 1) > 0 ? A2($Core$Action.Update,
-                      vs,
-                      {ctor: "_Tuple2"
-                      ,_0: _v10._0 + 1
-                      ,_1: nextCursor}) : $Core$Action.EnterNext;
-                    case "EnterPrev":
-                    return _U.cmp(_v10._0,
-                      0) > 0 ? A2($Core$Action.Update,
-                      vs,
-                      {ctor: "_Tuple2"
-                      ,_0: _v10._0 - 1
-                      ,_1: prevCursor(A2(at,
-                      _v10._0 - 1,
-                      vs))}) : $Core$Action.EnterPrev;
-                    case "NoChange":
-                    return $Core$Action.NoChange;
-                    case "Split":
-                    return A2($Core$Action.Update,
-                      _L.append(A2($List.take,
-                      _v10._0,
-                      vs),
-                      _L.append(_v14._0,
-                      A2($List.drop,_v10._0 + 1,vs))),
-                      {ctor: "_Tuple2"
-                      ,_0: _v14._1 + _v10._0
-                      ,_1: _v14._2});
-                    case "Update":
-                    return A2($Core$Action.Update,
-                      A3(replaceAt,
-                      _v14._0,
-                      _v10._0,
-                      vs),
-                      {ctor: "_Tuple2"
-                      ,_0: _v10._0
-                      ,_1: _v14._1});}
-                 _E.Case($moduleName,
-                 "between lines 21 and 33");
-              }();}
-         _E.Case($moduleName,
-         "between lines 21 and 33");
-      }();
-   });
-   var split = F3(function (nextCursor,
-   prevCursor,
-   fn) {
-      return A3($do,
-      nextCursor,
-      prevCursor,
-      split_(fn));
-   });
-   var cursor = F2(function (n,c) {
-      return {ctor: "_Tuple2"
-             ,_0: n
-             ,_1: c};
-   });
-   var Subs = function (a) {
-      return {_: {},child: a};
-   };
    _elm.Core.Array.values = {_op: _op
-                            ,cursor: cursor
+                            ,toValue: toValue
                             ,$do: $do
                             ,split: split
-                            ,render: render
-                            ,toJson: toJson};
+                            ,toJson: toJson
+                            ,firstZipper: firstZipper
+                            ,lastZipper: lastZipper
+                            ,remove: remove
+                            ,map: map
+                            ,active: active
+                            ,zipper: zipper
+                            ,append: append
+                            ,prepend: prepend
+                            ,mapAt: mapAt
+                            ,firstZipperThat: firstZipperThat
+                            ,lastZipperThat: lastZipperThat
+                            ,zipperAt: zipperAt
+                            ,moveUp: moveUp
+                            ,moveDown: moveDown
+                            ,update: update};
    return _elm.Core.Array.values;
 };Elm.Core = Elm.Core || {};
 Elm.Core.Action = Elm.Core.Action || {};
@@ -13757,13 +14423,10 @@ Elm.Core.Action.make = function (_elm) {
    _A = _N.Array.make(_elm),
    _E = _N.Error.make(_elm),
    $moduleName = "Core.Action";
-   var always = F3(function (r,
-   _v0,
-   _v1) {
+   var always = F2(function (r,
+   _v0) {
       return function () {
-         return function () {
-            return r;
-         }();
+         return r;
       }();
    });
    var NoChange = {ctor: "NoChange"};
@@ -13778,22 +14441,32 @@ Elm.Core.Action.make = function (_elm) {
              ,_1: b
              ,_2: c};
    });
-   var Update = F2(function (a,b) {
+   var Update = function (a) {
       return {ctor: "Update"
-             ,_0: a
-             ,_1: b};
+             ,_0: a};
+   };
+   var nav = F2(function (fn,_v2) {
+      return function () {
+         switch (_v2.ctor)
+         {case "_Tuple2":
+            return Update({ctor: "_Tuple2"
+                          ,_0: _v2._0
+                          ,_1: A2(fn,_v2._0,_v2._1)});}
+         _E.Case($moduleName,
+         "on line 11, column 20 to 39");
+      }();
    });
-   var nav = F3(function (fn,v,c) {
-      return A2(Update,
-      v,
-      A2(fn,v,c));
-   });
-   var change = F3(function (fn,
-   v,
-   c) {
-      return A2(Update,
-      A2(fn,v,c),
-      c);
+   var change = F2(function (fn,
+   _v6) {
+      return function () {
+         switch (_v6.ctor)
+         {case "_Tuple2":
+            return Update({ctor: "_Tuple2"
+                          ,_0: A2(fn,_v6._0,_v6._1)
+                          ,_1: _v6._1});}
+         _E.Case($moduleName,
+         "on line 14, column 23 to 42");
+      }();
    });
    _elm.Core.Action.values = {_op: _op
                              ,nav: nav
@@ -13806,6 +14479,30 @@ Elm.Core.Action.make = function (_elm) {
                              ,EnterNext: EnterNext
                              ,NoChange: NoChange};
    return _elm.Core.Action.values;
+};Elm.Dropbox = Elm.Dropbox || {};
+Elm.Dropbox.make = function (_elm) {
+   "use strict";
+   _elm.Dropbox = _elm.Dropbox || {};
+   if (_elm.Dropbox.values)
+   return _elm.Dropbox.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _A = _N.Array.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Dropbox",
+   $Native$Dropbox = Elm.Native.Dropbox.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var client = $Native$Dropbox.client;
+   var Client = F2(function (a,b) {
+      return {_: {}
+             ,read: a
+             ,write: b};
+   });
+   _elm.Dropbox.values = {_op: _op
+                         ,client: client};
+   return _elm.Dropbox.values;
 };Elm.Html = Elm.Html || {};
 Elm.Html.Attributes = Elm.Html.Attributes || {};
 Elm.Html.Attributes.make = function (_elm) {
@@ -14966,6 +15663,8 @@ Elm.Keys.make = function (_elm) {
    _E = _N.Error.make(_elm),
    $moduleName = "Keys",
    $List = Elm.List.make(_elm),
+   $Native$Keys = Elm.Native.Keys.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var Unrecognized = function (a) {
       return {ctor: "Unrecognized"
@@ -15028,7 +15727,17 @@ Elm.Keys.make = function (_elm) {
          return Unrecognized($String.show(code));
       }();
    };
+   var lastPressed = $Signal.merges(_L.fromArray([A2($Signal._op["<~"],
+                                                 fromPresses,
+                                                 $Native$Keys.pressesIn)
+                                                 ,A2($Signal._op["<~"],
+                                                 fromDowns,
+                                                 $Native$Keys.downsIn)
+                                                 ,A2($Signal._op["<~"],
+                                                 fromMeta,
+                                                 $Native$Keys.metaIn)]));
    _elm.Keys.values = {_op: _op
+                      ,lastPressed: lastPressed
                       ,Enter: Enter
                       ,Backspace: Backspace
                       ,Left: Left
@@ -15037,9 +15746,6 @@ Elm.Keys.make = function (_elm) {
                       ,Down: Down
                       ,Character: Character
                       ,Command: Command
-                      ,Unrecognized: Unrecognized
-                      ,fromPresses: fromPresses
-                      ,fromDowns: fromDowns
-                      ,fromMeta: fromMeta};
+                      ,Unrecognized: Unrecognized};
    return _elm.Keys.values;
 };
