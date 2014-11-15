@@ -6,11 +6,14 @@ import ElmTest.Test (..)
 import App
 import App (Command(..))
 import Keys (KeyInput(..))
-import Outline.Entry (entry, BaseCursor(..))
+import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
+import Outline.Entry as Entry
 import Outline.Document as Document
+import Core.String
+import Core.Array
 
 test1 = test "first-use scenario" <|
-  foldl App.step (Document.Zipper (entry "" "" [] []) (InText 0))
+  foldl App.step (Entry.textZipper Entry.emptyEntry)
     [ Key (Character "Tasks")
     , Key (Command "a") -- add
     , Key (Character "By time")
@@ -20,32 +23,32 @@ test1 = test "first-use scenario" <|
     , Key (Command "p")
     ]
   `assertEqual`
-  Document.Zipper
-    (entry "Tasks" "" []
+  Entry.childZipper (Core.Array.firstZipper Entry.textZipper)
+    ( entry "Tasks" "" []
       [ entry "By time" "" [] []
       , entry "Habits" "" [] []
-      ])
-    (InChild (0,InText 0))
+      ]
+    )
 
 test2 = test "sorting in an empty template" <|
-  foldl App.step (Document.Zipper
-      ( entry "Tasks" "" []
-        [ entry "By time" "" []
-          [ entry "daily" "" [] []
-          , entry "weekly" "" [] []
-          , entry "waiting on" "" [] []
-          , entry "monthly" "" [] []
-          , entry "yearly" "" [] []
-          ]
-        , entry "Habits" "" []
-          [ entry "daily" "" [] []
-          , entry "weekly" "" [] []
-          , entry "monthly" "" [] []
-          ]
-        , entry "By priority" "" [] []
-        , entry "By projet" "" [] []
+  foldl App.step
+    (Entry.textZipper <| entry "Tasks" "" []
+      [ entry "By time" "" []
+        [ entry "daily" "" [] []
+        , entry "weekly" "" [] []
+        , entry "waiting on" "" [] []
+        , entry "monthly" "" [] []
+        , entry "yearly" "" [] []
         ]
-      ) (InText 5))
+      , entry "Habits" "" []
+        [ entry "daily" "" [] []
+        , entry "weekly" "" [] []
+        , entry "monthly" "" [] []
+        ]
+      , entry "By priority" "" [] []
+      , entry "By projet" "" [] []
+      ]
+    )
     [ Key (Command "a") -- add
     , Key (Character "Watch Strange Loop videos")
     , Key (Enter)
@@ -63,7 +66,7 @@ test2 = test "sorting in an empty template" <|
     , Key (Command "1") -- voting guide -> time
     ]
   `assertEqual`
-  Document.Zipper
+  Entry.childZipper (Core.Array.firstZipper (Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper)))
     ( entry "Tasks" "" []
       [ entry "By time" ""
         [ entry "Read voting guide" "" [] []
@@ -91,7 +94,6 @@ test2 = test "sorting in an empty template" <|
         []
       ]
     )
-    (InChild (0,InInbox (0,InText 9)))
 
 suite = Suite "Integration tests"
   [ test1

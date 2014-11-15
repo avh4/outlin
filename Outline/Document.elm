@@ -1,6 +1,6 @@
-module Outline.Document where
+module Outline.Document (Value, Zipper) where
 
 import Outline.Entry as Entry
 
-type Value = Entry.Entry
-type Zipper = { value: Value, selection: Entry.Cursor }
+type Value = Entry.Value
+type Zipper = Entry.Zipper

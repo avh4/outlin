@@ -18,15 +18,15 @@ import Outline.Document as Document
 
 ---- App
 
-updateModel : ((val,cur) -> Action.Result val (val,cur)) -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel action {value,selection} = case action (value,selection) of
-  Action.Update (a,b) -> {value=a, selection=b}
+updateModel : (z -> Action.Result val z) -> z -> z
+updateModel action z = case action z of
+  Action.Update newZ -> newZ
   -- explicity list the following action results, which are all no-ops on document
-  Action.Split _ _ _ -> {value=value, selection=selection}
-  Action.Delete -> {value=value, selection=selection}
-  Action.EnterNext -> {value=value, selection=selection}
-  Action.EnterPrev -> {value=value, selection=selection}
-  Action.NoChange -> {value=value, selection=selection}
+  Action.Split _ _ _ -> z
+  Action.Delete -> z
+  Action.EnterNext -> z
+  Action.EnterPrev -> z
+  Action.NoChange -> z
 
 ---- INPUT
 
@@ -58,14 +58,14 @@ step c m = case c of
   Key (Keys.Command "Up") -> updateModel Entry.moveChildUp m
   Key (Keys.Command "Down") -> updateModel Entry.moveChildDown m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
-    Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
+    Json.Output.Success doc -> Entry.textZipper doc
     x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Unhandled command" x)
 
 ---- RENDER
 
 renderDocument : Document.Zipper -> Html
-renderDocument {value,selection} = Entry.render value (Just <| Debug.watch "cursor" selection)
+renderDocument = Entry.renderZipper
 
 renderDocs = node "div" []
   [ node "p" [] [ text "⌘A: add to inbox" ]

@@ -6,6 +6,7 @@ import Html.Attributes (class)
 import Keys
 import Dropbox
 import Outline.Entry as Entry
+import Outline.Entry (entry)
 import SampleData
 
 import App
@@ -22,12 +23,14 @@ commands = merges
   , Loaded <~ dropbox.read "outlin.json"
   ]
 
-state = foldp App.step (Document.Zipper SampleData.template (Entry.InText 4)) commands
+initialDocument = (Entry.textZipper SampleData.template)
+
+state = foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
 main = (toElement 800 600) <~ (App.render <~ state)
 
-jsonOutput = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
+jsonOutput = dropRepeats <| (\x -> x |> Entry.toValue |> Entry.toJson) <~ state
 
 toDropbox = dropbox.write "outlin.json" jsonOutput

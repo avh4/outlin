@@ -1,4 +1,4 @@
-module Core.String (Value, Zipper, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson) where
+module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt) where
 
 import Core.Action as Action
 import String
@@ -9,6 +9,24 @@ import Html.Attributes (class)
 type Value = String
 type Zipper = (String,Int)
 type Result = Action.Result Value Zipper
+
+startZipper : Value -> Zipper
+startZipper v = (v,0)
+
+endZipper : Value -> Zipper
+endZipper v = (v,String.length v)
+
+zipper : String -> String -> Zipper
+zipper left right = (left ++ right, String.length left)
+
+zipperAt : Int -> Value -> Zipper
+zipperAt i s = (s, i)
+
+toValue : Zipper -> Value
+toValue (v,_) = v
+
+split_ : Zipper -> (Value, Zipper)
+split_ (v,i) = (String.left i v, startZipper (String.dropLeft i v))
 
 update char value cursor =
   (String.left cursor value)
