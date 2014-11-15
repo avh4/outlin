@@ -142,17 +142,22 @@ footer (w,h) = flow right (map (\x -> asText x)
   ])
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
+findFocus : Entry.Zipper -> Entry.Zipper
+findFocus z = case z of
+  Entry.InChild e -> Core.Array.active e.children |> findFocus
+  _ -> z
 
 render : (Int,Int) -> Document.Zipper -> Element
 render (w,h) z =
   let f = footer (w,h)
       header = title (w,h) (Entry.textValue z)
       mh = h - (heightOf f) - (heightOf header)
+      focus = findFocus z
   in flow down
   [ header
   , flow right
-    [ leftPanel (toFloat w/2 |> floor,mh) z
-    , rightPanel (toFloat w/2 |> floor,mh) z
+    [ leftPanel (toFloat w/2 |> floor,mh) focus
+    , rightPanel (toFloat w/2 |> floor,mh) focus
     ]
   , f
   ]
