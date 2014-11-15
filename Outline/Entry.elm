@@ -1,4 +1,4 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, renderValue, renderZipper, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt) where
+module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -35,6 +35,10 @@ toValue z = case z of
   InDescription e -> Entry { e | description <- Core.String.toValue e.description }
   InInbox e -> Entry { e | inbox <- Core.Array.toValue toValue e.inbox }
   InChild e -> Entry { e | children <- Core.Array.toValue toValue e.children }
+
+textValue : Zipper -> String
+textValue z = case toValue z of
+  Entry e -> e.text
 
 textZipper : Value -> Zipper
 textZipper en = case en of Entry e -> InText { e | text <- Core.String.endZipper e.text }
@@ -260,41 +264,42 @@ goPrev = do (Action.always Action.EnterPrev)
 
 ---- RENDER
 
-renderValue : Value -> Html
-renderValue value = case value of
-  Entry e -> node "li" []
-    [ Core.String.renderValue e.text
-    , node "i" [] [ Core.String.renderValue e.description ]
-    , node "ul" [] <| map renderValue e.inbox
-    , node "ol" [] <| map renderValue e.children
-    ]
+-- renderValue : Value -> Html
+-- renderValue value = case value of
+--   Entry e -> node "li" []
+--     [ Core.String.renderValue e.text
+--     , node "i" [] [ Core.String.renderValue e.description ]
+--     , node "ul" [] <| map renderValue e.inbox
+--     , node "ol" [] <| map renderValue e.children
+--     ]
+--
+-- renderZipper : Zipper -> Html
+-- renderZipper z = case z of
+--   InText e -> node "li" []
+--     [ Core.String.renderZipper e.text
+--     , node "i" [] [ Core.String.renderValue e.description ]
+--     , node "ul" [] <| map renderValue e.inbox
+--     , node "ol" [] <| map renderValue e.children
+--     ]
+--   InDescription e -> node "li" []
+--     [ Core.String.renderValue e.text
+--     , node "i" [] [ Core.String.renderZipper e.description ]
+--     , node "ul" [] <| map renderValue e.inbox
+--     , node "ol" [] <| map renderValue e.children
+--     ]
+--   InInbox e -> node "li" []
+--     [ Core.String.renderValue e.text
+--     , node "i" [] [ Core.String.renderValue e.description ]
+--     , node "ul" [] <| Core.Array.map renderValue renderZipper e.inbox
+--     , node "ol" [] <| map renderValue e.children
+--     ]
+--   InChild e -> node "li" []
+--     [ Core.String.renderValue e.text
+--     , node "i" [] [ Core.String.renderValue e.description ]
+--     , node "ul" [] <| map renderValue e.inbox
+--     , node "ol" [] <| Core.Array.map renderValue renderZipper e.children
+--     ]
 
-renderZipper : Zipper -> Html
-renderZipper z = case z of
-  InText e -> node "li" []
-    [ Core.String.renderZipper e.text
-    , node "i" [] [ Core.String.renderValue e.description ]
-    , node "ul" [] <| map renderValue e.inbox
-    , node "ol" [] <| map renderValue e.children
-    ]
-  InDescription e -> node "li" []
-    [ Core.String.renderValue e.text
-    , node "i" [] [ Core.String.renderZipper e.description ]
-    , node "ul" [] <| map renderValue e.inbox
-    , node "ol" [] <| map renderValue e.children
-    ]
-  InInbox e -> node "li" []
-    [ Core.String.renderValue e.text
-    , node "i" [] [ Core.String.renderValue e.description ]
-    , node "ul" [] <| Core.Array.map renderValue renderZipper e.inbox
-    , node "ol" [] <| map renderValue e.children
-    ]
-  InChild e -> node "li" []
-    [ Core.String.renderValue e.text
-    , node "i" [] [ Core.String.renderValue e.description ]
-    , node "ul" [] <| map renderValue e.inbox
-    , node "ol" [] <| Core.Array.map renderValue renderZipper e.children
-    ]
 
 ---- JSON
 

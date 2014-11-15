@@ -1,4 +1,4 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt) where
+module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt, toTuple) where
 
 import Core.Action as Action
 import String
@@ -24,6 +24,9 @@ zipperAt i s = (s, i)
 
 toValue : Zipper -> Value
 toValue (v,_) = v
+
+toTuple : Zipper -> (String,String)
+toTuple (s,i) = (String.left i s, String.dropLeft i s)
 
 split_ : Zipper -> (Value, Zipper)
 split_ (v,i) = (String.left i v, startZipper (String.dropLeft i v))

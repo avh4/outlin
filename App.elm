@@ -12,6 +12,7 @@ import Json.Decoder
 import Json.Process
 import Json.Output
 import Core.Action as Action
+import Core.String
 import Color (..)
 import Text
 import Outline.Document as Document
@@ -64,17 +65,76 @@ step c m = case c of
 
 ---- RENDER
 
-renderDocument : Document.Zipper -> Html
-renderDocument = Entry.renderZipper
+textCursor fn z = case Core.String.toTuple z of
+  (left,r) -> flow right
+    [ fn left
+    , plainText "^"
+    , fn r
+    ]
 
-renderDocs = node "div" []
-  [ node "p" [] [ text "⌘A: add to inbox" ]
-  , node "p" [] [ text "⌘D: delete" ]
-  , node "p" [] [ text "⌘P: promote from inbox" ]
-  , node "p" [] [ text "⌘1 - ⌘7: move into …" ]
-  , node "p" [] [ text "⌘M: Missorted" ]
-  , node "p" [] [ text "⌘Up/Down: move up/down" ]
+hintText : String -> Element
+hintText s = s |> toText |> Text.italic |> Text.color (hsl 0 0 0.7) |> leftAligned
+
+inboxItem : Entry.Zipper -> Element
+inboxItem z = case z of
+  Entry.InText e -> textCursor plainText e.text
+  _ -> plainText (Entry.textValue z)
+
+inboxItemV : Entry.Value -> Element
+inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
+
+leftPanel : (Int,Int) -> Entry.Zipper -> Element
+leftPanel (w,h) z = case z of
+  -- InText e ->
+  -- InInbox e ->
+  _ -> case Entry.toValue z of
+    Entry.Entry e -> flow down (
+      [ subtitle (w,h) e.text
+      , subtitle (w,h) e.description |> color yellow
+      , "⌘A: add to inbox" |> hintText
+      ] ++ map inboxItemV e.inbox)
+      |> container w h topLeft
+
+child : Int -> Entry.Value -> Element
+child i v = case v of
+  Entry.Entry e -> flow right
+    [ "⌘" ++ (show <| i+1) ++ " " |> hintText
+    , plainText e.text
+    ]
+
+rightPanel : (Int,Int) -> Entry.Zipper -> Element
+rightPanel (w,h) z = case z of
+  -- InChild e ->
+  _ -> case Entry.toValue z of
+    Entry.Entry e -> flow down (
+      [ "⌘P: promote from inbox" |> hintText
+      ] ++ indexedMap child e.children)
+      |> container w h topLeft
+
+title : (Int,Int) -> String -> Element
+title (w,h) s = s |> plainText |> container w 30 midLeft |> color red
+
+subtitle : (Int,Int) -> String -> Element
+subtitle (w,h) s = s |> plainText |> container w 30 midLeft |> color green
+
+footer (w,h) = flow right (map (\x -> asText x)
+  [ "⌘D: delete"
+  , "⌘M: Missorted"
+  , "⌘Up/Down: move up/down"
+  ])
+  |> container w 40 midLeft |> color (hsl 0 0 0.8)
+
+
+render : (Int,Int) -> Document.Zipper -> Element
+render (w,h) z =
+  let f = footer (w,h)
+      header = title (w,h) (Entry.textValue z)
+      mh = h - (heightOf f) - (heightOf header)
+  in flow down
+  [ header
+  , flow right
+    [ leftPanel (toFloat w/2 |> floor,mh) z
+    , rightPanel (toFloat w/2 |> floor,mh) z
+    ]
+  , f
   ]
-
-render : Document.Zipper -> Html
-render m = node "div" [] [ renderDocs, renderDocument m ]

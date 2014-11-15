@@ -8,6 +8,7 @@ import Dropbox
 import Outline.Entry as Entry
 import Outline.Entry (entry)
 import SampleData
+import Window
 
 import App
 import App (Command(..))
@@ -29,7 +30,7 @@ state = foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = (toElement 800 600) <~ (App.render <~ state)
+main = App.render <~ Window.dimensions ~ state
 
 jsonOutput = dropRepeats <| (\x -> x |> Entry.toValue |> Entry.toJson) <~ state
 
