@@ -114,21 +114,23 @@ leftPanel size z = case z of
       (e.description |> plainText)
       (map inboxItemV e.inbox)
 
-child : Int -> Entry.Value -> Element
-child i v = case v of
-  Entry.Entry e -> flow right
-    [ "⌘" ++ (show <| i+1) ++ " " |> hintText
-    , plainText e.text
-    ]
+child : Int -> Element -> Element
+child i e = flow right
+  [ "⌘" ++ (show <| i+1) ++ " " |> hintText
+  , e
+  ]
+
+rightPanel' : (Int,Int) -> [Element] -> Element
+rightPanel' (w,h) childElements = flow down (
+  [ "⌘P: promote from inbox" |> hintText
+  ] ++ indexedMap child childElements)
+  |> container w h topLeft
 
 rightPanel : (Int,Int) -> Entry.Zipper -> Element
-rightPanel (w,h) z = case z of
-  -- InChild e ->
+rightPanel size z = case z of
   _ -> case Entry.toValue z of
-    Entry.Entry e -> flow down (
-      [ "⌘P: promote from inbox" |> hintText
-      ] ++ indexedMap child e.children)
-      |> container w h topLeft
+    Entry.Entry e -> rightPanel' size
+      (e.children |> map (\en -> case en of Entry.Entry e -> e.text) |> map plainText)
 
 title : (Int,Int) -> String -> Element
 title (w,h) s = s |> plainText |> container w 30 midLeft |> color red
