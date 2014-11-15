@@ -13,6 +13,7 @@ import Json.Process
 import Json.Output
 import Core.Action as Action
 import Core.String
+import Core.Array
 import Color (..)
 import Text
 import Outline.Document as Document
@@ -65,6 +66,7 @@ step c m = case c of
 
 ---- RENDER
 
+textCursor : (String -> Element) -> Core.String.Zipper -> Element
 textCursor fn z = case Core.String.toTuple z of
   (left,r) -> flow right
     [ fn left
@@ -83,17 +85,34 @@ inboxItem z = case z of
 inboxItemV : Entry.Value -> Element
 inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
 
+leftPanel' : (Int,Int) -> Element -> Element -> [Element] -> Element
+leftPanel' (w,h) textElement descriptionElement inboxElements = flow down (
+  [ textElement |> container w 30 midLeft |> color green
+  , descriptionElement |> container w 30 midLeft |> color yellow
+  , "⌘A: add to inbox" |> hintText
+  ] ++ inboxElements)
+  |> container w h topLeft
+
 leftPanel : (Int,Int) -> Entry.Zipper -> Element
-leftPanel (w,h) z = case z of
-  -- InText e ->
-  -- InInbox e ->
+leftPanel size z = case z of
+  -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
+  Entry.InText e -> leftPanel' size
+    (e.text |> textCursor plainText)
+    (e.description |> plainText)
+    (map inboxItemV e.inbox)
+  Entry.InDescription e -> leftPanel' size
+    (e.text |> plainText)
+    (e.description |> textCursor plainText)
+    (map inboxItemV e.inbox)
+  Entry.InInbox e -> leftPanel' size
+    (e.text |> plainText)
+    (e.description |> plainText)
+    (Core.Array.map inboxItemV inboxItem e.inbox)
   _ -> case Entry.toValue z of
-    Entry.Entry e -> flow down (
-      [ subtitle (w,h) e.text
-      , subtitle (w,h) e.description |> color yellow
-      , "⌘A: add to inbox" |> hintText
-      ] ++ map inboxItemV e.inbox)
-      |> container w h topLeft
+    Entry.Entry e -> leftPanel' size
+      (e.text |> plainText)
+      (e.description |> plainText)
+      (map inboxItemV e.inbox)
 
 child : Int -> Entry.Value -> Element
 child i v = case v of
@@ -113,9 +132,6 @@ rightPanel (w,h) z = case z of
 
 title : (Int,Int) -> String -> Element
 title (w,h) s = s |> plainText |> container w 30 midLeft |> color red
-
-subtitle : (Int,Int) -> String -> Element
-subtitle (w,h) s = s |> plainText |> container w 30 midLeft |> color green
 
 footer (w,h) = flow right (map (\x -> asText x)
   [ "⌘D: delete"
