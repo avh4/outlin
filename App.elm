@@ -11,24 +11,24 @@ import Outline.Entry as Entry
 import Json.Decoder
 import Json.Process
 import Json.Output
-import Core.Action (Action)
 import Core.Action as Action
+import Core.String
+import Core.Array
+import Color (..)
+import Text
+import Outline.Document as Document
 
 ---- App
 
-type Document = Entry.Entry
-type DocumentCursor = Entry.Cursor
-type Model = { value:Document, selection:DocumentCursor }
-
-updateModel : Action val cur -> {value:val, selection:cur} -> {value:val, selection:cur}
-updateModel action {value,selection} = case action value selection of
-  Action.Update a b -> {value=a, selection=b}
+updateModel : (z -> Action.Result val z) -> z -> z
+updateModel action z = case action z of
+  Action.Update newZ -> newZ
   -- explicity list the following action results, which are all no-ops on document
-  Action.Split _ _ _ -> {value=value, selection=selection}
-  Action.Delete -> {value=value, selection=selection}
-  Action.EnterNext -> {value=value, selection=selection}
-  Action.EnterPrev -> {value=value, selection=selection}
-  Action.NoChange -> {value=value, selection=selection}
+  Action.Split _ _ _ -> z
+  Action.Delete -> z
+  Action.EnterNext -> z
+  Action.EnterPrev -> z
+  Action.NoChange -> z
 
 ---- INPUT
 
@@ -37,7 +37,7 @@ data Command
   | KeyMeta Int
   | Loaded String
 
-step : Command -> Model -> Model
+step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
   Key (Keys.Left) -> updateModel Entry.goLeft m
   Key (Keys.Right) -> updateModel Entry.goRight m
@@ -60,23 +60,104 @@ step c m = case c of
   Key (Keys.Command "Up") -> updateModel Entry.moveChildUp m
   Key (Keys.Command "Down") -> updateModel Entry.moveChildDown m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
-    Json.Output.Success doc -> { value=doc, selection=Entry.InText 0 }
+    Json.Output.Success doc -> Entry.textZipper doc
     x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Unhandled command" x)
 
 ---- RENDER
 
-renderDocument : Document -> DocumentCursor -> Html
-renderDocument value cursor = Entry.render value (Just <| Debug.watch "cursor" cursor)
+textCursor : (String -> Element) -> Core.String.Zipper -> Element
+textCursor fn z = case Core.String.toTuple z of
+  (left,r) -> flow right
+    [ fn left
+    , plainText "^"
+    , fn r
+    ]
 
-renderDocs = node "div" []
-  [ node "p" [] [ text "⌘A: add to inbox" ]
-  , node "p" [] [ text "⌘D: delete" ]
-  , node "p" [] [ text "⌘P: promote from inbox" ]
-  , node "p" [] [ text "⌘1 - ⌘7: move into …" ]
-  , node "p" [] [ text "⌘M: Missorted" ]
-  , node "p" [] [ text "⌘Up/Down: move up/down" ]
+hintText : String -> Element
+hintText s = s |> toText |> Text.italic |> Text.color (hsl 0 0 0.7) |> leftAligned
+
+inboxItem : Entry.Zipper -> Element
+inboxItem z = case z of
+  Entry.InText e -> textCursor plainText e.text
+  _ -> plainText (Entry.textValue z)
+
+inboxItemV : Entry.Value -> Element
+inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
+
+leftPanel' : (Int,Int) -> Element -> Element -> [Element] -> Element
+leftPanel' (w,h) textElement descriptionElement inboxElements = flow down (
+  [ textElement |> container w 30 midLeft |> color green
+  , descriptionElement |> container w 30 midLeft |> color yellow
+  , "⌘A: add to inbox" |> hintText
+  ] ++ inboxElements)
+  |> container w h topLeft
+
+leftPanel : (Int,Int) -> Entry.Zipper -> Element
+leftPanel size z = case z of
+  -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
+  Entry.InText e -> leftPanel' size
+    (e.text |> textCursor plainText)
+    (e.description |> plainText)
+    (map inboxItemV e.inbox)
+  Entry.InDescription e -> leftPanel' size
+    (e.text |> plainText)
+    (e.description |> textCursor plainText)
+    (map inboxItemV e.inbox)
+  Entry.InInbox e -> leftPanel' size
+    (e.text |> plainText)
+    (e.description |> plainText)
+    (Core.Array.map inboxItemV inboxItem e.inbox)
+  _ -> case Entry.toValue z of
+    Entry.Entry e -> leftPanel' size
+      (e.text |> plainText)
+      (e.description |> plainText)
+      (map inboxItemV e.inbox)
+
+child : Int -> Element -> Element
+child i e = flow right
+  [ "⌘" ++ (show <| i+1) ++ " " |> hintText
+  , e
   ]
 
-render : Model -> Html
-render m = node "div" [] [ renderDocs, renderDocument m.value m.selection ]
+rightPanel' : (Int,Int) -> [Element] -> Element
+rightPanel' (w,h) childElements = flow down (
+  [ "⌘P: promote from inbox" |> hintText
+  ] ++ indexedMap child childElements)
+  |> container w h topLeft
+
+rightPanel : (Int,Int) -> Entry.Zipper -> Element
+rightPanel size z = case z of
+  _ -> case Entry.toValue z of
+    Entry.Entry e -> rightPanel' size
+      (e.children |> map (\en -> case en of Entry.Entry e -> e.text) |> map plainText)
+
+title : (Int,Int) -> String -> Element
+title (w,h) s = s |> plainText |> container w 30 midLeft |> color red
+
+footer (w,h) = flow right (map (\x -> asText x)
+  [ "⌘D: delete"
+  , "⌘M: Missorted"
+  , "⌘Up/Down: move up/down"
+  ])
+  |> container w 40 midLeft |> color (hsl 0 0 0.8)
+
+findFocus : Entry.Zipper -> Entry.Zipper
+findFocus z = case z of
+  Entry.InChild e -> Core.Array.active e.children |> findFocus
+  _ -> z
+
+render : (Int,Int) -> Document.Zipper -> Element
+render (w,h) z =
+  let f = footer (w,h)
+      header = title (w,h) (Entry.textValue z)
+      mh = h - (heightOf f) - (heightOf header)
+      focus = findFocus z
+  in flow down
+  [ header
+  , flow right
+    [ leftPanel (toFloat w/2 |> floor,mh) focus
+    , rightPanel (toFloat w/2 |> floor,mh) focus
+    ]
+  , f
+  ]

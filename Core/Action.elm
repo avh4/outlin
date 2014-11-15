@@ -1,19 +1,17 @@
-module Core.Action (Action, nav, change, always, Result(..)) where
+module Core.Action (nav, change, always, Result(..)) where
 
-data Result v c =
-  Update v c |
-  Split [v] Int c |
+data Result value zipper =
+  Update zipper |
+  Split [value] zipper [value] |
   Delete |
   EnterPrev | EnterNext |
   NoChange
 
-type Action v c = (v -> c -> Result v c)
+nav : (v -> c -> c) -> (v,c) -> Result v (v,c)
+nav fn = \(v,c) -> Update (v, (fn v c))
 
-nav : (v -> c -> c) -> Action v c
-nav fn = \v c -> Update v (fn v c)
+change : (v -> c -> v) -> (v,c) -> Result v (v,c)
+change fn = \(v,c) -> Update ((fn v c), c)
 
-change : (v -> c -> v) -> Action v c
-change fn = \v c -> Update (fn v c) c
-
-always : Result v c -> Action v c
-always r = \_ _ -> r
+always : Result v (v,c) -> (v,c) -> Result v (v,c)
+always r = \_ -> r

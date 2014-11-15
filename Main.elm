@@ -4,33 +4,34 @@ import Html (Html, text, node, toElement)
 import Html.Attributes (class)
 
 import Keys
+import Dropbox
 import Outline.Entry as Entry
+import Outline.Entry (entry)
 import SampleData
+import Window
 
 import App
-import App (Command(..), Model)
+import App (Command(..))
+import Outline.Document as Document
 
 ---- SIGNALS
 
-port pressesIn : Signal String
-port downsIn : Signal Int
-port metaIn : Signal Int
-
-port dropboxIn : Signal String
+dropbox = Dropbox.client "sy8pzlg66rwnv7n"
 
 commands : Signal Command
 commands = merges
-  [ Key <~ (Keys.fromPresses <~ pressesIn)
-  , Key <~ (Keys.fromDowns <~ downsIn)
-  , Key <~ (Keys.fromMeta <~ metaIn)
-  , Loaded <~ dropboxIn
+  [ Key <~ Keys.lastPressed
+  , Loaded <~ dropbox.read "outlin.json"
   ]
 
-state = foldp App.step (Model SampleData.template (Entry.InText 4)) commands
+initialDocument = (Entry.textZipper SampleData.template)
+
+state = foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = (toElement 800 600) <~ (App.render <~ state)
+main = App.render <~ Window.dimensions ~ state
 
-port dropboxOut : Signal String
-port dropboxOut = dropRepeats <| (\x -> Entry.toJson x.value) <~ state
+jsonOutput = dropRepeats <| (\x -> x |> Entry.toValue |> Entry.toJson) <~ state
+
+toDropbox = dropbox.write "outlin.json" jsonOutput

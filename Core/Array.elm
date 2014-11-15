@@ -1,13 +1,11 @@
-module Core.Array (Cursor, cursor, do, split, render, toJson) where
+module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update) where
 
-import Core.Action (Action)
 import Core.Action as Action
+import List
 
-type Value a = [a]
-type Cursor a = (Int, a)
-type Subs a = {child:a}
-
-cursor n c = (n, c)
+type Value v = [v]
+type Zipper v z = ([v],z,[v])
+type Result v z = Action.Result (Value v) (Zipper v z)
 
 replaceAt : a -> Int -> [a] -> [a]
 replaceAt a index list =
@@ -16,39 +14,108 @@ replaceAt a index list =
 at : Int -> [a] -> a
 at i list = list |> drop i |> head
 
+toValue : (z -> v) -> Zipper v z -> Value v
+toValue fn (left,cur,right) = reverse left ++ [fn cur] ++ right
+
+mapAt : Int -> (v -> v) -> Value v -> Value v
+mapAt n fn vs = indexedMap (\i v -> if i == n then fn v else v) vs
+
+append : v -> Value v -> Value v
+append v vs = vs ++ [v]
+
+prepend : v -> Value v -> Value v
+prepend v vs = v :: vs
+
+active : Zipper v z -> z
+active (_,z,_) = z
+
+zipper : [v] -> z -> [v] -> Zipper v z
+zipper left cur right = (left,cur,right)
+
+zipperAt : Int -> (v -> z) -> Value v -> Zipper v z
+zipperAt i fn vs =
+  ( vs |> take i |> reverse
+  , vs |> drop i |> head |> fn
+  , vs |> drop (i+1)
+  )
+
+-- TODO: return a Maybe
+firstZipper : (v -> z) -> Value v -> Zipper v z
+firstZipper fn (cur :: tail) = ([],fn cur,tail)
+
+firstZipperThat : (v -> Maybe z) -> Value v -> Maybe (Zipper v z)
+firstZipperThat fn vs = case vs of
+  (head::tail) -> case fn head of
+    Just zipper -> Just ([],zipper,tail)
+    Nothing -> case firstZipperThat fn tail of
+      Just (left,cur,right) -> Just (head::left,cur,right)
+      Nothing -> Nothing
+  [] -> Nothing
+
+lastZipper : (v -> z) -> Value v -> Zipper v z
+lastZipper fn list = let (cur :: tail) = reverse list in (tail,fn cur,[])
+
+lastZipperThat : (v -> Maybe z) -> Value v -> Maybe (Zipper v z)
+lastZipperThat fn vs = case firstZipperThat fn (reverse vs) of
+  Nothing -> Nothing
+  Just (left,cur,right) -> Just (right,cur,left)
+
+remove : (v -> z) -> Zipper v z -> Maybe (Zipper v z)
+remove fn (left,cur,right) =
+  case right of
+    (next :: tail) -> Just (left, fn next, tail)
+    [] -> case left of
+      (next :: tail) -> Just (tail, fn next, right)
+      [] -> Nothing
+
 -- TODO: instead of passing in nextCursor/prevCursor eagerly, can we flip it around so that there is an ActionResult that has a function : c -> Array.Cursor c
-do : c -> (v -> c) -> Action v c -> Action [v] (Cursor c)
-do nextCursor prevCursor action vs (i,c) = case action (at i vs) c of
-  Action.Update newV newC -> Action.Update (replaceAt newV i vs) (i,newC)
-  Action.Split newVs newI newC -> Action.Update ((take i vs) ++ newVs ++ (drop (i+1) vs)) (newI+i, newC)
-  Action.Delete -> if
-    | length vs > 1 -> Action.Update ((take i vs) ++ (drop (i+1) vs)) (min i <| -2+length vs,c)
-    | otherwise -> Action.Delete
-  Action.EnterNext -> if
-    | length vs > i+1 -> Action.Update vs (i+1, nextCursor)
-    | otherwise -> Action.EnterNext
-  Action.EnterPrev -> if
-    | i > 0 -> Action.Update vs (i-1, prevCursor (at (i-1) vs))
-    | otherwise -> Action.EnterPrev
+do : (z -> v) -> (v -> z) -> (v -> z) -> (z -> Action.Result v z) -> Zipper v z -> Result v z
+do toVal nextFn prevFn action (left,cur,right) = case action cur of
+  Action.Update new -> Action.Update (left,new,right)
+  Action.Split newLeft new newRight -> Action.Update (reverse newLeft ++ left,new,newRight ++ right)
+  Action.Delete -> case right of
+    (next :: tail) -> Action.Update (left, nextFn next, tail)
+    [] -> case left of
+      (next :: tail) -> Action.Update (tail, prevFn next, right)
+      [] -> Action.Delete
+  Action.EnterNext -> case right of
+    (next :: tail) -> Action.Update (toVal cur :: left, nextFn next, tail)
+    [] -> Action.EnterNext
+  Action.EnterPrev -> case left of
+    (next :: tail) -> Action.Update (tail, prevFn next, toVal cur :: right)
+    [] -> Action.EnterPrev
   Action.NoChange -> Action.NoChange
 
-split_ : (v -> c -> (v, v, c)) -> Action v c
-split_ fn = \v c -> case fn v c of
-  (v1, v2, innerC) -> Action.Split [v1, v2] 1 innerC
+split_ : (z -> (v, z)) -> z -> Action.Result v z
+split_ fn z = case fn z of
+  (v1, new) -> Action.Split [v1] new []
 
-split : c -> (v -> c) -> (v -> c -> (v, v, c)) -> Action [v] (Cursor c)
-split nextCursor prevCursor fn = do nextCursor prevCursor (split_ fn)
+split : (z -> v) -> (v -> z) -> (v -> z) -> (z -> (v, z)) -> Zipper v z -> Result v z
+split toVal nextCursor prevCursor fn = do toVal nextCursor prevCursor (split_ fn)
 
-render : (val -> Maybe cur -> out) -> [val] -> Maybe (Cursor cur) -> [out]
-render fn list msel = case msel of
-  Just (n, c) -> indexedMap (\i x -> fn x (if i==n then Just c else Nothing)) list
-  Nothing -> map (\x -> fn x Nothing) list
+moveUp : Zipper v z -> Maybe (Zipper v z)
+moveUp (left,cur,right) = case left of
+  [] -> Nothing
+  (head::tail) -> Just (tail,cur,head::right)
 
+moveDown : Zipper v z -> Maybe (Zipper v z)
+moveDown (left,cur,right) = case right of
+  [] -> Nothing
+  (head::tail) -> Just (head::left,cur,tail)
+
+update : z -> Zipper v z -> Zipper v z
+update new (left,_,right) = (left,new,right)
+
+map : (v -> a) -> (z -> a) -> Zipper v z -> [a]
+map valueFn zipperFn (left,z,right) =
+  List.map valueFn (reverse left)
+  ++ [zipperFn z]
+  ++ List.map valueFn right
 
 ---- JSON
 
-walk : (Value b -> c) -> Subs (a -> b) -> Value a -> c
-walk wrapFn {child} list = wrapFn <| map child list
+walk : (Value b -> c) -> (a -> b) -> Value a -> c
+walk wrapFn child list = wrapFn <| List.map child list
 
 toJson : (a -> String) -> [a] -> String
-toJson fn = walk (\vs -> "[" ++ (join "," vs) ++ "]") {child=fn}
+toJson fn = walk (\vs -> "[" ++ (join "," vs) ++ "]") fn
