@@ -102,31 +102,36 @@ crumbView h (left,text,right) =
 crumbsPanel : Int -> [(Int,String,Int)] -> Element
 crumbsPanel h crumbs = flow right (map (crumbView h) crumbs)
 
-leftPanel' : (Int,Int) -> Element -> Element -> [Element] -> Element
-leftPanel' (w,h) textElement descriptionElement inboxElements = flow down (
+siblingView : Int -> Entry.Value -> Element
+siblingView w v = case v of
+  Entry.Entry e -> e.text |> plainText |> width w |> color orange
+
+leftPanel' : (Int,Int) -> [Entry.Value] -> [Entry.Value] -> Element -> Element -> [Element] -> Element
+leftPanel' (w,h) left right textElement descriptionElement inboxElements = flow down (
+  (map (siblingView w) left) ++
   [ textElement |> width w |> color green
   , descriptionElement |> width w |> color yellow
   , "⌘A: add to inbox" |> hintText
-  ] ++ inboxElements)
+  ] ++ inboxElements ++ (map (siblingView w) right))
   |> container w h topLeft
 
-leftPanel : (Int,Int) -> Entry.Zipper -> Element
-leftPanel size z = case z of
+leftPanel : (Int,Int) -> Entry.Zipper -> [Entry.Value] -> [Entry.Value] -> Element
+leftPanel size z left right = case z of
   -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
-  Entry.InText e -> leftPanel' size
+  Entry.InText e -> leftPanel' size left right
     (e.text |> textCursor plainText)
     (e.description |> plainText)
     (map inboxItemV e.inbox)
-  Entry.InDescription e -> leftPanel' size
+  Entry.InDescription e -> leftPanel' size left right
     (e.text |> plainText)
     (e.description |> textCursor plainText)
     (map inboxItemV e.inbox)
-  Entry.InInbox e -> leftPanel' size
+  Entry.InInbox e -> leftPanel' size left right
     (e.text |> plainText)
     (e.description |> plainText)
     (Core.Array.map inboxItemV inboxItem e.inbox)
   _ -> case Entry.toValue z of
-    Entry.Entry e -> leftPanel' size
+    Entry.Entry e -> leftPanel' size left right
       (e.text |> plainText)
       (e.description |> plainText)
       (map inboxItemV e.inbox)
@@ -159,25 +164,25 @@ footer (w,h) = flow right (map (\x -> asText x)
   ])
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
-findFocus : (Int,Int) -> Entry.Zipper -> (Entry.Zipper,[(Int,String,Int)])
-findFocus (l,r) z = case z of
-  Entry.InChild e -> case Core.Array.active e.children |> findFocus (Core.Array.countLeft e.children,Core.Array.countRight e.children) of
-    (z',crumbs) -> (z', (l,e.text,r) :: crumbs)
-  _ -> (z,[])
+findFocus : (Int,Int) -> ([Entry.Value],[Entry.Value]) -> Entry.Zipper -> (([Entry.Value],Entry.Zipper,[Entry.Value]),[(Int,String,Int)])
+findFocus (l,r) (ls,rs) z = case z of
+  Entry.InChild e -> case Core.Array.active e.children |> findFocus (Core.Array.countLeft e.children,Core.Array.countRight e.children) (Core.Array.lefts e.children,Core.Array.rights e.children) of
+    (result,crumbs) -> (result, (l,e.text,r) :: crumbs)
+  _ -> ((ls,z,rs),[])
 
 render : (Int,Int) -> Document.Zipper -> Element
 render (w,h) z =
   let f = footer (w,h)
       header = title (w,h) (Entry.textValue z)
       mh = h - (heightOf f) - (heightOf header)
-      (focus,crumbs) = findFocus (0,0) z
+      ((ls,focus,rs),crumbs) = findFocus (0,0) ([],[]) z
       crumbs' = crumbsPanel mh (drop 1 crumbs)
       mw = w - (widthOf crumbs')
   in flow down
   [ header
   , flow right
     [ crumbs'
-    , leftPanel (toFloat mw/2 |> floor,mh) focus
+    , leftPanel (toFloat mw/2 |> floor,mh) focus ls rs
     , rightPanel (toFloat mw/2 |> ceiling,mh) focus
     ]
   , f
