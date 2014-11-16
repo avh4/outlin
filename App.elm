@@ -92,10 +92,10 @@ crumbView : Int -> (Int,String,Int) -> Element
 crumbView h (left,text,right) =
   let n = left + right + 1
       e = plainText text |> width (toFloat h/n |> ceiling)
-      w = heightOf e
+      w = heightOf e |> min 80
   in flow down
   [ spacer w (toFloat h*left/n |> floor) |> color grey
-  , e |> rot |> color purple
+  , e |> rot |> width w |> color purple
   , spacer w (toFloat h*right/n |> floor) |> color grey
   ]
 
@@ -104,8 +104,8 @@ crumbsPanel h crumbs = flow right (map (crumbView h) crumbs)
 
 leftPanel' : (Int,Int) -> Element -> Element -> [Element] -> Element
 leftPanel' (w,h) textElement descriptionElement inboxElements = flow down (
-  [ textElement |> container w 30 midLeft |> color green
-  , descriptionElement |> container w 30 midLeft |> color yellow
+  [ textElement |> width w |> color green
+  , descriptionElement |> width w |> color yellow
   , "⌘A: add to inbox" |> hintText
   ] ++ inboxElements)
   |> container w h topLeft
@@ -150,7 +150,7 @@ rightPanel size z = case z of
       (e.children |> map (\en -> case en of Entry.Entry e -> e.text) |> map plainText)
 
 title : (Int,Int) -> String -> Element
-title (w,h) s = s |> plainText |> container w 30 midLeft |> color red
+title (w,h) s = s |> plainText |> width w |> color red
 
 footer (w,h) = flow right (map (\x -> asText x)
   [ "⌘D: delete"
