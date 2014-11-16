@@ -85,6 +85,23 @@ inboxItem z = case z of
 inboxItemV : Entry.Value -> Element
 inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
 
+rot : Element -> Element
+rot e = collage (heightOf e) (widthOf e) [ e |> toForm |> rotate (degrees 90) ]
+
+crumbView : Int -> (Int,String,Int) -> Element
+crumbView h (left,text,right) =
+  let n = left + right + 1
+      e = plainText text |> width (toFloat h/n |> ceiling)
+      w = heightOf e
+  in flow down
+  [ spacer w (toFloat h*left/n |> floor) |> color grey
+  , e |> rot |> color purple
+  , spacer w (toFloat h*right/n |> floor) |> color grey
+  ]
+
+crumbsPanel : Int -> [(Int,String,Int)] -> Element
+crumbsPanel h crumbs = flow right (map (crumbView h) crumbs)
+
 leftPanel' : (Int,Int) -> Element -> Element -> [Element] -> Element
 leftPanel' (w,h) textElement descriptionElement inboxElements = flow down (
   [ textElement |> container w 30 midLeft |> color green
@@ -142,22 +159,26 @@ footer (w,h) = flow right (map (\x -> asText x)
   ])
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
-findFocus : Entry.Zipper -> Entry.Zipper
-findFocus z = case z of
-  Entry.InChild e -> Core.Array.active e.children |> findFocus
-  _ -> z
+findFocus : (Int,Int) -> Entry.Zipper -> (Entry.Zipper,[(Int,String,Int)])
+findFocus (l,r) z = case z of
+  Entry.InChild e -> case Core.Array.active e.children |> findFocus (Core.Array.countLeft e.children,Core.Array.countRight e.children) of
+    (z',crumbs) -> (z', (l,e.text,r) :: crumbs)
+  _ -> (z,[])
 
 render : (Int,Int) -> Document.Zipper -> Element
 render (w,h) z =
   let f = footer (w,h)
       header = title (w,h) (Entry.textValue z)
       mh = h - (heightOf f) - (heightOf header)
-      focus = findFocus z
+      (focus,crumbs) = findFocus (0,0) z
+      crumbs' = crumbsPanel mh (drop 1 crumbs)
+      mw = w - (widthOf crumbs')
   in flow down
   [ header
   , flow right
-    [ leftPanel (toFloat w/2 |> floor,mh) focus
-    , rightPanel (toFloat w/2 |> floor,mh) focus
+    [ crumbs'
+    , leftPanel (toFloat mw/2 |> floor,mh) focus
+    , rightPanel (toFloat mw/2 |> ceiling,mh) focus
     ]
   , f
   ]

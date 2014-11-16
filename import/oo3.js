@@ -15,9 +15,7 @@ function processFile(filename) {
   stream.on('end',function(){
    var xml = ltx.parse(string);
    //console.log(JSON.stringify(doNode(xml), null, 2));
-   console.log("module SampleData where\n");
-   console.log("import Outline.Entry as Entry\n");
-   console.log("template = " + doNode(xml).toString(1))
+   console.log(doNode(xml).toString(1))
   });
 }
 
@@ -33,7 +31,7 @@ function Entry(text, description, children) {
 
 Entry.prototype.toString = function(depth) {
   var indent = Array((depth||0)*2).join("  ");
-  return "Entry.Entry {text=" + quote(this.text) + ", description=" + quote(this.description) + ", children=[" + this.children.map(function(c) { return "\n" + indent + c.toString((depth||0)+1); }) + "]}";
+  return '{"text":' + quote(this.text) + ', "description":' + quote(this.description) + ',"inbox":[],"children":[' + this.children.map(function(c) { return c.toString((depth||0)+1); }) + "]}";
 }
 
 function doNode(node) {
