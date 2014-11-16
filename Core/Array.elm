@@ -1,4 +1,4 @@
-module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight) where
+module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights) where
 
 import Core.Action as Action
 import List
@@ -22,6 +22,12 @@ countLeft (left,_,_) = length left
 
 countRight : Zipper v z -> Int -- TODO: removing the type annotation causes compile errors
 countRight (_,_,right) = length right
+
+lefts : Zipper v z -> [v]
+lefts (left,_,_) = reverse left
+
+rights : Zipper v z -> [v]
+rights (_,_,right) = right
 
 mapAt : Int -> (v -> v) -> Value v -> Value v
 mapAt n fn vs = indexedMap (\i v -> if i == n then fn v else v) vs
