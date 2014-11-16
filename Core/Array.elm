@@ -1,4 +1,4 @@
-module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights) where
+module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM) where
 
 import Core.Action as Action
 import List
@@ -51,9 +51,14 @@ zipperAt i fn vs =
   , vs |> drop (i+1)
   )
 
--- TODO: return a Maybe
+-- TODO: use firstZipperM instead? or rename to firstZipper! ?
 firstZipper : (v -> z) -> Value v -> Zipper v z
 firstZipper fn (cur :: tail) = ([],fn cur,tail)
+
+firstZipperM : (v -> z) -> Value v -> Maybe (Zipper v z)
+firstZipperM fn vs = case vs of
+  (head :: tail) -> Just ([],fn head,tail)
+  [] -> Nothing
 
 firstZipperThat : (v -> Maybe z) -> Value v -> Maybe (Zipper v z)
 firstZipperThat fn vs = case vs of

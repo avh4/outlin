@@ -1,4 +1,4 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue) where
+module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -207,6 +207,7 @@ swapChildren fn z = case z of
 moveChildUp = doEntry <| swapChildren Core.Array.moveUp
 moveChildDown = doEntry <| swapChildren Core.Array.moveDown
 
+-- TODO: give a better name--maybe "doAtDeepestChild"
 doEntry : (Zipper -> Result) -> Zipper -> Result
 doEntry action z = case z of
   InChild e -> case action z of
@@ -216,6 +217,8 @@ doEntry action z = case z of
     x -> x
   _ -> action z
 
+-- TODO: rewrite to utilize doEntry for the recursion
+-- TODO: give a better name
 do : StringAction -> Zipper -> Result
 do stringAction z = case z of
   InText e -> case stringAction e.text of

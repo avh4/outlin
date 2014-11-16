@@ -17,6 +17,7 @@ import Core.Array
 import Color (..)
 import Text
 import Outline.Document as Document
+import App.EntryNav as EntryNav
 
 ---- App
 
@@ -59,6 +60,8 @@ step c m = case c of
   Key (Keys.Command "7") -> updateModel (Entry.moveInto 6) m
   Key (Keys.Command "Up") -> updateModel Entry.moveChildUp m
   Key (Keys.Command "Down") -> updateModel Entry.moveChildDown m
+  Key (Keys.Command "Right") -> updateModel EntryNav.goToFirstChild m
+  Key (Keys.Command "Left") -> updateModel EntryNav.goToParent m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> Entry.textZipper doc
     x -> fst (m, Debug.log "Load failed" x)
