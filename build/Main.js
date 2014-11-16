@@ -12281,6 +12281,7 @@ Elm.App.make = function (_elm) {
    $Core$Array = Elm.Core.Array.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Json$Decoder = Elm.Json.Decoder.make(_elm),
    $Json$Output = Elm.Json.Output.make(_elm),
@@ -12291,23 +12292,48 @@ Elm.App.make = function (_elm) {
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
    $String = Elm.String.make(_elm),
    $Text = Elm.Text.make(_elm);
-   var findFocus = function (z) {
+   var findFocus = F2(function (_v0,
+   z) {
       return function () {
-         switch (z.ctor)
-         {case "InChild":
-            return findFocus($Core$Array.active(z._0.children));}
-         return z;
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (z.ctor)
+                 {case "InChild":
+                    return function () {
+                         var _v6 = findFocus({ctor: "_Tuple2"
+                                             ,_0: $Core$Array.countLeft(z._0.children)
+                                             ,_1: $Core$Array.countRight(z._0.children)})($Core$Array.active(z._0.children));
+                         switch (_v6.ctor)
+                         {case "_Tuple2":
+                            return {ctor: "_Tuple2"
+                                   ,_0: _v6._0
+                                   ,_1: A2($List._op["::"],
+                                   {ctor: "_Tuple3"
+                                   ,_0: _v0._0
+                                   ,_1: z._0.text
+                                   ,_2: _v0._1},
+                                   _v6._1)};}
+                         _E.Case($moduleName,
+                         "between lines 164 and 166");
+                      }();}
+                 return {ctor: "_Tuple2"
+                        ,_0: z
+                        ,_1: _L.fromArray([])};
+              }();}
+         _E.Case($moduleName,
+         "between lines 163 and 166");
       }();
-   };
-   var footer = function (_v2) {
+   });
+   var footer = function (_v9) {
       return function () {
-         switch (_v2.ctor)
+         switch (_v9.ctor)
          {case "_Tuple2":
             return $Graphics$Element.color(A3($Color.hsl,
               0,
               0,
               0.8))(A3($Graphics$Element.container,
-              _v2._0,
+              _v9._0,
               40,
               $Graphics$Element.midLeft)(A2($Graphics$Element.flow,
               $Graphics$Element.right,
@@ -12319,21 +12345,58 @@ Elm.App.make = function (_elm) {
                            ,"⌘M: Missorted"
                            ,"⌘Up/Down: move up/down"])))));}
          _E.Case($moduleName,
-         "between lines 138 and 143");
+         "between lines 155 and 160");
       }();
    };
-   var title = F2(function (_v6,
+   var title = F2(function (_v13,
    s) {
       return function () {
-         switch (_v6.ctor)
+         switch (_v13.ctor)
          {case "_Tuple2":
             return $Graphics$Element.color($Color.red)(A3($Graphics$Element.container,
-              _v6._0,
+              _v13._0,
               30,
               $Graphics$Element.midLeft)($Text.plainText(s)));}
          _E.Case($moduleName,
-         "on line 136, column 17 to 70");
+         "on line 153, column 17 to 70");
       }();
+   });
+   var rot = function (e) {
+      return A3($Graphics$Collage.collage,
+      $Graphics$Element.heightOf(e),
+      $Graphics$Element.widthOf(e),
+      _L.fromArray([$Graphics$Collage.rotate($Basics.degrees(90))($Graphics$Collage.toForm(e))]));
+   };
+   var crumbView = F2(function (h,
+   _v17) {
+      return function () {
+         switch (_v17.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var n = _v17._0 + _v17._2 + 1;
+                 var e = $Graphics$Element.width($Basics.ceiling($Basics.toFloat(h) / n))($Text.plainText(_v17._1));
+                 var w = $Graphics$Element.heightOf(e);
+                 return A2($Graphics$Element.flow,
+                 $Graphics$Element.down,
+                 _L.fromArray([$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
+                              w,
+                              $Basics.floor($Basics.toFloat(h) * _v17._0 / n)))
+                              ,$Graphics$Element.color($Color.purple)(rot(e))
+                              ,$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
+                              w,
+                              $Basics.floor($Basics.toFloat(h) * _v17._2 / n)))]));
+              }();}
+         _E.Case($moduleName,
+         "between lines 93 and 100");
+      }();
+   });
+   var crumbsPanel = F2(function (h,
+   crumbs) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      A2($List.map,
+      crumbView(h),
+      crumbs));
    });
    var inboxItemV = function (v) {
       return function () {
@@ -12350,30 +12413,30 @@ Elm.App.make = function (_elm) {
       0,
       0.7))($Text.italic($Text.toText(s))));
    };
-   var leftPanel$ = F4(function (_v12,
+   var leftPanel$ = F4(function (_v24,
    textElement,
    descriptionElement,
    inboxElements) {
       return function () {
-         switch (_v12.ctor)
+         switch (_v24.ctor)
          {case "_Tuple2":
             return A3($Graphics$Element.container,
-              _v12._0,
-              _v12._1,
+              _v24._0,
+              _v24._1,
               $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
               $Graphics$Element.down,
               _L.append(_L.fromArray([$Graphics$Element.color($Color.green)(A3($Graphics$Element.container,
-                                     _v12._0,
+                                     _v24._0,
                                      30,
                                      $Graphics$Element.midLeft)(textElement))
                                      ,$Graphics$Element.color($Color.yellow)(A3($Graphics$Element.container,
-                                     _v12._0,
+                                     _v24._0,
                                      30,
                                      $Graphics$Element.midLeft)(descriptionElement))
                                      ,hintText("⌘A: add to inbox")]),
               inboxElements)));}
          _E.Case($moduleName,
-         "between lines 89 and 94");
+         "between lines 106 and 111");
       }();
    });
    var child = F2(function (i,e) {
@@ -12384,14 +12447,14 @@ Elm.App.make = function (_elm) {
                    " ")))
                    ,e]));
    });
-   var rightPanel$ = F2(function (_v16,
+   var rightPanel$ = F2(function (_v28,
    childElements) {
       return function () {
-         switch (_v16.ctor)
+         switch (_v28.ctor)
          {case "_Tuple2":
             return A3($Graphics$Element.container,
-              _v16._0,
-              _v16._1,
+              _v28._0,
+              _v28._1,
               $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
               $Graphics$Element.down,
               _L.append(_L.fromArray([hintText("⌘P: promote from inbox")]),
@@ -12399,15 +12462,15 @@ Elm.App.make = function (_elm) {
               child,
               childElements))));}
          _E.Case($moduleName,
-         "between lines 124 and 127");
+         "between lines 141 and 144");
       }();
    });
    var rightPanel = F2(function (size,
    z) {
       return function () {
          return function () {
-            var _v21 = $Outline$Entry.toValue(z);
-            switch (_v21.ctor)
+            var _v33 = $Outline$Entry.toValue(z);
+            switch (_v33.ctor)
             {case "Entry":
                return A2(rightPanel$,
                  size,
@@ -12417,25 +12480,25 @@ Elm.App.make = function (_elm) {
                        {case "Entry":
                           return en._0.text;}
                        _E.Case($moduleName,
-                       "on line 133, column 34 to 68");
+                       "on line 150, column 34 to 68");
                     }();
-                 })(_v21._0.children)));}
+                 })(_v33._0.children)));}
             _E.Case($moduleName,
-            "between lines 131 and 133");
+            "between lines 148 and 150");
          }();
       }();
    });
    var textCursor = F2(function (fn,
    z) {
       return function () {
-         var _v25 = $Core$String.toTuple(z);
-         switch (_v25.ctor)
+         var _v37 = $Core$String.toTuple(z);
+         switch (_v37.ctor)
          {case "_Tuple2":
             return A2($Graphics$Element.flow,
               $Graphics$Element.right,
-              _L.fromArray([fn(_v25._0)
+              _L.fromArray([fn(_v37._0)
                            ,$Text.plainText("^")
-                           ,fn(_v25._1)]));}
+                           ,fn(_v37._1)]));}
          _E.Case($moduleName,
          "between lines 70 and 75");
       }();
@@ -12480,56 +12543,65 @@ Elm.App.make = function (_elm) {
               inboxItemV,
               z._0.inbox));}
          return function () {
-            var _v34 = $Outline$Entry.toValue(z);
-            switch (_v34.ctor)
+            var _v46 = $Outline$Entry.toValue(z);
+            switch (_v46.ctor)
             {case "Entry":
                return A4(leftPanel$,
                  size,
-                 $Text.plainText(_v34._0.text),
-                 $Text.plainText(_v34._0.description),
+                 $Text.plainText(_v46._0.text),
+                 $Text.plainText(_v46._0.description),
                  A2($List.map,
                  inboxItemV,
-                 _v34._0.inbox));}
+                 _v46._0.inbox));}
             _E.Case($moduleName,
-            "between lines 111 and 115");
+            "between lines 128 and 132");
          }();
       }();
    });
-   var render = F2(function (_v36,
+   var render = F2(function (_v48,
    z) {
       return function () {
-         switch (_v36.ctor)
+         switch (_v48.ctor)
          {case "_Tuple2":
             return function () {
-                 var focus = findFocus(z);
+                 var $ = A2(findFocus,
+                 {ctor: "_Tuple2",_0: 0,_1: 0},
+                 z),
+                 focus = $._0,
+                 crumbs = $._1;
                  var header = A2(title,
                  {ctor: "_Tuple2"
-                 ,_0: _v36._0
-                 ,_1: _v36._1},
+                 ,_0: _v48._0
+                 ,_1: _v48._1},
                  $Outline$Entry.textValue(z));
                  var f = footer({ctor: "_Tuple2"
-                                ,_0: _v36._0
-                                ,_1: _v36._1});
-                 var mh = _v36._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
+                                ,_0: _v48._0
+                                ,_1: _v48._1});
+                 var mh = _v48._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
+                 var crumbs$ = A2(crumbsPanel,
+                 mh,
+                 A2($List.drop,1,crumbs));
+                 var mw = _v48._0 - $Graphics$Element.widthOf(crumbs$);
                  return A2($Graphics$Element.flow,
                  $Graphics$Element.down,
                  _L.fromArray([header
                               ,A2($Graphics$Element.flow,
                               $Graphics$Element.right,
-                              _L.fromArray([A2(leftPanel,
+                              _L.fromArray([crumbs$
+                                           ,A2(leftPanel,
                                            {ctor: "_Tuple2"
-                                           ,_0: $Basics.floor($Basics.toFloat(_v36._0) / 2)
+                                           ,_0: $Basics.floor($Basics.toFloat(mw) / 2)
                                            ,_1: mh},
                                            focus)
                                            ,A2(rightPanel,
                                            {ctor: "_Tuple2"
-                                           ,_0: $Basics.floor($Basics.toFloat(_v36._0) / 2)
+                                           ,_0: $Basics.ceiling($Basics.toFloat(mw) / 2)
                                            ,_1: mh},
                                            focus)]))
                               ,f]));
               }();}
          _E.Case($moduleName,
-         "between lines 152 and 163");
+         "between lines 170 and 184");
       }();
    });
    var Loaded = function (a) {
@@ -12546,14 +12618,14 @@ Elm.App.make = function (_elm) {
    var updateModel = F2(function (action,
    z) {
       return function () {
-         var _v40 = action(z);
-         switch (_v40.ctor)
+         var _v52 = action(z);
+         switch (_v52.ctor)
          {case "Delete": return z;
             case "EnterNext": return z;
             case "EnterPrev": return z;
             case "NoChange": return z;
             case "Split": return z;
-            case "Update": return _v40._0;}
+            case "Update": return _v52._0;}
          _E.Case($moduleName,
          "between lines 24 and 31");
       }();
@@ -12637,17 +12709,17 @@ Elm.App.make = function (_elm) {
               break;
             case "Loaded":
             return function () {
-                 var _v50 = A2($Json$Process.into,
+                 var _v62 = A2($Json$Process.into,
                  $Json$Decoder.fromString(c._0),
                  $Outline$Entry.decoder);
-                 switch (_v50.ctor)
+                 switch (_v62.ctor)
                  {case "Success":
-                    return $Outline$Entry.textZipper(_v50._0);}
+                    return $Outline$Entry.textZipper(_v62._0);}
                  return $Basics.fst({ctor: "_Tuple2"
                                     ,_0: m
                                     ,_1: A2($Debug.log,
                                     "Load failed",
-                                    _v50)});
+                                    _v62)});
               }();}
          return $Basics.fst({ctor: "_Tuple2"
                             ,_0: m
@@ -12666,6 +12738,9 @@ Elm.App.make = function (_elm) {
                      ,hintText: hintText
                      ,inboxItem: inboxItem
                      ,inboxItemV: inboxItemV
+                     ,rot: rot
+                     ,crumbView: crumbView
+                     ,crumbsPanel: crumbsPanel
                      ,leftPanel$: leftPanel$
                      ,leftPanel: leftPanel
                      ,child: child
@@ -14026,7 +14101,7 @@ Elm.Core.Array.make = function (_elm) {
               _L.append(_L.fromArray([zipperFn(_v0._1)]),
               A2($List.map,valueFn,_v0._2)));}
          _E.Case($moduleName,
-         "between lines 111 and 113");
+         "between lines 117 and 119");
       }();
    });
    var update = F2(function ($new,
@@ -14039,7 +14114,7 @@ Elm.Core.Array.make = function (_elm) {
                    ,_1: $new
                    ,_2: _v5._2};}
          _E.Case($moduleName,
-         "on line 107, column 30 to 44");
+         "on line 113, column 30 to 44");
       }();
    });
    var moveDown = function (_v10) {
@@ -14058,10 +14133,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _E.Case($moduleName,
-                 "between lines 102 and 104");
+                 "between lines 108 and 110");
               }();}
          _E.Case($moduleName,
-         "between lines 102 and 104");
+         "between lines 108 and 110");
       }();
    };
    var moveUp = function (_v18) {
@@ -14080,10 +14155,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _E.Case($moduleName,
-                 "between lines 97 and 99");
+                 "between lines 103 and 105");
               }();}
          _E.Case($moduleName,
-         "between lines 97 and 99");
+         "between lines 103 and 105");
       }();
    };
    var split_ = F2(function (fn,
@@ -14097,7 +14172,7 @@ Elm.Core.Array.make = function (_elm) {
               _v26._1,
               _L.fromArray([]));}
          _E.Case($moduleName,
-         "between lines 90 and 91");
+         "between lines 96 and 97");
       }();
    });
    var $do = F5(function (toVal,
@@ -14129,10 +14204,10 @@ Elm.Core.Array.make = function (_elm) {
                                     case "[]":
                                     return $Core$Action.Delete;}
                                  _E.Case($moduleName,
-                                 "between lines 78 and 81");
+                                 "between lines 84 and 87");
                               }();}
                          _E.Case($moduleName,
-                         "between lines 76 and 81");
+                         "between lines 82 and 87");
                       }();
                     case "EnterNext":
                     return function () {
@@ -14147,7 +14222,7 @@ Elm.Core.Array.make = function (_elm) {
                             case "[]":
                             return $Core$Action.EnterNext;}
                          _E.Case($moduleName,
-                         "between lines 81 and 84");
+                         "between lines 87 and 90");
                       }();
                     case "EnterPrev":
                     return function () {
@@ -14162,7 +14237,7 @@ Elm.Core.Array.make = function (_elm) {
                             case "[]":
                             return $Core$Action.EnterPrev;}
                          _E.Case($moduleName,
-                         "between lines 84 and 87");
+                         "between lines 90 and 93");
                       }();
                     case "NoChange":
                     return $Core$Action.NoChange;
@@ -14179,10 +14254,10 @@ Elm.Core.Array.make = function (_elm) {
                                                ,_1: _v34._0
                                                ,_2: _v29._2});}
                  _E.Case($moduleName,
-                 "between lines 73 and 87");
+                 "between lines 79 and 93");
               }();}
          _E.Case($moduleName,
-         "between lines 73 and 87");
+         "between lines 79 and 93");
       }();
    });
    var split = F4(function (toVal,
@@ -14217,13 +14292,13 @@ Elm.Core.Array.make = function (_elm) {
                             case "[]":
                             return $Maybe.Nothing;}
                          _E.Case($moduleName,
-                         "between lines 67 and 69");
+                         "between lines 73 and 75");
                       }();}
                  _E.Case($moduleName,
-                 "between lines 65 and 69");
+                 "between lines 71 and 75");
               }();}
          _E.Case($moduleName,
-         "between lines 65 and 69");
+         "between lines 71 and 75");
       }();
    });
    var lastZipper = F2(function (fn,
@@ -14231,7 +14306,7 @@ Elm.Core.Array.make = function (_elm) {
       return function () {
          var _raw = $List.reverse(list),
          $ = _raw.ctor === "::" ? _raw : _E.Case($moduleName,
-         "on line 56, column 42 to 54"),
+         "on line 62, column 42 to 54"),
          cur = $._0,
          tail = $._1;
          return {ctor: "_Tuple3"
@@ -14271,15 +14346,15 @@ Elm.Core.Array.make = function (_elm) {
                             case "Nothing":
                             return $Maybe.Nothing;}
                          _E.Case($moduleName,
-                         "between lines 50 and 53");
+                         "between lines 56 and 59");
                       }();}
                  _E.Case($moduleName,
-                 "between lines 48 and 53");
+                 "between lines 54 and 59");
               }();
             case "[]":
             return $Maybe.Nothing;}
          _E.Case($moduleName,
-         "between lines 47 and 53");
+         "between lines 53 and 59");
       }();
    });
    var lastZipperThat = F2(function (fn,
@@ -14300,7 +14375,7 @@ Elm.Core.Array.make = function (_elm) {
             case "Nothing":
             return $Maybe.Nothing;}
          _E.Case($moduleName,
-         "between lines 59 and 61");
+         "between lines 65 and 67");
       }();
    });
    var firstZipper = F2(function (fn,
@@ -14313,7 +14388,7 @@ Elm.Core.Array.make = function (_elm) {
                    ,_1: fn(_v77._0)
                    ,_2: _v77._1};}
          _E.Case($moduleName,
-         "on line 44, column 33 to 47");
+         "on line 50, column 33 to 47");
       }();
    });
    var zipperAt = F3(function (i,
@@ -14338,7 +14413,7 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return _v81._1;}
          _E.Case($moduleName,
-         "on line 30, column 18 to 19");
+         "on line 36, column 18 to 19");
       }();
    };
    var prepend = F2(function (v,
@@ -14362,14 +14437,32 @@ Elm.Core.Array.make = function (_elm) {
       }),
       vs);
    });
-   var toValue = F2(function (fn,
-   _v86) {
+   var countRight = function (_v86) {
       return function () {
          switch (_v86.ctor)
          {case "_Tuple3":
-            return _L.append($List.reverse(_v86._0),
-              _L.append(_L.fromArray([fn(_v86._1)]),
-              _v86._2));}
+            return $List.length(_v86._2);}
+         _E.Case($moduleName,
+         "on line 24, column 26 to 38");
+      }();
+   };
+   var countLeft = function (_v91) {
+      return function () {
+         switch (_v91.ctor)
+         {case "_Tuple3":
+            return $List.length(_v91._0);}
+         _E.Case($moduleName,
+         "on line 21, column 24 to 35");
+      }();
+   };
+   var toValue = F2(function (fn,
+   _v96) {
+      return function () {
+         switch (_v96.ctor)
+         {case "_Tuple3":
+            return _L.append($List.reverse(_v96._0),
+              _L.append(_L.fromArray([fn(_v96._1)]),
+              _v96._2));}
          _E.Case($moduleName,
          "on line 18, column 31 to 64");
       }();
@@ -14406,7 +14499,9 @@ Elm.Core.Array.make = function (_elm) {
                             ,zipperAt: zipperAt
                             ,moveUp: moveUp
                             ,moveDown: moveDown
-                            ,update: update};
+                            ,update: update
+                            ,countLeft: countLeft
+                            ,countRight: countRight};
    return _elm.Core.Array.values;
 };Elm.Core = Elm.Core || {};
 Elm.Core.Action = Elm.Core.Action || {};
