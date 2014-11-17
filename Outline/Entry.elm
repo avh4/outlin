@@ -1,4 +1,4 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry) where
+module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -45,6 +45,12 @@ textZipper en = case en of Entry e -> InText { e | text <- Core.String.endZipper
 
 textZipperAt : Int -> Value -> Zipper
 textZipperAt i en = case en of Entry e -> InText { e | text <- Core.String.zipperAt i e.text }
+
+descriptionZipper : Value -> Maybe Zipper
+descriptionZipper v = case v of
+  Entry e -> case e.description of
+    "" -> Nothing
+    _ -> Just <| InDescription { e | description <- Core.String.endZipper e.description }
 
 childZipper : (Core.Array.Value Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
 childZipper fn v = case v of Entry e -> InChild { e | children <- fn e.children }

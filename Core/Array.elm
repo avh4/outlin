@@ -1,4 +1,4 @@
-module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM) where
+module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action as Action
 import List
@@ -128,6 +128,16 @@ map valueFn zipperFn (left,z,right) =
   List.map valueFn (reverse left)
   ++ [zipperFn z]
   ++ List.map valueFn right
+
+goPrev : (z -> v) -> (v -> z) -> Zipper v z -> Maybe (Zipper v z)
+goPrev toVal fn (left,cur,right) = case left of
+  [] -> Nothing
+  (head :: tail) -> Just (tail, fn head, toVal cur :: right)
+
+goNext : (z -> v) -> (v -> z) -> Zipper v z -> Maybe (Zipper v z)
+goNext toVal fn (left,cur,right) = case right of
+  [] -> Nothing
+  (head :: tail) -> Just (toVal cur :: left, fn head, tail)
 
 ---- JSON
 

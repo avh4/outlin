@@ -41,15 +41,15 @@ step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
   Key (Keys.Single (Keys.Left)) -> updateModel Entry.goLeft m
   Key (Keys.Single (Keys.Right)) -> updateModel Entry.goRight m
-  Key (Keys.Single (Keys.Down)) -> updateModel Entry.goNext m
-  Key (Keys.Single (Keys.Up)) -> updateModel Entry.goPrev m
+  Key (Keys.Single (Keys.Down)) -> updateModel (Entry.doEntry EntryNav.goDownWithinChild) m
+  Key (Keys.Single (Keys.Up)) -> updateModel (Entry.doEntry EntryNav.goUpWithinChild) m
   Key (Keys.Single (Keys.Enter)) -> updateModel Entry.enter m
   Key (Keys.Single (Keys.Backspace)) -> updateModel Entry.backspace m
   Key (Keys.Character s) -> updateModel (Entry.insert s) m
   Key (Keys.CommandCharacter "a") -> updateModel Entry.addInboxItem m
   Key (Keys.CommandCharacter "d") -> updateModel Entry.delete m
-  Key (Keys.CommandCharacter "p") -> updateModel Entry.promote m
   Key (Keys.CommandCharacter "m") -> updateModel Entry.missort m
+  Key (Keys.CommandCharacter "p") -> updateModel Entry.promote m
   Key (Keys.CommandCharacter "1") -> updateModel (Entry.moveInto 0) m
   Key (Keys.CommandCharacter "2") -> updateModel (Entry.moveInto 1) m
   Key (Keys.CommandCharacter "3") -> updateModel (Entry.moveInto 2) m
@@ -57,10 +57,12 @@ step c m = case c of
   Key (Keys.CommandCharacter "5") -> updateModel (Entry.moveInto 4) m
   Key (Keys.CommandCharacter "6") -> updateModel (Entry.moveInto 5) m
   Key (Keys.CommandCharacter "7") -> updateModel (Entry.moveInto 6) m
+  Key (Keys.Shift (Keys.Up)) -> updateModel (Entry.doEntry EntryNav.goToPrevSibling) m
+  Key (Keys.Shift (Keys.Down)) -> updateModel (Entry.doEntry EntryNav.goToNextSibling) m
+  Key (Keys.Shift (Keys.Right)) -> updateModel EntryNav.goToFirstChild m
+  Key (Keys.Shift (Keys.Left)) -> updateModel EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateModel Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateModel Entry.moveChildDown m
-  Key (Keys.Command (Keys.Right)) -> updateModel EntryNav.goToFirstChild m
-  Key (Keys.Command (Keys.Left)) -> updateModel EntryNav.goToParent m
   Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
     Json.Output.Success doc -> Entry.textZipper doc
     x -> fst (m, Debug.log "Load failed" x)
@@ -159,10 +161,11 @@ rightPanel size z = case z of
 title : (Int,Int) -> String -> Element
 title (w,h) s = s |> plainText |> width w |> color red
 
-footer (w,h) = flow right (map (\x -> asText x)
+footer (w,h) = flow right (map (\x -> plainText (x ++ "    "))
   [ "⌘D: delete"
   , "⌘M: Missorted"
   , "⌘Up/Down: move up/down"
+  , "Shift-Up/Down/Left/Right: navigate hierarchy"
   ])
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
