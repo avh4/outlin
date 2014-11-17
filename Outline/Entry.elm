@@ -1,4 +1,4 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue) where
+module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, insert, backspace, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, delete, goLeft, goRight, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -45,6 +45,12 @@ textZipper en = case en of Entry e -> InText { e | text <- Core.String.endZipper
 
 textZipperAt : Int -> Value -> Zipper
 textZipperAt i en = case en of Entry e -> InText { e | text <- Core.String.zipperAt i e.text }
+
+descriptionZipper : Value -> Maybe Zipper
+descriptionZipper v = case v of
+  Entry e -> case e.description of
+    "" -> Nothing
+    _ -> Just <| InDescription { e | description <- Core.String.endZipper e.description }
 
 childZipper : (Core.Array.Value Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
 childZipper fn v = case v of Entry e -> InChild { e | children <- fn e.children }
@@ -207,6 +213,7 @@ swapChildren fn z = case z of
 moveChildUp = doEntry <| swapChildren Core.Array.moveUp
 moveChildDown = doEntry <| swapChildren Core.Array.moveDown
 
+-- TODO: give a better name--maybe "doAtDeepestChild"
 doEntry : (Zipper -> Result) -> Zipper -> Result
 doEntry action z = case z of
   InChild e -> case action z of
@@ -216,6 +223,8 @@ doEntry action z = case z of
     x -> x
   _ -> action z
 
+-- TODO: rewrite to utilize doEntry for the recursion
+-- TODO: give a better name
 do : StringAction -> Zipper -> Result
 do stringAction z = case z of
   InText e -> case stringAction e.text of
