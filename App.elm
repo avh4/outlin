@@ -81,13 +81,13 @@ textCursor fn z = case Core.String.toTuple z of
 hintText : String -> Element
 hintText s = s |> toText |> Text.italic |> Text.color (hsl 0 0 0.7) |> leftAligned
 
-inboxItem : Entry.Zipper -> Element
-inboxItem z = case z of
-  Entry.InText e -> textCursor plainText e.text
-  _ -> plainText (Entry.textValue z)
+inboxItem : Int -> Entry.Zipper -> Element
+inboxItem w z = case z of
+  Entry.InText e -> textCursor plainText e.text |> width w
+  _ -> plainText (Entry.textValue z) |> width w
 
-inboxItemV : Entry.Value -> Element
-inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
+inboxItemV : Int -> Entry.Value -> Element
+inboxItemV w v = case v of Entry.Entry e -> plainText (e.text) |> width w
 
 rot : Element -> Element
 rot e = collage (heightOf e) (widthOf e) [ e |> toForm |> rotate (degrees 90) ]
@@ -120,25 +120,25 @@ leftPanel' (w,h) left right textElement descriptionElement inboxElements = flow 
   |> container w h topLeft
 
 leftPanel : (Int,Int) -> Entry.Zipper -> [Entry.Value] -> [Entry.Value] -> Element
-leftPanel size z left right = case z of
+leftPanel (w,h) z left right = case z of
   -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
-  Entry.InText e -> leftPanel' size left right
+  Entry.InText e -> leftPanel' (w,h) left right
     (e.text |> textCursor plainText)
     (e.description |> plainText)
-    (map inboxItemV e.inbox)
-  Entry.InDescription e -> leftPanel' size left right
+    (map (inboxItemV w) e.inbox)
+  Entry.InDescription e -> leftPanel' (w,h) left right
     (e.text |> plainText)
     (e.description |> textCursor plainText)
-    (map inboxItemV e.inbox)
-  Entry.InInbox e -> leftPanel' size left right
+    (map (inboxItemV w) e.inbox)
+  Entry.InInbox e -> leftPanel' (w,h) left right
     (e.text |> plainText)
     (e.description |> plainText)
-    (Core.Array.map inboxItemV inboxItem e.inbox)
+    (Core.Array.map (inboxItemV w) (inboxItem w) e.inbox)
   _ -> case Entry.toValue z of
-    Entry.Entry e -> leftPanel' size left right
+    Entry.Entry e -> leftPanel' (w,h) left right
       (e.text |> plainText)
       (e.description |> plainText)
-      (map inboxItemV e.inbox)
+      (map (inboxItemV w) e.inbox)
 
 child : Int -> Element -> Element
 child i e = flow right
