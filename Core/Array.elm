@@ -2,35 +2,37 @@ module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZ
 
 import Core.Action as Action
 import List
+import List (..)
+import String
 
-type Value v = [v]
-type Zipper v z = ([v],z,[v])
-type Result v z = Action.Result (Value v) (Zipper v z)
+type alias Value v = List v
+type alias Zipper v z = (List v,z,List v)
+type alias Result v z = Action.Result (Value v) (Zipper v z)
 
-replaceAt : a -> Int -> [a] -> [a]
+replaceAt : a -> Int -> List a -> List a
 replaceAt a index list =
-  indexedMap (\i item -> if i == index then a else item) list
+  List.indexedMap (\i item -> if i == index then a else item) list
 
-at : Int -> [a] -> a
-at i list = list |> drop i |> head
+at : Int -> List a -> a
+at i list = list |> List.drop i |> List.head
 
 toValue : (z -> v) -> Zipper v z -> Value v
-toValue fn (left,cur,right) = reverse left ++ [fn cur] ++ right
+toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
 
 countLeft : Zipper v z -> Int -- TODO: removing the type annotation causes compile errors
-countLeft (left,_,_) = length left
+countLeft (left,_,_) = List.length left
 
 countRight : Zipper v z -> Int -- TODO: removing the type annotation causes compile errors
-countRight (_,_,right) = length right
+countRight (_,_,right) = List.length right
 
-lefts : Zipper v z -> [v]
-lefts (left,_,_) = reverse left
+lefts : Zipper v z -> List v
+lefts (left,_,_) = List.reverse left
 
-rights : Zipper v z -> [v]
+rights : Zipper v z -> List v
 rights (_,_,right) = right
 
 mapAt : Int -> (v -> v) -> Value v -> Value v
-mapAt n fn vs = indexedMap (\i v -> if i == n then fn v else v) vs
+mapAt n fn vs = List.indexedMap (\i v -> if i == n then fn v else v) vs
 
 append : v -> Value v -> Value v
 append v vs = vs ++ [v]
@@ -41,7 +43,7 @@ prepend v vs = v :: vs
 active : Zipper v z -> z
 active (_,z,_) = z
 
-zipper : [v] -> z -> [v] -> Zipper v z
+zipper : List v -> z -> List v -> Zipper v z
 zipper left cur right = (left,cur,right)
 
 zipperAt : Int -> (v -> z) -> Value v -> Zipper v z
@@ -123,7 +125,7 @@ moveDown (left,cur,right) = case right of
 update : z -> Zipper v z -> Zipper v z
 update new (left,_,right) = (left,new,right)
 
-map : (v -> a) -> (z -> a) -> Zipper v z -> [a]
+map : (v -> a) -> (z -> a) -> Zipper v z -> List a
 map valueFn zipperFn (left,z,right) =
   List.map valueFn (reverse left)
   ++ [zipperFn z]
@@ -144,5 +146,5 @@ goNext toVal fn (left,cur,right) = case right of
 walk : (Value b -> c) -> (a -> b) -> Value a -> c
 walk wrapFn child list = wrapFn <| List.map child list
 
-toJson : (a -> String) -> [a] -> String
-toJson fn = walk (\vs -> "[" ++ (join "," vs) ++ "]") fn
+toJson : (a -> String) -> List a -> String
+toJson fn = walk (\vs -> "[" ++ (String.join "," vs) ++ "]") fn

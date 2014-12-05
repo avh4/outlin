@@ -1,8 +1,8 @@
 module Core.Action (nav, change, always, Result(..)) where
 
-data Result value zipper =
+type Result value zipper =
   Update zipper |
-  Split [value] zipper [value] |
+  Split (List value) zipper (List value) |
   Delete |
   EnterPrev | EnterNext |
   NoChange

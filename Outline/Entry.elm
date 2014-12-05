@@ -5,29 +5,32 @@ import Html.Attributes (class)
 import Core.String
 import Core.Array
 import String
-import Json.Decoder
-import Json.Decoder (..)
-import Json.Output
+import Json.Decode
+import Json.Decode (..)
+import Json.Encode
 import Core.Action as Action
 import Debug
 import Maybe
+import List
+import List (..)
+import Maybe (..)
 
-data BaseValue v = Entry {text: v, description: v, inbox: [BaseValue v], children: [BaseValue v]}
+type BaseValue v = Entry {text: v, description: v, inbox: List (BaseValue v), children: List (BaseValue v)}
 
-data BaseZipper v z
-  = InText {text: z, description: v, inbox: [BaseValue v], children: [BaseValue v]}
-  | InDescription {text: v, description: z, inbox: [BaseValue v], children: [BaseValue v]}
-  | InInbox {text: v, description: v, inbox: Core.Array.Zipper (BaseValue v) (BaseZipper v z), children: [BaseValue v]}
-  | InChild {text: v, description: v, inbox: [BaseValue v], children: Core.Array.Zipper (BaseValue v) (BaseZipper v z)}
+type BaseZipper v z
+  = InText {text: z, description: v, inbox: List (BaseValue v), children: List (BaseValue v)}
+  | InDescription {text: v, description: z, inbox: List (BaseValue v), children: List (BaseValue v)}
+  | InInbox {text: v, description: v, inbox: Core.Array.Zipper (BaseValue v) (BaseZipper v z), children: List (BaseValue v)}
+  | InChild {text: v, description: v, inbox: List (BaseValue v), children: Core.Array.Zipper (BaseValue v) (BaseZipper v z)}
 
 emptyEntry = Entry {text="", description="", inbox=[], children=[]}
 textEntry t = Entry {text=t, description="", inbox=[], children=[]}
 entry t d i c = Entry {text=t, description=d, inbox=i, children=c}
 
-type Value = BaseValue String
-type Zipper = BaseZipper String Core.String.Zipper
-type StringAction = Core.String.Zipper -> Core.String.Result
-type Result = Action.Result Value Zipper
+type alias Value = BaseValue String
+type alias Zipper = BaseZipper String Core.String.Zipper
+type alias StringAction = Core.String.Zipper -> Core.String.Result
+type alias Result = Action.Result Value Zipper
 
 toValue : Zipper -> Value
 toValue z = case z of
@@ -67,8 +70,8 @@ inboxZipperAt i fn v = case v of Entry e -> InInbox { e | inbox <- Core.Array.zi
 findLastCursor : Value -> Zipper
 findLastCursor en = case en of
   Entry e -> if
-    | length e.children > 0 -> InChild { e | children <- Core.Array.lastZipper findLastCursor e.children }
-    | length e.inbox > 0 -> InInbox { e | inbox <- Core.Array.lastZipper findLastCursor e.inbox }
+    | List.length e.children > 0 -> InChild { e | children <- Core.Array.lastZipper findLastCursor e.children }
+    | List.length e.inbox > 0 -> InInbox { e | inbox <- Core.Array.lastZipper findLastCursor e.inbox }
     | otherwise -> InText { e | text <- Core.String.endZipper e.text }
 
 addInboxItem__ : BaseValue a -> BaseValue a -> BaseValue a
@@ -82,13 +85,13 @@ addInboxItem_ newEntry z = case z of
 
 addInboxItem = doEntry (addInboxItem_ emptyEntry)
 
-dropAt : Int -> [a] -> [a]
+dropAt : Int -> List a -> List a
 dropAt i list = (take i list) ++ (drop (i+1) list)
 
-changeAt : (a -> a) -> Int -> [a] -> [a]
+changeAt : (a -> a) -> Int -> List a -> List a
 changeAt fn i list = indexedMap (\n x -> if n == i then fn x else x) list
 
-at : Int -> [a] -> a
+at : Int -> List a -> a
 at i list = head <| drop i list
 
 promote_ : Zipper -> Result
@@ -137,26 +140,26 @@ firstChildInboxZipper v = case v of
   Entry e -> Core.Array.firstZipperThat firstInboxZipper e.children
     |> Maybe.map (\x -> InChild { e | children <- x })
 
-tryMap : (a -> Maybe b) -> [a] -> b -> b
+tryMap : (a -> Maybe b) -> List a -> b -> b
 tryMap fn list default = case list of
   (head::tail) -> case fn head of
     Just result -> result
     Nothing -> tryMap fn tail default
   [] -> default
 
-tryMap2 : (a -> Maybe b) -> [a] -> Maybe b -> Maybe b
+tryMap2 : (a -> Maybe b) -> List a -> Maybe b -> Maybe b
 tryMap2 fn list default = case list of
   (head::tail) -> case fn head of
     Just result -> Just result
     Nothing -> tryMap2 fn tail default
   [] -> default
 
-try : [Maybe a] -> a -> a
+try : List (Maybe a) -> a -> a
 try = tryMap identity
 
 moveToInboxOfFirstChildOrNext : Value -> Result
 moveToInboxOfFirstChildOrNext en = case en of
-  Entry e -> Maybe.maybe Action.EnterNext Action.Update (firstChildInboxZipper en)
+  Entry e -> Maybe.map Action.Update (firstChildInboxZipper en) ? Action.EnterNext
 
 appendToInboxOfChild : Int -> Value -> Core.Array.Value Value -> Core.Array.Value Value
 appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- Core.Array.prepend v e.inbox }) children
@@ -193,7 +196,7 @@ missort_ z = case z of
 
 missort = doEntry missort_
 
-swap : Int -> a -> Int -> a -> [a] -> [a]
+swap : Int -> a -> Int -> a -> List a -> List a
 swap ai a bi b list = list |> indexedMap
   (\i x -> if
     | i == ai -> b
@@ -231,7 +234,7 @@ do stringAction z = case z of
     Action.Update newZ -> Action.Update <| InText { e | text <- newZ }
     Action.Delete -> Action.Delete
     Action.NoChange -> Action.NoChange
-    Action.Split left newZ right -> Action.Split (map textEntry left) (InText { e | text <- newZ }) (map textEntry right)
+    Action.Split left newZ right -> Action.Split (List.map textEntry left) (InText { e | text <- newZ }) (List.map textEntry right)
     Action.EnterPrev -> Action.EnterPrev
     Action.EnterNext -> try
       [ firstInboxZipper (toValue z) |> Maybe.map Action.Update
@@ -320,11 +323,16 @@ toJson entry = case entry of Entry e ->
   ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
   ++ "}"
 
-decoder : Json.Decoder.Decoder Value
-decoder a = Json.Decoder.decode4
-  ("text" := Json.Decoder.string)
-  ("description" := Json.Decoder.string)
-  ("inbox" := Json.Decoder.listOf decoder)
-  ("children" := Json.Decoder.listOf decoder)
-  (\t d i c -> Entry {text=t,description=d,inbox=i,children=c})
-  a -- this is to work around https://github.com/elm-lang/Elm/issues/639
+decoder : Json.Decode.Decoder (BaseValue String)
+decoder =
+  Json.Decode.map (\e -> Entry e) <|
+  object4 (\t d i c -> {text=t, description=d, inbox=i, children=c})
+    ("text" := Json.Decode.string)
+    ("description" := Json.Decode.string)
+    ("inbox" := Json.Decode.list (lazy (\_ -> decoder)))
+    ("children" := Json.Decode.list (lazy (\_ -> decoder)))
+
+lazy : (() -> Decoder a) -> Decoder a
+lazy thunk =
+  Json.Decode.customDecoder value
+      (\js -> Json.Decode.decodeValue (thunk ()) js)

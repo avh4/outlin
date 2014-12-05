@@ -2,7 +2,10 @@ module App.EntryNav where
 
 import Core.Action as Action
 import Core.Array
+import Outline.Entry
 import Outline.Entry (..)
+
+type alias Result = Outline.Entry.Result
 
 goToFirstChild' : Zipper -> Result
 goToFirstChild' z = case z of
@@ -27,7 +30,7 @@ goToParent = doEntry goToParent'
 
 -- TODO: compare to try, tryMap in Outline.Entry
 -- TODO: move to Util
-tryMap : [(a -> Maybe b)] -> (a -> b) -> a -> b
+tryMap : List (a -> Maybe b) -> (a -> b) -> a -> b
 tryMap fns fn v = case fns of
   [] -> fn v
   (head :: tail) -> case head v of
@@ -35,7 +38,7 @@ tryMap fns fn v = case fns of
     Nothing -> tryMap tail fn v
 
 -- TODO: could be written in terms of Maybe.map, and possibly inlined?
-tryMap2 : [(a -> Maybe b)] -> (b -> x) -> x -> a -> x
+tryMap2 : List (a -> Maybe b) -> (b -> x) -> x -> a -> x
 tryMap2 fns fn2 def v = case fns of
   [] -> def
   (head :: tail) -> case head v of

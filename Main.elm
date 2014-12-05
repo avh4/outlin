@@ -13,25 +13,27 @@ import Window
 import App
 import App (Command(..))
 import Outline.Document as Document
+import Signal
+import Debug
 
 ---- SIGNALS
 
 dropbox = Dropbox.client "mjplyqeks6z3js8"
 
 commands : Signal Command
-commands = merges
-  [ Key <~ Keys.lastPressed
-  , Loaded <~ dropbox.read "outlin.json"
+commands = Signal.mergeMany
+  [ Signal.map Key Keys.lastPressed
+  , Signal.map Loaded <| dropbox.read "outlin.json"
   ]
 
 initialDocument = (Entry.textZipper SampleData.template)
 
-state = foldp App.step initialDocument commands
+state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = App.render <~ Window.dimensions ~ state
+main = Signal.map2 App.render Window.dimensions state
 
-jsonOutput = dropRepeats <| (\x -> x |> Entry.toValue |> Entry.toJson) <~ state
+jsonOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Entry.toValue |> Entry.toJson) state
 
 toDropbox = dropbox.write "outlin.json" jsonOutput
