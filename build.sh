@@ -2,4 +2,5 @@
 
 set -e
 
-elm --make --bundle-runtime --only-js Main.elm
+rm elm.js
+elm-make Main.elm
