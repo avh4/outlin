@@ -8,9 +8,8 @@ import Keys
 import Char
 import Debug
 import Outline.Entry as Entry
-import Json.Decoder
-import Json.Process
-import Json.Output
+import Json.Decode
+import Json.Encode
 import Core.Action as Action
 import Core.String
 import Core.Array
@@ -18,6 +17,11 @@ import Color (..)
 import Text
 import Outline.Document as Document
 import App.EntryNav as EntryNav
+import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
+import Graphics.Collage (collage, toForm, rotate)
+import Text (plainText)
+import List
+import List (..)
 
 ---- App
 
@@ -33,7 +37,7 @@ updateModel action z = case action z of
 
 ---- INPUT
 
-data Command
+type Command
   = Key Keys.KeyCombo
   | Loaded String
 
@@ -63,8 +67,8 @@ step c m = case c of
   Key (Keys.Shift (Keys.Left)) -> updateModel EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateModel Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateModel Entry.moveChildDown m
-  Loaded s -> case Json.Decoder.fromString s `Json.Process.into` Entry.decoder of
-    Json.Output.Success doc -> Entry.textZipper doc
+  Loaded s -> case Json.Decode.decodeString Entry.decoder s of
+    Ok doc -> Entry.textZipper doc
     x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Unhandled command" x)
 
@@ -79,15 +83,15 @@ textCursor fn z = case Core.String.toTuple z of
     ]
 
 hintText : String -> Element
-hintText s = s |> toText |> Text.italic |> Text.color (hsl 0 0 0.7) |> leftAligned
+hintText s = s |> Text.fromString |> Text.italic |> Text.color (hsl 0 0 0.7) |> Text.leftAligned
 
-inboxItem : Entry.Zipper -> Element
-inboxItem z = case z of
-  Entry.InText e -> textCursor plainText e.text
-  _ -> plainText (Entry.textValue z)
+inboxItem : Int -> Entry.Zipper -> Element
+inboxItem w z = case z of
+  Entry.InText e -> textCursor plainText e.text |> width w
+  _ -> plainText (Entry.textValue z) |> width w
 
-inboxItemV : Entry.Value -> Element
-inboxItemV v = case v of Entry.Entry e -> plainText (e.text)
+inboxItemV : Int -> Entry.Value -> Element
+inboxItemV w v = case v of Entry.Entry e -> plainText (e.text) |> width w
 
 rot : Element -> Element
 rot e = collage (heightOf e) (widthOf e) [ e |> toForm |> rotate (degrees 90) ]
@@ -103,65 +107,65 @@ crumbView h (left,text,right) =
   , spacer w (toFloat h*right/n |> floor) |> color grey
   ]
 
-crumbsPanel : Int -> [(Int,String,Int)] -> Element
-crumbsPanel h crumbs = flow right (map (crumbView h) crumbs)
+crumbsPanel : Int -> List (Int,String,Int) -> Element
+crumbsPanel h crumbs = flow right (List.map (crumbView h) crumbs)
 
 siblingView : Int -> Entry.Value -> Element
 siblingView w v = case v of
   Entry.Entry e -> e.text |> plainText |> width w |> color orange
 
-leftPanel' : (Int,Int) -> [Entry.Value] -> [Entry.Value] -> Element -> Element -> [Element] -> Element
+leftPanel' : (Int,Int) -> List Entry.Value -> List Entry.Value -> Element -> Element -> List Element -> Element
 leftPanel' (w,h) left right textElement descriptionElement inboxElements = flow down (
-  (map (siblingView w) left) ++
+  (List.map (siblingView w) left) ++
   [ textElement |> width w |> color green
   , descriptionElement |> width w |> color yellow
   , "⌘A: add to inbox" |> hintText
-  ] ++ inboxElements ++ (map (siblingView w) right))
+  ] ++ inboxElements ++ (List.map (siblingView w) right))
   |> container w h topLeft
 
-leftPanel : (Int,Int) -> Entry.Zipper -> [Entry.Value] -> [Entry.Value] -> Element
-leftPanel size z left right = case z of
+leftPanel : (Int,Int) -> Entry.Zipper -> List Entry.Value -> List Entry.Value -> Element
+leftPanel (w,h) z left right = case z of
   -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
-  Entry.InText e -> leftPanel' size left right
+  Entry.InText e -> leftPanel' (w,h) left right
     (e.text |> textCursor plainText)
     (e.description |> plainText)
-    (map inboxItemV e.inbox)
-  Entry.InDescription e -> leftPanel' size left right
+    (List.map (inboxItemV w) e.inbox)
+  Entry.InDescription e -> leftPanel' (w,h) left right
     (e.text |> plainText)
     (e.description |> textCursor plainText)
-    (map inboxItemV e.inbox)
-  Entry.InInbox e -> leftPanel' size left right
+    (List.map (inboxItemV w) e.inbox)
+  Entry.InInbox e -> leftPanel' (w,h) left right
     (e.text |> plainText)
     (e.description |> plainText)
-    (Core.Array.map inboxItemV inboxItem e.inbox)
+    (Core.Array.map (inboxItemV w) (inboxItem w) e.inbox)
   _ -> case Entry.toValue z of
-    Entry.Entry e -> leftPanel' size left right
+    Entry.Entry e -> leftPanel' (w,h) left right
       (e.text |> plainText)
       (e.description |> plainText)
-      (map inboxItemV e.inbox)
+      (List.map (inboxItemV w) e.inbox)
 
 child : Int -> Element -> Element
 child i e = flow right
-  [ "⌘" ++ (show <| i+1) ++ " " |> hintText
+  [ "⌘" ++ (toString <| i+1) ++ " " |> hintText
   , e
   ]
 
-rightPanel' : (Int,Int) -> [Element] -> Element
+rightPanel' : (Int,Int) -> List Element -> Element
 rightPanel' (w,h) childElements = flow down (
   [ "⌘P: promote from inbox" |> hintText
-  ] ++ indexedMap child childElements)
+  ] ++ List.indexedMap child childElements)
   |> container w h topLeft
 
 rightPanel : (Int,Int) -> Entry.Zipper -> Element
 rightPanel size z = case z of
   _ -> case Entry.toValue z of
     Entry.Entry e -> rightPanel' size
-      (e.children |> map (\en -> case en of Entry.Entry e -> e.text) |> map plainText)
+      (e.children |> List.map (\en -> case en of Entry.Entry e -> e.text) |> List.map plainText)
 
 title : (Int,Int) -> String -> Element
 title (w,h) s = s |> plainText |> width w |> color red
 
-footer (w,h) = flow right (map (\x -> plainText (x ++ "    "))
+footer (w,h) = flow right (List.map (\x -> plainText (x ++ "    "))
   [ "⌘D: delete"
   , "⌘M: Missorted"
   , "⌘Up/Down: move up/down"
@@ -169,7 +173,7 @@ footer (w,h) = flow right (map (\x -> plainText (x ++ "    "))
   ])
   |> container w 40 midLeft |> color (hsl 0 0 0.8)
 
-findFocus : (Int,Int) -> ([Entry.Value],[Entry.Value]) -> Entry.Zipper -> (([Entry.Value],Entry.Zipper,[Entry.Value]),[(Int,String,Int)])
+findFocus : (Int,Int) -> (List Entry.Value,List Entry.Value) -> Entry.Zipper -> ((List Entry.Value,Entry.Zipper,List Entry.Value),List (Int,String,Int))
 findFocus (l,r) (ls,rs) z = case z of
   Entry.InChild e -> case Core.Array.active e.children |> findFocus (Core.Array.countLeft e.children,Core.Array.countRight e.children) (Core.Array.lefts e.children,Core.Array.rights e.children) of
     (result,crumbs) -> (result, (l,e.text,r) :: crumbs)

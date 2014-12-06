@@ -6,9 +6,9 @@ import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
 
-type Value = String
-type Zipper = (String,Int)
-type Result = Action.Result Value Zipper
+type alias Value = String
+type alias Zipper = (String,Int)
+type alias Result = Action.Result Value Zipper
 
 startZipper : Value -> Zipper
 startZipper v = (v,0)
