@@ -65,9 +65,9 @@ step c m = case c of
   Key (Keys.Single (Keys.Right)) -> updateText Core.String.goRight m
   Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
   Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
-  Key (Keys.Single (Keys.Enter)) -> updateEntry Entry.enter m
+  Key (Keys.Single (Keys.Enter)) -> updateZipper Document.enter m
   Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
-  Key (Keys.Character s) -> updateEntry (Entry.insert s) m
+  Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
   Key (Keys.CommandCharacter "d") -> updateText Core.String.delete m
   Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m

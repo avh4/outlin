@@ -1,4 +1,4 @@
-module Outline.Document.Actions (Result, do, doEntry, doText) where
+module Outline.Document.Actions (Result, do, doEntry, doText, enter) where
 
 import Outline.Document.Model (..)
 import Core.Action
@@ -37,3 +37,8 @@ doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
 doText stringFn = do
   (Scratch.do stringFn)
   (Entry.do stringFn)
+
+enter : Zipper -> Result
+enter = do
+  (Scratch.do (Core.String.insert "\n"))
+  (Entry.do Core.String.split)

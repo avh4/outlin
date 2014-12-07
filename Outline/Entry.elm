@@ -1,4 +1,4 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, insert, enter, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, goNext, goPrev, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper) where
+module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -260,14 +260,6 @@ do stringAction z = case z of
       [ lastInboxZipper (toValue z) |> Maybe.map Action.Update
       ] (Action.Update <| textZipper (toValue z))
     Action.NoChange -> Action.NoChange
-
-insert : String -> Zipper -> Result
-insert s = do (Core.String.insert s)
-
-enter = do Core.String.split
-
-goNext = do (Action.always Action.EnterNext)
-goPrev = do (Action.always Action.EnterPrev)
 
 ---- RENDER
 
