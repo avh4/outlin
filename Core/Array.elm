@@ -71,6 +71,8 @@ firstZipperThat fn vs = case vs of
       Nothing -> Nothing
   [] -> Nothing
 
+
+-- TODO: Needs to return a Maybe
 lastZipper : (v -> z) -> Value v -> Zipper v z
 lastZipper fn list = let (cur :: tail) = reverse list in (tail,fn cur,[])
 

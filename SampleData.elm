@@ -2,7 +2,7 @@ module SampleData where
 
 import Outline.Entry as Entry
 
-template = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
+outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   [ Entry.Entry { text="sdfs", description="", inbox=[], children=[] }
   , Entry.Entry { text="Bacon", description="", inbox=[], children=[] }
   , Entry.Entry { text="Freddy", description="", inbox=[], children=[] }
@@ -32,3 +32,5 @@ template = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   Entry.Entry { text="By priorty", description="", inbox=[], children=[] },
   Entry.Entry { text="By project", description="", inbox=[], children=[] }
   ] }
+
+template = {scratch=["Current Task Alpha"], outline=outline}

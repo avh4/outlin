@@ -15,7 +15,9 @@ import Core.String
 import Core.Array
 import Color (..)
 import Text
-import Outline.Document as Document
+import Outline.Document.Model as Document
+import Outline.Document.Actions as Document
+import Outline.Document.Render as Document
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
 import Graphics.Collage (collage, toForm, rotate)
@@ -25,15 +27,20 @@ import List (..)
 
 ---- App
 
-updateModel : (z -> Action.Result val z) -> z -> z
+updateModel : (Document.Zipper -> Document.Result) -> Document.Zipper -> Document.Zipper
 updateModel action z = case action z of
-  Action.Update newZ -> newZ
+  Action.Update z' -> z'
   -- explicity list the following action results, which are all no-ops on document
   Action.Split _ _ _ -> z
   Action.Delete -> z
   Action.EnterNext -> z
   Action.EnterPrev -> z
   Action.NoChange -> z
+
+updateEntry : (Entry.Zipper -> Entry.Result) -> Document.Zipper -> Document.Zipper
+updateEntry action z = case Document.doEntry action z of
+  Action.Update z' -> z'
+  _ -> z
 
 ---- INPUT
 
@@ -43,33 +50,33 @@ type Command
 
 step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
-  Key (Keys.Single (Keys.Left)) -> updateModel Entry.goLeft m
-  Key (Keys.Single (Keys.Right)) -> updateModel Entry.goRight m
-  Key (Keys.Single (Keys.Down)) -> updateModel (Entry.doEntry EntryNav.goDownWithinChild) m
-  Key (Keys.Single (Keys.Up)) -> updateModel (Entry.doEntry EntryNav.goUpWithinChild) m
-  Key (Keys.Single (Keys.Enter)) -> updateModel Entry.enter m
-  Key (Keys.Single (Keys.Backspace)) -> updateModel Entry.backspace m
-  Key (Keys.Character s) -> updateModel (Entry.insert s) m
-  Key (Keys.CommandCharacter "a") -> updateModel Entry.addInboxItem m
-  Key (Keys.CommandCharacter "d") -> updateModel Entry.delete m
-  Key (Keys.CommandCharacter "m") -> updateModel Entry.missort m
-  Key (Keys.CommandCharacter "p") -> updateModel Entry.promote m
-  Key (Keys.CommandCharacter "1") -> updateModel (Entry.moveInto 0) m
-  Key (Keys.CommandCharacter "2") -> updateModel (Entry.moveInto 1) m
-  Key (Keys.CommandCharacter "3") -> updateModel (Entry.moveInto 2) m
-  Key (Keys.CommandCharacter "4") -> updateModel (Entry.moveInto 3) m
-  Key (Keys.CommandCharacter "5") -> updateModel (Entry.moveInto 4) m
-  Key (Keys.CommandCharacter "6") -> updateModel (Entry.moveInto 5) m
-  Key (Keys.CommandCharacter "7") -> updateModel (Entry.moveInto 6) m
-  Key (Keys.Shift (Keys.Up)) -> updateModel (Entry.doEntry EntryNav.goToPrevSibling) m
-  Key (Keys.Shift (Keys.Down)) -> updateModel (Entry.doEntry EntryNav.goToNextSibling) m
-  Key (Keys.Shift (Keys.Right)) -> updateModel EntryNav.goToFirstChild m
-  Key (Keys.Shift (Keys.Left)) -> updateModel EntryNav.goToParent m
-  Key (Keys.Command (Keys.Up)) -> updateModel Entry.moveChildUp m
-  Key (Keys.Command (Keys.Down)) -> updateModel Entry.moveChildDown m
-  Loaded s -> case Json.Decode.decodeString Entry.decoder s of
-    Ok doc -> Entry.textZipper doc
-    x -> fst (m, Debug.log "Load failed" x)
+  Key (Keys.Single (Keys.Left)) -> updateModel Document.goLeft m
+  Key (Keys.Single (Keys.Right)) -> updateEntry Entry.goRight m
+  Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
+  Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
+  Key (Keys.Single (Keys.Enter)) -> updateEntry Entry.enter m
+  Key (Keys.Single (Keys.Backspace)) -> updateEntry Entry.backspace m
+  Key (Keys.Character s) -> updateEntry (Entry.insert s) m
+  Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
+  Key (Keys.CommandCharacter "d") -> updateEntry Entry.delete m
+  Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m
+  Key (Keys.CommandCharacter "p") -> updateEntry Entry.promote m
+  Key (Keys.CommandCharacter "1") -> updateEntry (Entry.moveInto 0) m
+  Key (Keys.CommandCharacter "2") -> updateEntry (Entry.moveInto 1) m
+  Key (Keys.CommandCharacter "3") -> updateEntry (Entry.moveInto 2) m
+  Key (Keys.CommandCharacter "4") -> updateEntry (Entry.moveInto 3) m
+  Key (Keys.CommandCharacter "5") -> updateEntry (Entry.moveInto 4) m
+  Key (Keys.CommandCharacter "6") -> updateEntry (Entry.moveInto 5) m
+  Key (Keys.CommandCharacter "7") -> updateEntry (Entry.moveInto 6) m
+  Key (Keys.Shift (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
+  Key (Keys.Shift (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
+  Key (Keys.Shift (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
+  Key (Keys.Shift (Keys.Left)) -> updateEntry EntryNav.goToParent m
+  Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
+  Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
+  -- Loaded s -> case Json.Decode.decodeString Entry.decoder s of
+  --   Ok doc -> Document.outlineZipper doc
+  --   x -> fst (m, Debug.log "Load failed" x)
   x -> fst (m, Debug.log "Unhandled command" x)
 
 ---- RENDER
@@ -179,8 +186,8 @@ findFocus (l,r) (ls,rs) z = case z of
     (result,crumbs) -> (result, (l,e.text,r) :: crumbs)
   _ -> ((ls,z,rs),[])
 
-render : (Int,Int) -> Document.Zipper -> Element
-render (w,h) z =
+renderOutline : (Int,Int) -> Entry.Zipper -> Element
+renderOutline (w,h) z =
   let f = footer (w,h)
       header = title (w,h) (Entry.textValue z)
       mh = h - (heightOf f) - (heightOf header)
@@ -196,3 +203,7 @@ render (w,h) z =
     ]
   , f
   ]
+
+render : (Int,Int) -> Document.Zipper -> Element
+render = Document.render renderOutline
+  (\scratch outline -> flow down [scratch, outline])
