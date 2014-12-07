@@ -15,16 +15,20 @@ import List
 import Graphics.Input (clickable)
 import Signal
 
-tab : Signal.Channel String -> String -> Element
-tab channel label = label
-  |> plainText
+tab : String -> Element
+tab label = label |> plainText |> width 80
+
+clickableTab channel label = tab label
   |> clickable (Signal.send channel label)
+
+selectedTab label = tab label
+  |> color yellow
 
 tabs : Signal.Channel String -> List String -> String -> List String -> Element
 tabs channel l sel r = flow right
-  (  (List.map (tab channel) l)
-  ++ [sel |> asText |> color yellow]
-  ++ (List.map (tab channel) r)
+  (  (List.map (clickableTab channel) l)
+  ++ [sel |> selectedTab]
+  ++ (List.map (clickableTab channel) r)
   )
 
 render : Signal.Channel String -> (Int,Int) -> Zipper -> Element
