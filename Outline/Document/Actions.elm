@@ -1,9 +1,10 @@
-module Outline.Document.Actions (Result, do, doEntry, goLeft) where
+module Outline.Document.Actions (Result, do, doEntry, doText) where
 
 import Outline.Document.Model (..)
 import Core.Action
 import Core.Action (..)
 import Core.Array
+import Core.String
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
@@ -32,5 +33,7 @@ do scratchFn entryFn zipper = case zipper of
 doEntry : (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 doEntry entryFn = do (\_ -> NoChange) entryFn
 
-goLeft : Zipper -> Result
-goLeft = do Scratch.goLeft Entry.goLeft
+doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
+doText stringFn = do
+  (Scratch.do stringFn)
+  (Entry.do stringFn)

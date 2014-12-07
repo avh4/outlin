@@ -44,6 +44,12 @@ updateEntry action z = case Document.doEntry action z of
   Action.Update z' -> z'
   _ -> z
 
+-- TODO: extract common code from update*
+updateText : (Core.String.Zipper -> Core.String.Result) -> Document.Zipper -> Document.Zipper
+updateText stringFn z = case Document.doText stringFn z of
+  Action.Update z' -> z'
+  _ -> z
+
 ---- INPUT
 
 type Command
@@ -52,17 +58,18 @@ type Command
   | Tab String
   | Scratch Int
 
+-- TODO: refactor to keep trailing 'm' out of here
 step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
-  Key (Keys.Single (Keys.Left)) -> updateZipper Document.goLeft m
-  Key (Keys.Single (Keys.Right)) -> updateEntry Entry.goRight m
+  Key (Keys.Single (Keys.Left)) -> updateText Core.String.goLeft m
+  Key (Keys.Single (Keys.Right)) -> updateText Core.String.goRight m
   Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
   Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
   Key (Keys.Single (Keys.Enter)) -> updateEntry Entry.enter m
-  Key (Keys.Single (Keys.Backspace)) -> updateEntry Entry.backspace m
+  Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
   Key (Keys.Character s) -> updateEntry (Entry.insert s) m
   Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
-  Key (Keys.CommandCharacter "d") -> updateEntry Entry.delete m
+  Key (Keys.CommandCharacter "d") -> updateText Core.String.delete m
   Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m
   Key (Keys.CommandCharacter "p") -> updateEntry Entry.promote m
   Key (Keys.CommandCharacter "1") -> updateEntry (Entry.moveInto 0) m
