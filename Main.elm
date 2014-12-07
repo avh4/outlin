@@ -12,6 +12,7 @@ import Window
 
 import App
 import App (Command(..))
+import App.Render.Main as App
 import Outline.Document.Model as Document
 import Outline.Document.Json as Document
 import Signal
@@ -21,9 +22,12 @@ import Debug
 
 -- dropbox = Dropbox.client "mjplyqeks6z3js8"
 
+tabsChannel = Signal.channel ""
+
 commands : Signal Command
 commands = Signal.mergeMany
   [ Signal.map Key Keys.lastPressed
+  , Signal.map Tab (Signal.subscribe tabsChannel)
   -- , Signal.map Loaded <| dropbox.read "outlin.json"
   ]
 
@@ -33,7 +37,7 @@ state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = Signal.map2 App.render Window.dimensions state
+main = Signal.map2 (App.render tabsChannel) Window.dimensions state
 
 jsonOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.toValue |> Document.toJson) state
 
