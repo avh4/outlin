@@ -50,6 +50,7 @@ type Command
   = Key Keys.KeyCombo
   | Loaded String
   | Tab String
+  | Scratch Int
 
 step : Command -> Document.Zipper -> Document.Zipper
 step c m = case c of
@@ -78,9 +79,11 @@ step c m = case c of
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
   
-  Tab "Scratch" -> updateValue Document.scratchZipper m
+  Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m
   
+  Scratch i -> updateValue (Document.scratchZipper i) m
+
   -- Loaded s -> case Json.Decode.decodeString Entry.decoder s of
   --   Ok doc -> Document.outlineZipper doc
   --   x -> fst (m, Debug.log "Load failed" x)

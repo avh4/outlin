@@ -1,4 +1,4 @@
-module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
+module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action as Action
 import List
@@ -46,12 +46,22 @@ active (_,z,_) = z
 zipper : List v -> z -> List v -> Zipper v z
 zipper left cur right = (left,cur,right)
 
+-- TODO: should return Maybe; replace zipperAtM
 zipperAt : Int -> (v -> z) -> Value v -> Zipper v z
 zipperAt i fn vs =
   ( vs |> take i |> reverse
   , vs |> drop i |> head |> fn
   , vs |> drop (i+1)
   )
+
+zipperAtM : Int -> (v -> z) -> Value v -> Maybe (Zipper v z)
+zipperAtM i fn vs = case List.isEmpty (vs |> drop i) of
+  True -> Nothing
+  False -> Just
+    ( vs |> take i |> reverse
+    , vs |> drop i |> head |> fn
+    , vs |> drop (i+1)
+    )
 
 -- TODO: use firstZipperM instead? or rename to firstZipper! ?
 firstZipper : (v -> z) -> Value v -> Zipper v z
@@ -132,6 +142,14 @@ map valueFn zipperFn (left,z,right) =
   List.map valueFn (reverse left)
   ++ [zipperFn z]
   ++ List.map valueFn right
+
+indexedMap : (Int -> v -> a) -> (Int -> z -> a) -> Zipper v z -> List a
+indexedMap valueFn zipperFn (left,z,right) =
+  let leftCount = List.length left
+  in
+    List.indexedMap valueFn (reverse left)
+    ++ [zipperFn leftCount z]
+    ++ List.indexedMap (\i v -> valueFn (leftCount+1+i) v) right
 
 goPrev : (z -> v) -> (v -> z) -> Zipper v z -> Maybe (Zipper v z)
 goPrev toVal fn (left,cur,right) = case left of

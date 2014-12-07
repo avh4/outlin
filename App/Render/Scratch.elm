@@ -3,13 +3,33 @@ module App.Render.Scratch (render) where
 import Core.Array
 import Outline.Scratch.Model as Scratch
 import Graphics.Element (..)
-import Text (..)
+import Graphics.Input (clickable)
+import Color (..)
+import Text (plainText)
+import Signal
 
-renderValue : Scratch.Value -> Element
-renderValue v = asText <| toString v
+navItem : Signal.Channel Int -> Int -> Scratch.Value -> Element
+navItem channel i v = v
+  |> plainText
+  |> width 200
+  |> height 40
+  |> clickable (Signal.send channel i)
+
+selectedNavItem : Signal.Channel Int -> Int -> Scratch.Zipper -> Element
+selectedNavItem channel i z = z
+  |> Scratch.toValue
+  |> navItem channel i
+  |> color yellow
+
+list channel z = z
+  |> Core.Array.indexedMap (navItem channel) (selectedNavItem channel)
+  |> flow down
 
 renderZipper : Scratch.Zipper -> Element
-renderZipper z = renderValue (Scratch.toValue z) -- TODO
+renderZipper z = plainText (Scratch.toValue z) -- TODO
 
-render : Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render z = flow down (Core.Array.map renderValue renderZipper z)
+render : Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render scratchChannel z = flow right
+  [ list scratchChannel z
+  , Core.Array.active z |> renderZipper
+  ]

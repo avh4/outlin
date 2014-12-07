@@ -19,8 +19,8 @@ toValue z = case z of
   InScratch sZip eVal -> {scratch=Core.Array.toValue Scratch.toValue sZip, outline=eVal}
   InOutline sVal eZip -> {scratch=sVal, outline=Entry.toValue eZip}
 
-scratchZipper : Value -> Zipper
-scratchZipper {scratch,outline} = case Core.Array.firstZipperM Scratch.endZipper scratch of
+scratchZipper : Int -> Value -> Zipper
+scratchZipper i {scratch,outline} = case Core.Array.zipperAtM i Scratch.endZipper scratch of
   Just zipper -> InScratch zipper outline
   -- Nothing ->  TODO-- should create an empty scratch
 

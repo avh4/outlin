@@ -33,4 +33,4 @@ outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   Entry.Entry { text="By project", description="", inbox=[], children=[] }
   ] }
 
-template = {scratch=["Current Task Alpha"], outline=outline}
+template = {scratch=["Scratch 3", "Scratch 2"], outline=outline}
