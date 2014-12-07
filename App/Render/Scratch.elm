@@ -2,6 +2,7 @@ module App.Render.Scratch (render) where
 
 import Core.Array
 import Outline.Scratch.Model as Scratch
+import App.Render.String as String
 import Graphics.Element (..)
 import Graphics.Input (clickable)
 import Color (..)
@@ -26,7 +27,7 @@ list channel z = z
   |> flow down
 
 renderZipper : Scratch.Zipper -> Element
-renderZipper z = plainText (Scratch.toValue z) -- TODO
+renderZipper z = String.render plainText z
 
 render : Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
 render scratchChannel z = flow right
