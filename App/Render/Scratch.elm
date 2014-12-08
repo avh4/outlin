@@ -30,7 +30,7 @@ list channel z = z
   |> flow down
 
 renderZipper : Scratch.Zipper -> Element
-renderZipper z = String.render plainText z
+renderZipper z = String.render z
 
 render : Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
 render scratchChannel z = flow right

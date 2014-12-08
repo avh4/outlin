@@ -2,12 +2,13 @@ module App.Render.String (render) where
 
 import Core.String
 import Graphics.Element (..)
-import Text (plainText)
+import Html (..)
+import Html.Attributes (..)
+import String
 
-render : (String -> Element) -> Core.String.Zipper -> Element
-render fn z = case Core.String.toTuple z of
-  (l,r) -> flow right
-    [ fn l
-    , plainText "^"
-    , fn r
-    ]
+render : Core.String.Zipper -> Element
+render (value,cursor) = node "span" [] [
+  text <| String.left cursor value,
+  node "span" [ class "cursor" ] [ text "^" ],
+  text <| String.dropLeft cursor value ]
+  |> toElement 100 100

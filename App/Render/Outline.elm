@@ -17,7 +17,7 @@ hintText s = s |> Text.fromString |> Text.italic |> Text.color (hsl 0 0 0.7) |> 
 
 inboxItem : Int -> Entry.Zipper -> Element
 inboxItem w z = case z of
-  Entry.InText e -> String.render plainText e.text |> width w
+  Entry.InText e -> String.render e.text |> width w
   _ -> plainText (Entry.textValue z) |> width w
 
 inboxItemV : Int -> Entry.Value -> Element
@@ -57,12 +57,12 @@ leftPanel : (Int,Int) -> Entry.Zipper -> List Entry.Value -> List Entry.Value ->
 leftPanel (w,h) z left right = case z of
   -- TODO: refactor to use a record of functions so that each case only needs to specify the zipper function
   Entry.InText e -> leftPanel' (w,h) left right
-    (e.text |> String.render plainText)
+    (e.text |> String.render)
     (e.description |> plainText)
     (List.map (inboxItemV w) e.inbox)
   Entry.InDescription e -> leftPanel' (w,h) left right
     (e.text |> plainText)
-    (e.description |> String.render plainText)
+    (e.description |> String.render)
     (List.map (inboxItemV w) e.inbox)
   Entry.InInbox e -> leftPanel' (w,h) left right
     (e.text |> plainText)
