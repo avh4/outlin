@@ -12,28 +12,41 @@ import Window
 
 import App
 import App (Command(..))
-import Outline.Document as Document
+import App.Render.Main as App
+import Outline.Document.Model as Document
+import Outline.Document.Json as Document
 import Signal
 import Debug
+import Core.Array
+import Outline.Scratch.Json as Scratch
 
 ---- SIGNALS
 
 dropbox = Dropbox.client "sy8pzlg66rwnv7n"
 
+tabsChannel = Signal.channel ""
+scratchChannel = Signal.channel 0
+
 commands : Signal Command
 commands = Signal.mergeMany
   [ Signal.map Key Keys.lastPressed
-  , Signal.map Loaded <| dropbox.read "outlin.json"
+  , Signal.map Tab (Signal.subscribe tabsChannel)
+  , Signal.map Scratch (Signal.subscribe scratchChannel)
+  , Signal.map LoadedOutline <| dropbox.read "outlin.json"
+  , Signal.map LoadedScratch <| dropbox.read "scratch.json"
   ]
 
-initialDocument = (Entry.textZipper SampleData.template)
+initialDocument = (Document.scratchZipper 0 SampleData.template)
 
 state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = Signal.map2 App.render Window.dimensions state
+main = Signal.map2 (App.render tabsChannel scratchChannel) Window.dimensions state
 
-jsonOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Entry.toValue |> Entry.toJson) state
+outlineOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.outlineValue |> Entry.toJson) state
 
-toDropbox = dropbox.write "outlin.json" jsonOutput
+scratchOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.scratchValue |> Core.Array.toJson Scratch.toJson) state
+
+outlineToDropbox = dropbox.write "outlin.json" outlineOutput
+scratchToDropbox = dropbox.write "scratch.json" scratchOutput

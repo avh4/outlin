@@ -1,10 +1,11 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt, toTuple) where
+module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt, toTuple, decoder) where
 
 import Core.Action as Action
 import String
 import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
+import Json.Decode
 
 type alias Value = String
 type alias Zipper = (String,Int)
@@ -76,3 +77,6 @@ quote s = s |> quoteQuote |> quoteNewline
 
 toJson : String -> String
 toJson = walk (\s -> "\"" ++ quote s ++ "\"")
+
+decoder : Json.Decode.Decoder Value
+decoder = Json.Decode.string
