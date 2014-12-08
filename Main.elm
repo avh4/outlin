@@ -30,6 +30,7 @@ scratchChannel = Signal.channel 0
 commands : Signal Command
 commands = Signal.mergeMany
   [ Signal.map Key Keys.lastPressed
+  , Signal.map Paste Keys.pastes
   , Signal.map Tab (Signal.subscribe tabsChannel)
   , Signal.map Scratch (Signal.subscribe scratchChannel)
   , Signal.map LoadedOutline <| dropbox.read "outlin.json"
