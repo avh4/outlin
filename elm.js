@@ -38,6 +38,9 @@ Elm.App.make = function (_elm) {
       return {ctor: "LoadedOutline"
              ,_0: a};
    };
+   var Paste = function (a) {
+      return {ctor: "Paste",_0: a};
+   };
    var Key = function (a) {
       return {ctor: "Key",_0: a};
    };
@@ -187,36 +190,40 @@ Elm.App.make = function (_elm) {
               break;
             case "LoadedOutline":
             return function () {
-                 var _v20 = A2($Json$Decode.decodeString,
+                 var _v21 = A2($Json$Decode.decodeString,
                  $Outline$Entry.decoder,
                  c._0);
-                 switch (_v20.ctor)
+                 switch (_v21.ctor)
                  {case "Ok":
                     return A2($Outline$Document$Model.replaceOutline,
                       m,
-                      _v20._0);}
+                      _v21._0);}
                  return $Basics.fst({ctor: "_Tuple2"
                                     ,_0: m
                                     ,_1: A2($Debug.log,
                                     "Load failed",
-                                    _v20)});
+                                    _v21)});
               }();
             case "LoadedScratch":
             return function () {
-                 var _v22 = A2($Json$Decode.decodeString,
+                 var _v23 = A2($Json$Decode.decodeString,
                  $Outline$Scratch$Json.listDecoder,
                  c._0);
-                 switch (_v22.ctor)
+                 switch (_v23.ctor)
                  {case "Ok":
                     return A2($Outline$Document$Model.replaceScratch,
                       m,
-                      _v22._0);}
+                      _v23._0);}
                  return $Basics.fst({ctor: "_Tuple2"
                                     ,_0: m
                                     ,_1: A2($Debug.log,
                                     "Load failed",
-                                    _v22)});
+                                    _v23)});
               }();
+            case "Paste":
+            return A2(updateText,
+              $Core$String.insert(c._0),
+              m);
             case "Scratch":
             return A2(updateValue,
               $Outline$Document$Model.scratchZipper(c._0),
@@ -244,6 +251,7 @@ Elm.App.make = function (_elm) {
                      ,updateEntry: updateEntry
                      ,updateText: updateText
                      ,Key: Key
+                     ,Paste: Paste
                      ,LoadedOutline: LoadedOutline
                      ,LoadedScratch: LoadedScratch
                      ,Tab: Tab
@@ -5790,6 +5798,7 @@ Elm.Keys.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Native$Keys = Elm.Native.Keys.make(_elm),
    $Signal = Elm.Signal.make(_elm);
+   var pastes = $Native$Keys.pasteIn;
    var charFromCode = function (code) {
       return function () {
          switch (code)
@@ -5945,6 +5954,7 @@ Elm.Keys.make = function (_elm) {
                                                     $Native$Keys.shiftIn)]));
    _elm.Keys.values = {_op: _op
                       ,lastPressed: lastPressed
+                      ,pastes: pastes
                       ,Enter: Enter
                       ,Backspace: Backspace
                       ,Left: Left
@@ -6220,6 +6230,9 @@ Elm.Main.make = function (_elm) {
    var commands = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
                                                  $App.Key,
                                                  $Keys.lastPressed)
+                                                 ,A2($Signal.map,
+                                                 $App.Paste,
+                                                 $Keys.pastes)
                                                  ,A2($Signal.map,
                                                  $App.Tab,
                                                  $Signal.subscribe(tabsChannel))
@@ -9211,6 +9224,7 @@ Elm.Native.Keys.make = function(elm) {
   var downsIn = Signal.constant(0);
   var metaIn = Signal.constant(0);
   var shiftIn = Signal.constant(0);
+  var pasteIn = Signal.constant("");
 
   var specialKeys = {
     '8': 'backspace',
@@ -9229,10 +9243,34 @@ Elm.Native.Keys.make = function(elm) {
   };
 
   var downMods = {};
+  var pasteCapture = document.createElement("textarea");
+
+  // TODO: make this not visible; http://stackoverflow.com/a/13422563/308930
+  pasteCapture.style.position = "absolute";
+
+  function isPaste(e) {
+    return downMods.meta && e.keyCode == 86;
+  }
+
+  function handlePaste() {
+    // TODO: cancel old timeout if it exists (test with `echo -n | pbcopy`)
+    var pasted = pasteCapture.value;
+    if (pasted == '') {
+      setTimeout(handlePaste, 10);
+    } else {
+      document.body.removeChild(pasteCapture);
+      elm.notify(pasteIn.id, pasted);
+    }
+  }
 
   document.onkeydown = function(e) {
     var mod;
-    if (mod = modKeys[e.keyCode.toString()]) {
+    if (isPaste(e)) {
+      pasteCapture.value = "";
+      document.body.appendChild(pasteCapture);
+      pasteCapture.focus();
+      handlePaste();
+    } else if (mod = modKeys[e.keyCode.toString()]) {
       downMods[mod] = true;
       e.preventDefault();
     } else if (downMods.meta) {
@@ -9273,7 +9311,8 @@ Elm.Native.Keys.make = function(elm) {
     pressesIn: pressesIn,
     downsIn: downsIn,
     metaIn: metaIn,
-    shiftIn: shiftIn
+    shiftIn: shiftIn,
+    pasteIn: pasteIn
   };
 };
 
