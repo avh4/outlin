@@ -13,571 +13,224 @@ Elm.App.make = function (_elm) {
    $moduleName = "App",
    $App$EntryNav = Elm.App.EntryNav.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
    $Core$Action = Elm.Core.Action.make(_elm),
-   $Core$Array = Elm.Core.Array.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
    $Keys = Elm.Keys.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Outline$Document = Elm.Outline.Document.make(_elm),
+   $Outline$Document$Actions = Elm.Outline.Document.Actions.make(_elm),
+   $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Text = Elm.Text.make(_elm);
-   var findFocus = F3(function (_v0,
-   _v1,
-   z) {
-      return function () {
-         switch (_v1.ctor)
-         {case "_Tuple2":
-            return function () {
-                 switch (_v0.ctor)
-                 {case "_Tuple2":
-                    return function () {
-                         switch (z.ctor)
-                         {case "InChild":
-                            return function () {
-                                 var _v10 = A2(findFocus,
-                                 {ctor: "_Tuple2"
-                                 ,_0: $Core$Array.countLeft(z._0.children)
-                                 ,_1: $Core$Array.countRight(z._0.children)},
-                                 {ctor: "_Tuple2"
-                                 ,_0: $Core$Array.lefts(z._0.children)
-                                 ,_1: $Core$Array.rights(z._0.children)})($Core$Array.active(z._0.children));
-                                 switch (_v10.ctor)
-                                 {case "_Tuple2":
-                                    return {ctor: "_Tuple2"
-                                           ,_0: _v10._0
-                                           ,_1: A2($List._op["::"],
-                                           {ctor: "_Tuple3"
-                                           ,_0: _v0._0
-                                           ,_1: z._0.text
-                                           ,_2: _v0._1},
-                                           _v10._1)};}
-                                 _U.badCase($moduleName,
-                                 "between lines 178 and 180");
-                              }();}
-                         return {ctor: "_Tuple2"
-                                ,_0: {ctor: "_Tuple3"
-                                     ,_0: _v1._0
-                                     ,_1: z
-                                     ,_2: _v1._1}
-                                ,_1: _L.fromArray([])};
-                      }();}
-                 _U.badCase($moduleName,
-                 "between lines 177 and 180");
-              }();}
-         _U.badCase($moduleName,
-         "between lines 177 and 180");
-      }();
-   });
-   var footer = function (_v13) {
-      return function () {
-         switch (_v13.ctor)
-         {case "_Tuple2":
-            return $Graphics$Element.color(A3($Color.hsl,
-              0,
-              0,
-              0.8))(A3($Graphics$Element.container,
-              _v13._0,
-              40,
-              $Graphics$Element.midLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.right,
-              A2($List.map,
-              function (x) {
-                 return $Text.plainText(A2($Basics._op["++"],
-                 x,
-                 "    "));
-              },
-              _L.fromArray(["⌘D: delete"
-                           ,"⌘M: Missorted"
-                           ,"⌘Up/Down: move up/down"
-                           ,"Shift-Up/Down/Left/Right: navigate hierarchy"])))));}
-         _U.badCase($moduleName,
-         "between lines 168 and 174");
-      }();
+   $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm),
+   $Result = Elm.Result.make(_elm);
+   var Scratch = function (a) {
+      return {ctor: "Scratch"
+             ,_0: a};
    };
-   var title = F2(function (_v17,
-   s) {
-      return function () {
-         switch (_v17.ctor)
-         {case "_Tuple2":
-            return $Graphics$Element.color($Color.red)($Graphics$Element.width(_v17._0)($Text.plainText(s)));}
-         _U.badCase($moduleName,
-         "on line 166, column 17 to 55");
-      }();
-   });
-   var siblingView = F2(function (w,
-   v) {
-      return function () {
-         switch (v.ctor)
-         {case "Entry":
-            return $Graphics$Element.color($Color.orange)($Graphics$Element.width(w)($Text.plainText(v._0.text)));}
-         _U.badCase($moduleName,
-         "between lines 114 and 115");
-      }();
-   });
-   var rot = function (e) {
-      return A3($Graphics$Collage.collage,
-      $Graphics$Element.heightOf(e),
-      $Graphics$Element.widthOf(e),
-      _L.fromArray([$Graphics$Collage.rotate($Basics.degrees(90))($Graphics$Collage.toForm(e))]));
+   var Tab = function (a) {
+      return {ctor: "Tab",_0: a};
    };
-   var crumbView = F2(function (h,
-   _v23) {
-      return function () {
-         switch (_v23.ctor)
-         {case "_Tuple3":
-            return function () {
-                 var n = _v23._0 + _v23._2 + 1;
-                 var e = $Graphics$Element.width($Basics.ceiling($Basics.toFloat(h) / n))($Text.plainText(_v23._1));
-                 var w = $Basics.min(80)($Graphics$Element.heightOf(e));
-                 return A2($Graphics$Element.flow,
-                 $Graphics$Element.down,
-                 _L.fromArray([$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
-                              w,
-                              $Basics.floor($Basics.toFloat(h) * _v23._0 / n)))
-                              ,$Graphics$Element.color($Color.purple)($Graphics$Element.width(w)(rot(e)))
-                              ,$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
-                              w,
-                              $Basics.floor($Basics.toFloat(h) * _v23._2 / n)))]));
-              }();}
-         _U.badCase($moduleName,
-         "between lines 101 and 108");
-      }();
-   });
-   var crumbsPanel = F2(function (h,
-   crumbs) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      A2($List.map,
-      crumbView(h),
-      crumbs));
-   });
-   var inboxItemV = F2(function (w,
-   v) {
-      return function () {
-         switch (v.ctor)
-         {case "Entry":
-            return $Graphics$Element.width(w)($Text.plainText(v._0.text));}
-         _U.badCase($moduleName,
-         "on line 94, column 18 to 74");
-      }();
-   });
-   var hintText = function (s) {
-      return $Text.leftAligned($Text.color(A3($Color.hsl,
-      0,
-      0,
-      0.7))($Text.italic($Text.fromString(s))));
+   var LoadedScratch = function (a) {
+      return {ctor: "LoadedScratch"
+             ,_0: a};
    };
-   var leftPanel$ = F6(function (_v30,
-   left,
-   right,
-   textElement,
-   descriptionElement,
-   inboxElements) {
-      return function () {
-         switch (_v30.ctor)
-         {case "_Tuple2":
-            return A3($Graphics$Element.container,
-              _v30._0,
-              _v30._1,
-              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.down,
-              A2($Basics._op["++"],
-              A2($List.map,
-              siblingView(_v30._0),
-              left),
-              A2($Basics._op["++"],
-              _L.fromArray([$Graphics$Element.color($Color.green)($Graphics$Element.width(_v30._0)(textElement))
-                           ,$Graphics$Element.color($Color.yellow)($Graphics$Element.width(_v30._0)(descriptionElement))
-                           ,hintText("⌘A: add to inbox")]),
-              A2($Basics._op["++"],
-              inboxElements,
-              A2($List.map,
-              siblingView(_v30._0),
-              right))))));}
-         _U.badCase($moduleName,
-         "between lines 118 and 124");
-      }();
-   });
-   var child = F2(function (i,e) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      _L.fromArray([hintText(A2($Basics._op["++"],
-                   "⌘",
-                   A2($Basics._op["++"],
-                   $Basics.toString(i + 1),
-                   " ")))
-                   ,e]));
-   });
-   var rightPanel$ = F2(function (_v34,
-   childElements) {
-      return function () {
-         switch (_v34.ctor)
-         {case "_Tuple2":
-            return A3($Graphics$Element.container,
-              _v34._0,
-              _v34._1,
-              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.down,
-              A2($Basics._op["++"],
-              _L.fromArray([hintText("⌘P: promote from inbox")]),
-              A2($List.indexedMap,
-              child,
-              childElements))));}
-         _U.badCase($moduleName,
-         "between lines 154 and 157");
-      }();
-   });
-   var rightPanel = F2(function (size,
-   z) {
-      return function () {
-         return function () {
-            var _v39 = $Outline$Entry.toValue(z);
-            switch (_v39.ctor)
-            {case "Entry":
-               return A2(rightPanel$,
-                 size,
-                 $List.map($Text.plainText)($List.map(function (en) {
-                    return function () {
-                       switch (en.ctor)
-                       {case "Entry":
-                          return en._0.text;}
-                       _U.badCase($moduleName,
-                       "on line 163, column 39 to 73");
-                    }();
-                 })(_v39._0.children)));}
-            _U.badCase($moduleName,
-            "between lines 161 and 163");
-         }();
-      }();
-   });
-   var textCursor = F2(function (fn,
-   z) {
-      return function () {
-         var _v43 = $Core$String.toTuple(z);
-         switch (_v43.ctor)
-         {case "_Tuple2":
-            return A2($Graphics$Element.flow,
-              $Graphics$Element.right,
-              _L.fromArray([fn(_v43._0)
-                           ,$Text.plainText("^")
-                           ,fn(_v43._1)]));}
-         _U.badCase($moduleName,
-         "between lines 78 and 83");
-      }();
-   });
-   var inboxItem = F2(function (w,
-   z) {
-      return function () {
-         switch (z.ctor)
-         {case "InText":
-            return $Graphics$Element.width(w)(A2(textCursor,
-              $Text.plainText,
-              z._0.text));}
-         return $Graphics$Element.width(w)($Text.plainText($Outline$Entry.textValue(z)));
-      }();
-   });
-   var leftPanel = F4(function (_v48,
-   z,
-   left,
-   right) {
-      return function () {
-         switch (_v48.ctor)
-         {case "_Tuple2":
-            return function () {
-                 switch (z.ctor)
-                 {case "InDescription":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v48._0
-                      ,_1: _v48._1},
-                      left,
-                      right,
-                      $Text.plainText(z._0.text),
-                      textCursor($Text.plainText)(z._0.description),
-                      A2($List.map,
-                      inboxItemV(_v48._0),
-                      z._0.inbox));
-                    case "InInbox":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v48._0
-                      ,_1: _v48._1},
-                      left,
-                      right,
-                      $Text.plainText(z._0.text),
-                      $Text.plainText(z._0.description),
-                      A3($Core$Array.map,
-                      inboxItemV(_v48._0),
-                      inboxItem(_v48._0),
-                      z._0.inbox));
-                    case "InText":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v48._0
-                      ,_1: _v48._1},
-                      left,
-                      right,
-                      textCursor($Text.plainText)(z._0.text),
-                      $Text.plainText(z._0.description),
-                      A2($List.map,
-                      inboxItemV(_v48._0),
-                      z._0.inbox));}
-                 return function () {
-                    var _v56 = $Outline$Entry.toValue(z);
-                    switch (_v56.ctor)
-                    {case "Entry":
-                       return A6(leftPanel$,
-                         {ctor: "_Tuple2"
-                         ,_0: _v48._0
-                         ,_1: _v48._1},
-                         left,
-                         right,
-                         $Text.plainText(_v56._0.text),
-                         $Text.plainText(_v56._0.description),
-                         A2($List.map,
-                         inboxItemV(_v48._0),
-                         _v56._0.inbox));}
-                    _U.badCase($moduleName,
-                    "between lines 141 and 145");
-                 }();
-              }();}
-         _U.badCase($moduleName,
-         "between lines 127 and 145");
-      }();
-   });
-   var render = F2(function (_v58,
-   z) {
-      return function () {
-         switch (_v58.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var _ = A3(findFocus,
-                 {ctor: "_Tuple2",_0: 0,_1: 0},
-                 {ctor: "_Tuple2"
-                 ,_0: _L.fromArray([])
-                 ,_1: _L.fromArray([])},
-                 z);
-                 var crumbs = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3": return _._1;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 187, column 32 to 57");
-                 }();
-                 var focus = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._1;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 187, column 32 to 57");
-                 }();
-                 var ls = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._0;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 187, column 32 to 57");
-                 }();
-                 var rs = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._2;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 187, column 32 to 57");
-                 }();
-                 var header = A2(title,
-                 {ctor: "_Tuple2"
-                 ,_0: _v58._0
-                 ,_1: _v58._1},
-                 $Outline$Entry.textValue(z));
-                 var f = footer({ctor: "_Tuple2"
-                                ,_0: _v58._0
-                                ,_1: _v58._1});
-                 var mh = _v58._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
-                 var crumbs$ = A2(crumbsPanel,
-                 mh,
-                 A2($List.drop,1,crumbs));
-                 var mw = _v58._0 - $Graphics$Element.widthOf(crumbs$);
-                 return A2($Graphics$Element.flow,
-                 $Graphics$Element.down,
-                 _L.fromArray([header
-                              ,A2($Graphics$Element.flow,
-                              $Graphics$Element.right,
-                              _L.fromArray([crumbs$
-                                           ,A4(leftPanel,
-                                           {ctor: "_Tuple2"
-                                           ,_0: $Basics.floor($Basics.toFloat(mw) / 2)
-                                           ,_1: mh},
-                                           focus,
-                                           ls,
-                                           rs)
-                                           ,A2(rightPanel,
-                                           {ctor: "_Tuple2"
-                                           ,_0: $Basics.ceiling($Basics.toFloat(mw) / 2)
-                                           ,_1: mh},
-                                           focus)]))
-                              ,f]));
-              }();}
-         _U.badCase($moduleName,
-         "between lines 184 and 198");
-      }();
-   });
-   var Loaded = function (a) {
-      return {ctor: "Loaded"
+   var LoadedOutline = function (a) {
+      return {ctor: "LoadedOutline"
              ,_0: a};
    };
    var Key = function (a) {
       return {ctor: "Key",_0: a};
    };
-   var updateModel = F2(function (action,
+   var updateText = F2(function (stringFn,
    z) {
       return function () {
-         var _v86 = action(z);
-         switch (_v86.ctor)
+         var _v0 = A2($Outline$Document$Actions.doText,
+         stringFn,
+         z);
+         switch (_v0.ctor)
+         {case "Update": return _v0._0;}
+         return z;
+      }();
+   });
+   var updateEntry = F2(function (action,
+   z) {
+      return function () {
+         var _v2 = A2($Outline$Document$Actions.doEntry,
+         action,
+         z);
+         switch (_v2.ctor)
+         {case "Update": return _v2._0;}
+         return z;
+      }();
+   });
+   var updateZipper = F2(function (action,
+   z) {
+      return function () {
+         var _v4 = action(z);
+         switch (_v4.ctor)
          {case "Delete": return z;
             case "EnterNext": return z;
             case "EnterPrev": return z;
             case "NoChange": return z;
             case "Split": return z;
-            case "Update": return _v86._0;}
+            case "Update": return _v4._0;}
          _U.badCase($moduleName,
-         "between lines 29 and 36");
+         "between lines 34 and 41");
       }();
+   });
+   var updateValue = F2(function (toZipper,
+   z) {
+      return toZipper($Outline$Document$Model.toValue(z));
    });
    var step = F2(function (c,m) {
       return function () {
          switch (c.ctor)
          {case "Key": switch (c._0.ctor)
               {case "Character":
-                 return A2(updateModel,
-                   $Outline$Entry.insert(c._0._0),
+                 return A2(updateText,
+                   $Core$String.insert(c._0._0),
                    m);
                  case "Command":
                  switch (c._0._0.ctor)
                    {case "Down":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.moveChildDown,
                         m);
                       case "Up":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.moveChildUp,
                         m);}
                    break;
                  case "CommandCharacter":
                  switch (c._0._0)
                    {case "1":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.moveInto(0),
                         m);
-                      case "2": return A2(updateModel,
+                      case "2": return A2(updateEntry,
                         $Outline$Entry.moveInto(1),
                         m);
-                      case "3": return A2(updateModel,
+                      case "3": return A2(updateEntry,
                         $Outline$Entry.moveInto(2),
                         m);
-                      case "4": return A2(updateModel,
+                      case "4": return A2(updateEntry,
                         $Outline$Entry.moveInto(3),
                         m);
-                      case "5": return A2(updateModel,
+                      case "5": return A2(updateEntry,
                         $Outline$Entry.moveInto(4),
                         m);
-                      case "6": return A2(updateModel,
+                      case "6": return A2(updateEntry,
                         $Outline$Entry.moveInto(5),
                         m);
-                      case "7": return A2(updateModel,
+                      case "7": return A2(updateEntry,
                         $Outline$Entry.moveInto(6),
                         m);
-                      case "a": return A2(updateModel,
+                      case "a": return A2(updateEntry,
                         $Outline$Entry.addInboxItem,
                         m);
-                      case "d": return A2(updateModel,
-                        $Outline$Entry.$delete,
+                      case "d": return A2(updateText,
+                        $Core$String.$delete,
                         m);
-                      case "m": return A2(updateModel,
+                      case "m": return A2(updateEntry,
                         $Outline$Entry.missort,
                         m);
-                      case "p": return A2(updateModel,
+                      case "p": return A2(updateEntry,
                         $Outline$Entry.promote,
                         m);}
                    break;
                  case "Shift":
                  switch (c._0._0.ctor)
                    {case "Down":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.doEntry($App$EntryNav.goToNextSibling),
                         m);
                       case "Left":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $App$EntryNav.goToParent,
                         m);
                       case "Right":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $App$EntryNav.goToFirstChild,
                         m);
                       case "Up":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.doEntry($App$EntryNav.goToPrevSibling),
                         m);}
                    break;
                  case "Single":
                  switch (c._0._0.ctor)
                    {case "Backspace":
-                      return A2(updateModel,
-                        $Outline$Entry.backspace,
+                      return A2(updateText,
+                        $Core$String.backspace,
                         m);
                       case "Down":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.doEntry($App$EntryNav.goDownWithinChild),
                         m);
                       case "Enter":
-                      return A2(updateModel,
-                        $Outline$Entry.enter,
+                      return A2(updateZipper,
+                        $Outline$Document$Actions.enter,
                         m);
                       case "Left":
-                      return A2(updateModel,
-                        $Outline$Entry.goLeft,
+                      return A2(updateText,
+                        $Core$String.goLeft,
                         m);
                       case "Right":
-                      return A2(updateModel,
-                        $Outline$Entry.goRight,
+                      return A2(updateText,
+                        $Core$String.goRight,
                         m);
                       case "Up":
-                      return A2(updateModel,
+                      return A2(updateEntry,
                         $Outline$Entry.doEntry($App$EntryNav.goUpWithinChild),
                         m);}
                    break;}
               break;
-            case "Loaded":
+            case "LoadedOutline":
             return function () {
-                 var _v99 = A2($Json$Decode.decodeString,
+                 var _v20 = A2($Json$Decode.decodeString,
                  $Outline$Entry.decoder,
                  c._0);
-                 switch (_v99.ctor)
+                 switch (_v20.ctor)
                  {case "Ok":
-                    return $Outline$Entry.textZipper(_v99._0);}
+                    return A2($Outline$Document$Model.replaceOutline,
+                      m,
+                      _v20._0);}
                  return $Basics.fst({ctor: "_Tuple2"
                                     ,_0: m
                                     ,_1: A2($Debug.log,
                                     "Load failed",
-                                    _v99)});
-              }();}
+                                    _v20)});
+              }();
+            case "LoadedScratch":
+            return function () {
+                 var _v22 = A2($Json$Decode.decodeString,
+                 $Outline$Scratch$Json.listDecoder,
+                 c._0);
+                 switch (_v22.ctor)
+                 {case "Ok":
+                    return A2($Outline$Document$Model.replaceScratch,
+                      m,
+                      _v22._0);}
+                 return $Basics.fst({ctor: "_Tuple2"
+                                    ,_0: m
+                                    ,_1: A2($Debug.log,
+                                    "Load failed",
+                                    _v22)});
+              }();
+            case "Scratch":
+            return A2(updateValue,
+              $Outline$Document$Model.scratchZipper(c._0),
+              m);
+            case "Tab": switch (c._0)
+              {case "Scratch":
+                 return A2(updateValue,
+                   $Outline$Document$Model.scratchZipper(0),
+                   m);
+                 case "Tasks":
+                 return A2(updateValue,
+                   $Outline$Document$Model.outlineZipper,
+                   m);}
+              break;}
          return $Basics.fst({ctor: "_Tuple2"
                             ,_0: m
                             ,_1: A2($Debug.log,
@@ -586,27 +239,16 @@ Elm.App.make = function (_elm) {
       }();
    });
    _elm.App.values = {_op: _op
-                     ,updateModel: updateModel
+                     ,updateValue: updateValue
+                     ,updateZipper: updateZipper
+                     ,updateEntry: updateEntry
+                     ,updateText: updateText
                      ,Key: Key
-                     ,Loaded: Loaded
-                     ,step: step
-                     ,textCursor: textCursor
-                     ,hintText: hintText
-                     ,inboxItem: inboxItem
-                     ,inboxItemV: inboxItemV
-                     ,rot: rot
-                     ,crumbView: crumbView
-                     ,crumbsPanel: crumbsPanel
-                     ,siblingView: siblingView
-                     ,leftPanel$: leftPanel$
-                     ,leftPanel: leftPanel
-                     ,child: child
-                     ,rightPanel$: rightPanel$
-                     ,rightPanel: rightPanel
-                     ,title: title
-                     ,footer: footer
-                     ,findFocus: findFocus
-                     ,render: render};
+                     ,LoadedOutline: LoadedOutline
+                     ,LoadedScratch: LoadedScratch
+                     ,Tab: Tab
+                     ,Scratch: Scratch
+                     ,step: step};
    return _elm.App.values;
 };
 Elm.App = Elm.App || {};
@@ -845,6 +487,652 @@ Elm.App.EntryNav.make = function (_elm) {
                               ,goToNextSibling: goToNextSibling
                               ,goToPrevSibling: goToPrevSibling};
    return _elm.App.EntryNav.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.Main = Elm.App.Render.Main || {};
+Elm.App.Render.Main.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.Main = _elm.App.Render.Main || {};
+   if (_elm.App.Render.Main.values)
+   return _elm.App.Render.Main.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.Main",
+   $App$Render$Outline = Elm.App.Render.Outline.make(_elm),
+   $App$Render$Scratch = Elm.App.Render.Scratch.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Graphics$Input = Elm.Graphics.Input.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var tab = function (label) {
+      return $Graphics$Element.width(80)($Text.plainText(label));
+   };
+   var clickableTab = F2(function (channel,
+   label) {
+      return $Graphics$Input.clickable(A2($Signal.send,
+      channel,
+      label))(tab(label));
+   });
+   var selectedTab = function (label) {
+      return $Graphics$Element.color($Color.yellow)(tab(label));
+   };
+   var tabs = F4(function (channel,
+   l,
+   sel,
+   r) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      A2($Basics._op["++"],
+      A2($List.map,
+      clickableTab(channel),
+      l),
+      A2($Basics._op["++"],
+      _L.fromArray([selectedTab(sel)]),
+      A2($List.map,
+      clickableTab(channel),
+      r))));
+   });
+   var render = F4(function (tabChannel,
+   scratchChannel,
+   _v0,
+   z) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (z.ctor)
+                 {case "InOutline":
+                    return A2($Graphics$Element.flow,
+                      $Graphics$Element.down,
+                      _L.fromArray([A4(tabs,
+                                   tabChannel,
+                                   _L.fromArray(["Scratch"]),
+                                   "Tasks",
+                                   _L.fromArray([]))
+                                   ,A2($App$Render$Outline.render,
+                                   {ctor: "_Tuple2"
+                                   ,_0: _v0._0
+                                   ,_1: _v0._1 - 50},
+                                   z._1)]));
+                    case "InScratch":
+                    return A2($Graphics$Element.flow,
+                      $Graphics$Element.down,
+                      _L.fromArray([A4(tabs,
+                                   tabChannel,
+                                   _L.fromArray([]),
+                                   "Scratch",
+                                   _L.fromArray(["Tasks"]))
+                                   ,A2($App$Render$Scratch.render,
+                                   scratchChannel,
+                                   z._0)]));}
+                 _U.badCase($moduleName,
+                 "between lines 35 and 43");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 35 and 43");
+      }();
+   });
+   _elm.App.Render.Main.values = {_op: _op
+                                 ,render: render};
+   return _elm.App.Render.Main.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.Outline = Elm.App.Render.Outline || {};
+Elm.App.Render.Outline.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.Outline = _elm.App.Render.Outline || {};
+   if (_elm.App.Render.Outline.values)
+   return _elm.App.Render.Outline.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.Outline",
+   $App$Render$String = Elm.App.Render.String.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var findFocus = F3(function (_v0,
+   _v1,
+   z) {
+      return function () {
+         switch (_v1.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v0.ctor)
+                 {case "_Tuple2":
+                    return function () {
+                         switch (z.ctor)
+                         {case "InChild":
+                            return function () {
+                                 var _v10 = A2(findFocus,
+                                 {ctor: "_Tuple2"
+                                 ,_0: $Core$Array.countLeft(z._0.children)
+                                 ,_1: $Core$Array.countRight(z._0.children)},
+                                 {ctor: "_Tuple2"
+                                 ,_0: $Core$Array.lefts(z._0.children)
+                                 ,_1: $Core$Array.rights(z._0.children)})($Core$Array.active(z._0.children));
+                                 switch (_v10.ctor)
+                                 {case "_Tuple2":
+                                    return {ctor: "_Tuple2"
+                                           ,_0: _v10._0
+                                           ,_1: A2($List._op["::"],
+                                           {ctor: "_Tuple3"
+                                           ,_0: _v0._0
+                                           ,_1: z._0.text
+                                           ,_2: _v0._1},
+                                           _v10._1)};}
+                                 _U.badCase($moduleName,
+                                 "between lines 108 and 110");
+                              }();}
+                         return {ctor: "_Tuple2"
+                                ,_0: {ctor: "_Tuple3"
+                                     ,_0: _v1._0
+                                     ,_1: z
+                                     ,_2: _v1._1}
+                                ,_1: _L.fromArray([])};
+                      }();}
+                 _U.badCase($moduleName,
+                 "between lines 107 and 110");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 107 and 110");
+      }();
+   });
+   var footer = function (_v13) {
+      return function () {
+         switch (_v13.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.color(A3($Color.hsl,
+              0,
+              0,
+              0.8))(A3($Graphics$Element.container,
+              _v13._0,
+              40,
+              $Graphics$Element.midLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.right,
+              A2($List.map,
+              function (x) {
+                 return $Text.plainText(A2($Basics._op["++"],
+                 x,
+                 "    "));
+              },
+              _L.fromArray(["⌘D: delete"
+                           ,"⌘M: Missorted"
+                           ,"⌘Up/Down: move up/down"
+                           ,"Shift-Up/Down/Left/Right: navigate hierarchy"])))));}
+         _U.badCase($moduleName,
+         "between lines 98 and 104");
+      }();
+   };
+   var title = F2(function (_v17,
+   s) {
+      return function () {
+         switch (_v17.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.color($Color.red)($Graphics$Element.width(_v17._0)($Text.plainText(s)));}
+         _U.badCase($moduleName,
+         "on line 96, column 17 to 55");
+      }();
+   });
+   var siblingView = F2(function (w,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Graphics$Element.color($Color.orange)($Graphics$Element.width(w)($Text.plainText(v._0.text)));}
+         _U.badCase($moduleName,
+         "between lines 44 and 45");
+      }();
+   });
+   var rot = function (e) {
+      return A3($Graphics$Collage.collage,
+      $Graphics$Element.heightOf(e),
+      $Graphics$Element.widthOf(e),
+      _L.fromArray([$Graphics$Collage.rotate($Basics.degrees(90))($Graphics$Collage.toForm(e))]));
+   };
+   var crumbView = F2(function (h,
+   _v23) {
+      return function () {
+         switch (_v23.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var n = _v23._0 + _v23._2 + 1;
+                 var e = $Graphics$Element.width($Basics.ceiling($Basics.toFloat(h) / n))($Text.plainText(_v23._1));
+                 var w = $Basics.min(80)($Graphics$Element.heightOf(e));
+                 return A2($Graphics$Element.flow,
+                 $Graphics$Element.down,
+                 _L.fromArray([$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
+                              w,
+                              $Basics.floor($Basics.toFloat(h) * _v23._0 / n)))
+                              ,$Graphics$Element.color($Color.purple)($Graphics$Element.width(w)(rot(e)))
+                              ,$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
+                              w,
+                              $Basics.floor($Basics.toFloat(h) * _v23._2 / n)))]));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 31 and 38");
+      }();
+   });
+   var crumbsPanel = F2(function (h,
+   crumbs) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      A2($List.map,
+      crumbView(h),
+      crumbs));
+   });
+   var inboxItemV = F2(function (w,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return $Graphics$Element.width(w)($Text.plainText(v._0.text));}
+         _U.badCase($moduleName,
+         "on line 24, column 18 to 74");
+      }();
+   });
+   var inboxItem = F2(function (w,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InText":
+            return $Graphics$Element.width(w)($App$Render$String.render(z._0.text));}
+         return $Graphics$Element.width(w)($Text.plainText($Outline$Entry.textValue(z)));
+      }();
+   });
+   var hintText = function (s) {
+      return $Text.leftAligned($Text.color(A3($Color.hsl,
+      0,
+      0,
+      0.7))($Text.italic($Text.fromString(s))));
+   };
+   var leftPanel$ = F6(function (_v32,
+   left,
+   right,
+   textElement,
+   descriptionElement,
+   inboxElements) {
+      return function () {
+         switch (_v32.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v32._0,
+              _v32._1,
+              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              A2($Basics._op["++"],
+              A2($List.map,
+              siblingView(_v32._0),
+              left),
+              A2($Basics._op["++"],
+              _L.fromArray([$Graphics$Element.color($Color.green)($Graphics$Element.width(_v32._0)(textElement))
+                           ,$Graphics$Element.color($Color.yellow)($Graphics$Element.width(_v32._0)(descriptionElement))
+                           ,hintText("⌘A: add to inbox")]),
+              A2($Basics._op["++"],
+              inboxElements,
+              A2($List.map,
+              siblingView(_v32._0),
+              right))))));}
+         _U.badCase($moduleName,
+         "between lines 48 and 54");
+      }();
+   });
+   var leftPanel = F4(function (_v36,
+   z,
+   left,
+   right) {
+      return function () {
+         switch (_v36.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (z.ctor)
+                 {case "InDescription":
+                    return A6(leftPanel$,
+                      {ctor: "_Tuple2"
+                      ,_0: _v36._0
+                      ,_1: _v36._1},
+                      left,
+                      right,
+                      $Text.plainText(z._0.text),
+                      $App$Render$String.render(z._0.description),
+                      A2($List.map,
+                      inboxItemV(_v36._0),
+                      z._0.inbox));
+                    case "InInbox":
+                    return A6(leftPanel$,
+                      {ctor: "_Tuple2"
+                      ,_0: _v36._0
+                      ,_1: _v36._1},
+                      left,
+                      right,
+                      $Text.plainText(z._0.text),
+                      $Text.plainText(z._0.description),
+                      A3($Core$Array.map,
+                      inboxItemV(_v36._0),
+                      inboxItem(_v36._0),
+                      z._0.inbox));
+                    case "InText":
+                    return A6(leftPanel$,
+                      {ctor: "_Tuple2"
+                      ,_0: _v36._0
+                      ,_1: _v36._1},
+                      left,
+                      right,
+                      $App$Render$String.render(z._0.text),
+                      $Text.plainText(z._0.description),
+                      A2($List.map,
+                      inboxItemV(_v36._0),
+                      z._0.inbox));}
+                 return function () {
+                    var _v44 = $Outline$Entry.toValue(z);
+                    switch (_v44.ctor)
+                    {case "Entry":
+                       return A6(leftPanel$,
+                         {ctor: "_Tuple2"
+                         ,_0: _v36._0
+                         ,_1: _v36._1},
+                         left,
+                         right,
+                         $Text.plainText(_v44._0.text),
+                         $Text.plainText(_v44._0.description),
+                         A2($List.map,
+                         inboxItemV(_v36._0),
+                         _v44._0.inbox));}
+                    _U.badCase($moduleName,
+                    "between lines 71 and 75");
+                 }();
+              }();}
+         _U.badCase($moduleName,
+         "between lines 57 and 75");
+      }();
+   });
+   var child = F2(function (i,e) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      _L.fromArray([hintText(A2($Basics._op["++"],
+                   "⌘",
+                   A2($Basics._op["++"],
+                   $Basics.toString(i + 1),
+                   " ")))
+                   ,e]));
+   });
+   var rightPanel$ = F2(function (_v46,
+   childElements) {
+      return function () {
+         switch (_v46.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v46._0,
+              _v46._1,
+              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              A2($Basics._op["++"],
+              _L.fromArray([hintText("⌘P: promote from inbox")]),
+              A2($List.indexedMap,
+              child,
+              childElements))));}
+         _U.badCase($moduleName,
+         "between lines 84 and 87");
+      }();
+   });
+   var rightPanel = F2(function (size,
+   z) {
+      return function () {
+         return function () {
+            var _v51 = $Outline$Entry.toValue(z);
+            switch (_v51.ctor)
+            {case "Entry":
+               return A2(rightPanel$,
+                 size,
+                 $List.map($Text.plainText)($List.map(function (en) {
+                    return function () {
+                       switch (en.ctor)
+                       {case "Entry":
+                          return en._0.text;}
+                       _U.badCase($moduleName,
+                       "on line 93, column 39 to 73");
+                    }();
+                 })(_v51._0.children)));}
+            _U.badCase($moduleName,
+            "between lines 91 and 93");
+         }();
+      }();
+   });
+   var render = F2(function (_v55,
+   z) {
+      return function () {
+         switch (_v55.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _ = A3(findFocus,
+                 {ctor: "_Tuple2",_0: 0,_1: 0},
+                 {ctor: "_Tuple2"
+                 ,_0: _L.fromArray([])
+                 ,_1: _L.fromArray([])},
+                 z);
+                 var crumbs = function () {
+                    switch (_.ctor)
+                    {case "_Tuple2":
+                       switch (_._0.ctor)
+                         {case "_Tuple3": return _._1;}
+                         break;}
+                    _U.badCase($moduleName,
+                    "on line 117, column 32 to 57");
+                 }();
+                 var focus = function () {
+                    switch (_.ctor)
+                    {case "_Tuple2":
+                       switch (_._0.ctor)
+                         {case "_Tuple3":
+                            return _._0._1;}
+                         break;}
+                    _U.badCase($moduleName,
+                    "on line 117, column 32 to 57");
+                 }();
+                 var ls = function () {
+                    switch (_.ctor)
+                    {case "_Tuple2":
+                       switch (_._0.ctor)
+                         {case "_Tuple3":
+                            return _._0._0;}
+                         break;}
+                    _U.badCase($moduleName,
+                    "on line 117, column 32 to 57");
+                 }();
+                 var rs = function () {
+                    switch (_.ctor)
+                    {case "_Tuple2":
+                       switch (_._0.ctor)
+                         {case "_Tuple3":
+                            return _._0._2;}
+                         break;}
+                    _U.badCase($moduleName,
+                    "on line 117, column 32 to 57");
+                 }();
+                 var header = A2(title,
+                 {ctor: "_Tuple2"
+                 ,_0: _v55._0
+                 ,_1: _v55._1},
+                 $Outline$Entry.textValue(z));
+                 var f = footer({ctor: "_Tuple2"
+                                ,_0: _v55._0
+                                ,_1: _v55._1});
+                 var mh = _v55._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
+                 var crumbs$ = A2(crumbsPanel,
+                 mh,
+                 A2($List.drop,1,crumbs));
+                 var mw = _v55._0 - $Graphics$Element.widthOf(crumbs$);
+                 return A2($Graphics$Element.flow,
+                 $Graphics$Element.down,
+                 _L.fromArray([header
+                              ,A2($Graphics$Element.flow,
+                              $Graphics$Element.right,
+                              _L.fromArray([crumbs$
+                                           ,A4(leftPanel,
+                                           {ctor: "_Tuple2"
+                                           ,_0: $Basics.floor($Basics.toFloat(mw) / 2)
+                                           ,_1: mh},
+                                           focus,
+                                           ls,
+                                           rs)
+                                           ,A2(rightPanel,
+                                           {ctor: "_Tuple2"
+                                           ,_0: $Basics.ceiling($Basics.toFloat(mw) / 2)
+                                           ,_1: mh},
+                                           focus)]))
+                              ,f]));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 114 and 128");
+      }();
+   });
+   _elm.App.Render.Outline.values = {_op: _op
+                                    ,render: render};
+   return _elm.App.Render.Outline.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.Scratch = Elm.App.Render.Scratch || {};
+Elm.App.Render.Scratch.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.Scratch = _elm.App.Render.Scratch || {};
+   if (_elm.App.Render.Scratch.values)
+   return _elm.App.Render.Scratch.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.Scratch",
+   $App$Render$String = Elm.App.Render.String.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Graphics$Input = Elm.Graphics.Input.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var renderZipper = function (z) {
+      return $App$Render$String.render(z);
+   };
+   var navItem = F3(function (channel,
+   i,
+   v) {
+      return $Graphics$Input.clickable(A2($Signal.send,
+      channel,
+      i))($Graphics$Element.height(40)($Graphics$Element.width(200)($Text.plainText($List.head($String.split("\n")(v))))));
+   });
+   var selectedNavItem = F3(function (channel,
+   i,
+   z) {
+      return $Graphics$Element.color($Color.yellow)(A2(navItem,
+      channel,
+      i)($Outline$Scratch$Model.toValue(z)));
+   });
+   var list = F2(function (channel,
+   z) {
+      return $Graphics$Element.flow($Graphics$Element.down)(A2($Core$Array.indexedMap,
+      navItem(channel),
+      selectedNavItem(channel))(z));
+   });
+   var render = F2(function (scratchChannel,
+   z) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.right,
+      _L.fromArray([A2(list,
+                   scratchChannel,
+                   z)
+                   ,renderZipper($Core$Array.active(z))]));
+   });
+   _elm.App.Render.Scratch.values = {_op: _op
+                                    ,render: render};
+   return _elm.App.Render.Scratch.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.String = Elm.App.Render.String || {};
+Elm.App.Render.String.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.String = _elm.App.Render.String || {};
+   if (_elm.App.Render.String.values)
+   return _elm.App.Render.String.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.String",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $String = Elm.String.make(_elm);
+   var render = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return A2($Html.toElement,
+              100,
+              100)(A3($Html.node,
+              "span",
+              _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                 ,_0: "white-space"
+                                                                 ,_1: "pre-wrap"}]))]),
+              _L.fromArray([$Html.text(A2($String.left,
+                           _v0._1,
+                           _v0._0))
+                           ,A3($Html.node,
+                           "span",
+                           _L.fromArray([$Html$Attributes.$class("cursor")]),
+                           _L.fromArray([$Html.text("^")]))
+                           ,$Html.text(A2($String.dropLeft,
+                           _v0._1,
+                           _v0._0))])));}
+         _U.badCase($moduleName,
+         "between lines 19 and 26");
+      }();
+   };
+   var line = function (string) {
+      return A3($Html.node,
+      "p",
+      _L.fromArray([]),
+      _L.fromArray([$Html.text(string)]));
+   };
+   var lines = function (stringWithNewlines) {
+      return $List.map(line)($String.split("\n")(stringWithNewlines));
+   };
+   _elm.App.Render.String.values = {_op: _op
+                                   ,render: render};
+   return _elm.App.Render.String.values;
 };
 Elm.Array = Elm.Array || {};
 Elm.Array.make = function (_elm) {
@@ -1738,10 +2026,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 140 and 142");
+                 "between lines 160 and 162");
               }();}
          _U.badCase($moduleName,
-         "between lines 140 and 142");
+         "between lines 160 and 162");
       }();
    });
    var goPrev = F3(function (toVal,
@@ -1762,187 +2050,215 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 135 and 137");
+                 "between lines 155 and 157");
               }();}
          _U.badCase($moduleName,
-         "between lines 135 and 137");
+         "between lines 155 and 157");
       }();
    });
-   var map = F3(function (valueFn,
+   var indexedMap = F3(function (valueFn,
    zipperFn,
    _v16) {
       return function () {
          switch (_v16.ctor)
          {case "_Tuple3":
-            return A2($Basics._op["++"],
-              A2($List.map,
-              valueFn,
-              $List.reverse(_v16._0)),
-              A2($Basics._op["++"],
-              _L.fromArray([zipperFn(_v16._1)]),
-              A2($List.map,
-              valueFn,
-              _v16._2)));}
+            return function () {
+                 var leftCount = $List.length(_v16._0);
+                 return A2($Basics._op["++"],
+                 A2($List.indexedMap,
+                 valueFn,
+                 $List.reverse(_v16._0)),
+                 A2($Basics._op["++"],
+                 _L.fromArray([A2(zipperFn,
+                 leftCount,
+                 _v16._1)]),
+                 A2($List.indexedMap,
+                 F2(function (i,v) {
+                    return A2(valueFn,
+                    leftCount + 1 + i,
+                    v);
+                 }),
+                 _v16._2)));
+              }();}
          _U.badCase($moduleName,
-         "between lines 130 and 132");
+         "between lines 148 and 152");
       }();
    });
-   var update = F2(function ($new,
+   var map = F3(function (valueFn,
+   zipperFn,
    _v21) {
       return function () {
          switch (_v21.ctor)
          {case "_Tuple3":
-            return {ctor: "_Tuple3"
-                   ,_0: _v21._0
-                   ,_1: $new
-                   ,_2: _v21._2};}
+            return A2($Basics._op["++"],
+              A2($List.map,
+              valueFn,
+              $List.reverse(_v21._0)),
+              A2($Basics._op["++"],
+              _L.fromArray([zipperFn(_v21._1)]),
+              A2($List.map,
+              valueFn,
+              _v21._2)));}
          _U.badCase($moduleName,
-         "on line 126, column 30 to 44");
+         "between lines 142 and 144");
       }();
    });
-   var moveDown = function (_v26) {
+   var update = F2(function ($new,
+   _v26) {
       return function () {
          switch (_v26.ctor)
          {case "_Tuple3":
+            return {ctor: "_Tuple3"
+                   ,_0: _v26._0
+                   ,_1: $new
+                   ,_2: _v26._2};}
+         _U.badCase($moduleName,
+         "on line 138, column 30 to 44");
+      }();
+   });
+   var moveDown = function (_v31) {
+      return function () {
+         switch (_v31.ctor)
+         {case "_Tuple3":
             return function () {
-                 switch (_v26._2.ctor)
+                 switch (_v31._2.ctor)
                  {case "::":
                     return $Maybe.Just({ctor: "_Tuple3"
                                        ,_0: A2($List._op["::"],
-                                       _v26._2._0,
-                                       _v26._0)
-                                       ,_1: _v26._1
-                                       ,_2: _v26._2._1});
+                                       _v31._2._0,
+                                       _v31._0)
+                                       ,_1: _v31._1
+                                       ,_2: _v31._2._1});
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 121 and 123");
+                 "between lines 133 and 135");
               }();}
          _U.badCase($moduleName,
-         "between lines 121 and 123");
+         "between lines 133 and 135");
       }();
    };
-   var moveUp = function (_v34) {
+   var moveUp = function (_v39) {
       return function () {
-         switch (_v34.ctor)
+         switch (_v39.ctor)
          {case "_Tuple3":
             return function () {
-                 switch (_v34._0.ctor)
+                 switch (_v39._0.ctor)
                  {case "::":
                     return $Maybe.Just({ctor: "_Tuple3"
-                                       ,_0: _v34._0._1
-                                       ,_1: _v34._1
+                                       ,_0: _v39._0._1
+                                       ,_1: _v39._1
                                        ,_2: A2($List._op["::"],
-                                       _v34._0._0,
-                                       _v34._2)});
+                                       _v39._0._0,
+                                       _v39._2)});
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 116 and 118");
+                 "between lines 128 and 130");
               }();}
          _U.badCase($moduleName,
-         "between lines 116 and 118");
+         "between lines 128 and 130");
       }();
    };
    var split_ = F2(function (fn,
    z) {
       return function () {
-         var _v42 = fn(z);
-         switch (_v42.ctor)
+         var _v47 = fn(z);
+         switch (_v47.ctor)
          {case "_Tuple2":
             return A3($Core$Action.Split,
-              _L.fromArray([_v42._0]),
-              _v42._1,
+              _L.fromArray([_v47._0]),
+              _v47._1,
               _L.fromArray([]));}
          _U.badCase($moduleName,
-         "between lines 109 and 110");
+         "between lines 121 and 122");
       }();
    });
    var $do = F5(function (toVal,
    nextFn,
    prevFn,
    action,
-   _v45) {
+   _v50) {
       return function () {
-         switch (_v45.ctor)
+         switch (_v50.ctor)
          {case "_Tuple3":
             return function () {
-                 var _v50 = action(_v45._1);
-                 switch (_v50.ctor)
+                 var _v55 = action(_v50._1);
+                 switch (_v55.ctor)
                  {case "Delete":
                     return function () {
-                         switch (_v45._2.ctor)
+                         switch (_v50._2.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
-                                                       ,_0: _v45._0
-                                                       ,_1: nextFn(_v45._2._0)
-                                                       ,_2: _v45._2._1});
+                                                       ,_0: _v50._0
+                                                       ,_1: nextFn(_v50._2._0)
+                                                       ,_2: _v50._2._1});
                             case "[]": return function () {
-                                 switch (_v45._0.ctor)
+                                 switch (_v50._0.ctor)
                                  {case "::":
                                     return $Core$Action.Update({ctor: "_Tuple3"
-                                                               ,_0: _v45._0._1
-                                                               ,_1: prevFn(_v45._0._0)
-                                                               ,_2: _v45._2});
+                                                               ,_0: _v50._0._1
+                                                               ,_1: prevFn(_v50._0._0)
+                                                               ,_2: _v50._2});
                                     case "[]":
                                     return $Core$Action.Delete;}
                                  _U.badCase($moduleName,
-                                 "between lines 97 and 100");
+                                 "between lines 109 and 112");
                               }();}
                          _U.badCase($moduleName,
-                         "between lines 95 and 100");
+                         "between lines 107 and 112");
                       }();
                     case "EnterNext":
                     return function () {
-                         switch (_v45._2.ctor)
+                         switch (_v50._2.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
                                                        ,_0: A2($List._op["::"],
-                                                       toVal(_v45._1),
-                                                       _v45._0)
-                                                       ,_1: nextFn(_v45._2._0)
-                                                       ,_2: _v45._2._1});
+                                                       toVal(_v50._1),
+                                                       _v50._0)
+                                                       ,_1: nextFn(_v50._2._0)
+                                                       ,_2: _v50._2._1});
                             case "[]":
                             return $Core$Action.EnterNext;}
                          _U.badCase($moduleName,
-                         "between lines 100 and 103");
+                         "between lines 112 and 115");
                       }();
                     case "EnterPrev":
                     return function () {
-                         switch (_v45._0.ctor)
+                         switch (_v50._0.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
-                                                       ,_0: _v45._0._1
-                                                       ,_1: prevFn(_v45._0._0)
+                                                       ,_0: _v50._0._1
+                                                       ,_1: prevFn(_v50._0._0)
                                                        ,_2: A2($List._op["::"],
-                                                       toVal(_v45._1),
-                                                       _v45._2)});
+                                                       toVal(_v50._1),
+                                                       _v50._2)});
                             case "[]":
                             return $Core$Action.EnterPrev;}
                          _U.badCase($moduleName,
-                         "between lines 103 and 106");
+                         "between lines 115 and 118");
                       }();
                     case "NoChange":
                     return $Core$Action.NoChange;
                     case "Split":
                     return $Core$Action.Update({ctor: "_Tuple3"
                                                ,_0: A2($Basics._op["++"],
-                                               $List.reverse(_v50._0),
-                                               _v45._0)
-                                               ,_1: _v50._1
+                                               $List.reverse(_v55._0),
+                                               _v50._0)
+                                               ,_1: _v55._1
                                                ,_2: A2($Basics._op["++"],
-                                               _v50._2,
-                                               _v45._2)});
+                                               _v55._2,
+                                               _v50._2)});
                     case "Update":
                     return $Core$Action.Update({ctor: "_Tuple3"
-                                               ,_0: _v45._0
-                                               ,_1: _v50._0
-                                               ,_2: _v45._2});}
+                                               ,_0: _v50._0
+                                               ,_1: _v55._0
+                                               ,_2: _v50._2});}
                  _U.badCase($moduleName,
-                 "between lines 92 and 106");
+                 "between lines 104 and 118");
               }();}
          _U.badCase($moduleName,
-         "between lines 92 and 106");
+         "between lines 104 and 118");
       }();
    });
    var split = F4(function (toVal,
@@ -1956,34 +2272,34 @@ Elm.Core.Array.make = function (_elm) {
       split_(fn));
    });
    var remove = F2(function (fn,
-   _v67) {
+   _v72) {
       return function () {
-         switch (_v67.ctor)
+         switch (_v72.ctor)
          {case "_Tuple3":
             return function () {
-                 switch (_v67._2.ctor)
+                 switch (_v72._2.ctor)
                  {case "::":
                     return $Maybe.Just({ctor: "_Tuple3"
-                                       ,_0: _v67._0
-                                       ,_1: fn(_v67._2._0)
-                                       ,_2: _v67._2._1});
+                                       ,_0: _v72._0
+                                       ,_1: fn(_v72._2._0)
+                                       ,_2: _v72._2._1});
                     case "[]": return function () {
-                         switch (_v67._0.ctor)
+                         switch (_v72._0.ctor)
                          {case "::":
                             return $Maybe.Just({ctor: "_Tuple3"
-                                               ,_0: _v67._0._1
-                                               ,_1: fn(_v67._0._0)
-                                               ,_2: _v67._2});
+                                               ,_0: _v72._0._1
+                                               ,_1: fn(_v72._0._0)
+                                               ,_2: _v72._2});
                             case "[]":
                             return $Maybe.Nothing;}
                          _U.badCase($moduleName,
-                         "between lines 86 and 88");
+                         "between lines 98 and 100");
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 84 and 88");
+                 "between lines 96 and 100");
               }();}
          _U.badCase($moduleName,
-         "between lines 84 and 88");
+         "between lines 96 and 100");
       }();
    });
    var lastZipper = F2(function (fn,
@@ -1991,7 +2307,7 @@ Elm.Core.Array.make = function (_elm) {
       return function () {
          var _raw = $List.reverse(list),
          $ = _raw.ctor === "::" ? _raw : _U.badCase($moduleName,
-         "on line 75, column 42 to 54"),
+         "on line 87, column 42 to 54"),
          cur = $._0,
          tail = $._1;
          return {ctor: "_Tuple3"
@@ -2005,62 +2321,62 @@ Elm.Core.Array.make = function (_elm) {
       return function () {
          switch (vs.ctor)
          {case "::": return function () {
-                 var _v81 = fn(vs._0);
-                 switch (_v81.ctor)
+                 var _v86 = fn(vs._0);
+                 switch (_v86.ctor)
                  {case "Just":
                     return $Maybe.Just({ctor: "_Tuple3"
                                        ,_0: _L.fromArray([])
-                                       ,_1: _v81._0
+                                       ,_1: _v86._0
                                        ,_2: vs._1});
                     case "Nothing":
                     return function () {
-                         var _v83 = A2(firstZipperThat,
+                         var _v88 = A2(firstZipperThat,
                          fn,
                          vs._1);
-                         switch (_v83.ctor)
+                         switch (_v88.ctor)
                          {case "Just":
-                            switch (_v83._0.ctor)
+                            switch (_v88._0.ctor)
                               {case "_Tuple3":
                                  return $Maybe.Just({ctor: "_Tuple3"
                                                     ,_0: A2($List._op["::"],
                                                     vs._0,
-                                                    _v83._0._0)
-                                                    ,_1: _v83._0._1
-                                                    ,_2: _v83._0._2});}
+                                                    _v88._0._0)
+                                                    ,_1: _v88._0._1
+                                                    ,_2: _v88._0._2});}
                               break;
                             case "Nothing":
                             return $Maybe.Nothing;}
                          _U.badCase($moduleName,
-                         "between lines 69 and 72");
+                         "between lines 79 and 82");
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 67 and 72");
+                 "between lines 77 and 82");
               }();
             case "[]":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 66 and 72");
+         "between lines 76 and 82");
       }();
    });
    var lastZipperThat = F2(function (fn,
    vs) {
       return function () {
-         var _v88 = A2(firstZipperThat,
+         var _v93 = A2(firstZipperThat,
          fn,
          $List.reverse(vs));
-         switch (_v88.ctor)
+         switch (_v93.ctor)
          {case "Just":
-            switch (_v88._0.ctor)
+            switch (_v93._0.ctor)
               {case "_Tuple3":
                  return $Maybe.Just({ctor: "_Tuple3"
-                                    ,_0: _v88._0._2
-                                    ,_1: _v88._0._1
-                                    ,_2: _v88._0._0});}
+                                    ,_0: _v93._0._2
+                                    ,_1: _v93._0._1
+                                    ,_2: _v93._0._0});}
               break;
             case "Nothing":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 78 and 80");
+         "between lines 90 and 92");
       }();
    });
    var firstZipperM = F2(function (fn,
@@ -2075,20 +2391,37 @@ Elm.Core.Array.make = function (_elm) {
             case "[]":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 61 and 63");
+         "between lines 71 and 73");
       }();
    });
    var firstZipper = F2(function (fn,
-   _v96) {
+   _v101) {
       return function () {
-         switch (_v96.ctor)
+         switch (_v101.ctor)
          {case "::":
             return {ctor: "_Tuple3"
                    ,_0: _L.fromArray([])
-                   ,_1: fn(_v96._0)
-                   ,_2: _v96._1};}
+                   ,_1: fn(_v101._0)
+                   ,_2: _v101._1};}
          _U.badCase($moduleName,
-         "on line 58, column 33 to 47");
+         "on line 68, column 33 to 47");
+      }();
+   });
+   var zipperAtM = F3(function (i,
+   fn,
+   vs) {
+      return function () {
+         var _v105 = $List.isEmpty($List.drop(i)(vs));
+         switch (_v105)
+         {case false:
+            return $Maybe.Just({ctor: "_Tuple3"
+                               ,_0: $List.reverse($List.take(i)(vs))
+                               ,_1: fn($List.head($List.drop(i)(vs)))
+                               ,_2: $List.drop(i + 1)(vs)});
+            case true:
+            return $Maybe.Nothing;}
+         _U.badCase($moduleName,
+         "between lines 58 and 64");
       }();
    });
    var zipperAt = F3(function (i,
@@ -2107,11 +2440,11 @@ Elm.Core.Array.make = function (_elm) {
              ,_1: cur
              ,_2: right};
    });
-   var active = function (_v100) {
+   var active = function (_v106) {
       return function () {
-         switch (_v100.ctor)
+         switch (_v106.ctor)
          {case "_Tuple3":
-            return _v100._1;}
+            return _v106._1;}
          _U.badCase($moduleName,
          "on line 44, column 18 to 19");
       }();
@@ -2138,52 +2471,52 @@ Elm.Core.Array.make = function (_elm) {
       }),
       vs);
    });
-   var rights = function (_v105) {
+   var rights = function (_v111) {
       return function () {
-         switch (_v105.ctor)
+         switch (_v111.ctor)
          {case "_Tuple3":
-            return _v105._2;}
+            return _v111._2;}
          _U.badCase($moduleName,
          "on line 32, column 22 to 27");
       }();
    };
-   var lefts = function (_v110) {
+   var lefts = function (_v116) {
       return function () {
-         switch (_v110.ctor)
+         switch (_v116.ctor)
          {case "_Tuple3":
-            return $List.reverse(_v110._0);}
+            return $List.reverse(_v116._0);}
          _U.badCase($moduleName,
          "on line 29, column 20 to 37");
       }();
    };
-   var countRight = function (_v115) {
+   var countRight = function (_v121) {
       return function () {
-         switch (_v115.ctor)
+         switch (_v121.ctor)
          {case "_Tuple3":
-            return $List.length(_v115._2);}
+            return $List.length(_v121._2);}
          _U.badCase($moduleName,
          "on line 26, column 26 to 43");
       }();
    };
-   var countLeft = function (_v120) {
+   var countLeft = function (_v126) {
       return function () {
-         switch (_v120.ctor)
+         switch (_v126.ctor)
          {case "_Tuple3":
-            return $List.length(_v120._0);}
+            return $List.length(_v126._0);}
          _U.badCase($moduleName,
          "on line 23, column 24 to 40");
       }();
    };
    var toValue = F2(function (fn,
-   _v125) {
+   _v131) {
       return function () {
-         switch (_v125.ctor)
+         switch (_v131.ctor)
          {case "_Tuple3":
             return A2($Basics._op["++"],
-              $List.reverse(_v125._0),
+              $List.reverse(_v131._0),
               A2($Basics._op["++"],
-              _L.fromArray([fn(_v125._1)]),
-              _v125._2));}
+              _L.fromArray([fn(_v131._1)]),
+              _v131._2));}
          _U.badCase($moduleName,
          "on line 20, column 31 to 69");
       }();
@@ -2210,6 +2543,7 @@ Elm.Core.Array.make = function (_elm) {
                             ,lastZipper: lastZipper
                             ,remove: remove
                             ,map: map
+                            ,indexedMap: indexedMap
                             ,active: active
                             ,zipper: zipper
                             ,append: append
@@ -2218,6 +2552,7 @@ Elm.Core.Array.make = function (_elm) {
                             ,firstZipperThat: firstZipperThat
                             ,lastZipperThat: lastZipperThat
                             ,zipperAt: zipperAt
+                            ,zipperAtM: zipperAtM
                             ,moveUp: moveUp
                             ,moveDown: moveDown
                             ,update: update
@@ -2248,8 +2583,10 @@ Elm.Core.String.make = function (_elm) {
    $Core$Action = Elm.Core.Action.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
    $Regex = Elm.Regex.make(_elm),
    $String = Elm.String.make(_elm);
+   var decoder = $Json$Decode.string;
    var quoteNewline = A3($Regex.replace,
    $Regex.All,
    $Regex.regex("\n"),
@@ -2297,7 +2634,7 @@ Elm.Core.String.make = function (_elm) {
                            _v4._1,
                            _v4._0))]));}
          _U.badCase($moduleName,
-         "between lines 62 and 65");
+         "between lines 63 and 66");
       }();
    };
    var renderValue = function (value) {
@@ -2318,7 +2655,7 @@ Elm.Core.String.make = function (_elm) {
               ,_1: 0},
               _L.fromArray([]));}
          _U.badCase($moduleName,
-         "on line 56, column 15 to 73");
+         "on line 57, column 15 to 73");
       }();
    };
    var $delete = $Core$Action.always($Core$Action.Delete);
@@ -2360,7 +2697,7 @@ Elm.Core.String.make = function (_elm) {
                                             ,_1: _v14._1 - 1});
               }();}
          _U.badCase($moduleName,
-         "between lines 46 and 48");
+         "between lines 47 and 49");
       }();
    };
    var move = F3(function ($char,
@@ -2394,7 +2731,7 @@ Elm.Core.String.make = function (_elm) {
                                        _v21._0,
                                        _v21._1)});}
          _U.badCase($moduleName,
-         "on line 43, column 18 to 60");
+         "on line 44, column 18 to 60");
       }();
    });
    var toTuple = function (_v25) {
@@ -2409,7 +2746,7 @@ Elm.Core.String.make = function (_elm) {
                    _v25._1,
                    _v25._0)};}
          _U.badCase($moduleName,
-         "on line 29, column 18 to 54");
+         "on line 30, column 18 to 54");
       }();
    };
    var toValue = function (_v29) {
@@ -2418,7 +2755,7 @@ Elm.Core.String.make = function (_elm) {
          {case "_Tuple2":
             return _v29._0;}
          _U.badCase($moduleName,
-         "on line 26, column 17 to 18");
+         "on line 27, column 17 to 18");
       }();
    };
    var zipperAt = F2(function (i,
@@ -2457,7 +2794,7 @@ Elm.Core.String.make = function (_elm) {
                    _v33._1,
                    _v33._0))};}
          _U.badCase($moduleName,
-         "on line 32, column 17 to 67");
+         "on line 33, column 17 to 67");
       }();
    };
    _elm.Core.String.values = {_op: _op
@@ -2476,7 +2813,8 @@ Elm.Core.String.make = function (_elm) {
                              ,split_: split_
                              ,zipper: zipper
                              ,zipperAt: zipperAt
-                             ,toTuple: toTuple};
+                             ,toTuple: toTuple
+                             ,decoder: decoder};
    return _elm.Core.String.values;
 };
 Elm.Debug = Elm.Debug || {};
@@ -4414,6 +4752,38 @@ Elm.Graphics.Element.make = function (_elm) {
                                   ,outward: outward};
    return _elm.Graphics.Element.values;
 };
+Elm.Graphics = Elm.Graphics || {};
+Elm.Graphics.Input = Elm.Graphics.Input || {};
+Elm.Graphics.Input.make = function (_elm) {
+   "use strict";
+   _elm.Graphics = _elm.Graphics || {};
+   _elm.Graphics.Input = _elm.Graphics.Input || {};
+   if (_elm.Graphics.Input.values)
+   return _elm.Graphics.Input.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Graphics.Input",
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Native$Graphics$Input = Elm.Native.Graphics.Input.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var clickable = $Native$Graphics$Input.clickable;
+   var hoverable = $Native$Graphics$Input.hoverable;
+   var dropDown = $Native$Graphics$Input.dropDown;
+   var checkbox = $Native$Graphics$Input.checkbox;
+   var customButton = $Native$Graphics$Input.customButton;
+   var button = $Native$Graphics$Input.button;
+   _elm.Graphics.Input.values = {_op: _op
+                                ,button: button
+                                ,customButton: customButton
+                                ,checkbox: checkbox
+                                ,dropDown: dropDown
+                                ,hoverable: hoverable
+                                ,clickable: clickable};
+   return _elm.Graphics.Input.values;
+};
 Elm.Html = Elm.Html || {};
 Elm.Html.make = function (_elm) {
    "use strict";
@@ -5830,43 +6200,72 @@ Elm.Main.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "Main",
    $App = Elm.App.make(_elm),
+   $App$Render$Main = Elm.App.Render.Main.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
    $Dropbox = Elm.Dropbox.make(_elm),
    $Keys = Elm.Keys.make(_elm),
+   $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm),
    $SampleData = Elm.SampleData.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Window = Elm.Window.make(_elm);
-   var initialDocument = $Outline$Entry.textZipper($SampleData.template);
+   var initialDocument = A2($Outline$Document$Model.scratchZipper,
+   0,
+   $SampleData.template);
+   var scratchChannel = $Signal.channel(0);
+   var tabsChannel = $Signal.channel("");
    var dropbox = $Dropbox.client("sy8pzlg66rwnv7n");
    var commands = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
                                                  $App.Key,
                                                  $Keys.lastPressed)
-                                                 ,$Signal.map($App.Loaded)(dropbox.read("outlin.json"))]));
+                                                 ,A2($Signal.map,
+                                                 $App.Tab,
+                                                 $Signal.subscribe(tabsChannel))
+                                                 ,A2($Signal.map,
+                                                 $App.Scratch,
+                                                 $Signal.subscribe(scratchChannel))
+                                                 ,$Signal.map($App.LoadedOutline)(dropbox.read("outlin.json"))
+                                                 ,$Signal.map($App.LoadedScratch)(dropbox.read("scratch.json"))]));
    var state = A3($Signal.foldp,
    $App.step,
    initialDocument,
    commands);
    var main = A3($Signal.map2,
-   $App.render,
+   A2($App$Render$Main.render,
+   tabsChannel,
+   scratchChannel),
    $Window.dimensions,
    state);
-   var jsonOutput = $Signal.dropRepeats(A2($Signal.map,
+   var outlineOutput = $Signal.dropRepeats(A2($Signal.map,
    function (x) {
-      return $Outline$Entry.toJson($Outline$Entry.toValue(x));
+      return $Outline$Entry.toJson($Outline$Document$Model.outlineValue(x));
    },
    state));
-   var toDropbox = A2(dropbox.write,
+   var scratchOutput = $Signal.dropRepeats(A2($Signal.map,
+   function (x) {
+      return $Core$Array.toJson($Outline$Scratch$Json.toJson)($Outline$Document$Model.scratchValue(x));
+   },
+   state));
+   var outlineToDropbox = A2(dropbox.write,
    "outlin.json",
-   jsonOutput);
+   outlineOutput);
+   var scratchToDropbox = A2(dropbox.write,
+   "scratch.json",
+   scratchOutput);
    _elm.Main.values = {_op: _op
                       ,dropbox: dropbox
+                      ,tabsChannel: tabsChannel
+                      ,scratchChannel: scratchChannel
                       ,commands: commands
                       ,initialDocument: initialDocument
                       ,state: state
                       ,main: main
-                      ,jsonOutput: jsonOutput
-                      ,toDropbox: toDropbox};
+                      ,outlineOutput: outlineOutput
+                      ,scratchOutput: scratchOutput
+                      ,outlineToDropbox: outlineToDropbox
+                      ,scratchToDropbox: scratchToDropbox};
    return _elm.Main.values;
 };
 Elm.Maybe = Elm.Maybe || {};
@@ -6926,7 +7325,7 @@ Elm.Native.Dropbox.make = function(elm) {
 
       client.readFile(filename, function(error, data) {
         if (error) {
-          return alert(error);
+          return console.log("elm-dropbox: " + filename + ": " + error);
         }
         console.log("elm-dropbox: " + filename + ": Read from Dropbox");
         elm.notify(output.id, data);
@@ -7897,6 +8296,419 @@ Elm.Native.Graphics.Element.make = function(localRuntime) {
         addTransform: addTransform,
         htmlHeight: F2(htmlHeight),
         guid: Utils.guid
+    };
+
+};
+
+// setup
+Elm.Native = Elm.Native || {};
+Elm.Native.Graphics = Elm.Native.Graphics || {};
+Elm.Native.Graphics.Input = Elm.Native.Graphics.Input || {};
+
+// definition
+Elm.Native.Graphics.Input.make = function(localRuntime) {
+    'use strict';
+
+    // attempt to short-circuit
+    if ('values' in Elm.Native.Graphics.Input) {
+        return Elm.Native.Graphics.Input.values;
+    }
+
+    var Color = Elm.Native.Color.make(localRuntime);
+    var List = Elm.Native.List.make(localRuntime);
+    var Text = Elm.Native.Text.make(localRuntime);
+    var Utils = Elm.Native.Utils.make(localRuntime);
+
+    var Element = Elm.Graphics.Element.make(localRuntime);
+    var NativeElement = Elm.Native.Graphics.Element.make(localRuntime);
+
+
+    function renderDropDown(model) {
+        var drop = NativeElement.createNode('select');
+        drop.style.border = '0 solid';
+        drop.style.pointerEvents = 'auto';
+        drop.style.display = 'block';
+
+        drop.elm_values = List.toArray(model.values);
+        var values = drop.elm_values;
+
+        for (var i = 0; i < values.length; ++i) {
+            var option = NativeElement.createNode('option');
+            var name = values[i]._0;
+            option.value = name;
+            option.innerHTML = name;
+            drop.appendChild(option);
+        }
+        drop.addEventListener('change', function() {
+            drop.elm_values[drop.selectedIndex]._1();
+        });
+
+        return drop;
+    }
+
+    function updateDropDown(node, oldModel, newModel) {
+        node.elm_values = List.toArray(newModel.values);
+
+        var values = node.elm_values;
+        var kids = node.childNodes;
+        var kidsLength = kids.length;
+
+        var i = 0;
+        for (; i < kidsLength && i < values.length; ++i) {
+            var option = kids[i];
+            var name = values[i]._0;
+            option.value = name;
+            option.innerHTML = name;
+        }
+        for (; i < kidsLength; ++i) {
+            node.removeChild(node.lastChild);
+        }
+        for (; i < values.length; ++i) {
+            var option = NativeElement.createNode('option');
+            var name = values[i]._0;
+            option.value = name;
+            option.innerHTML = name;
+            node.appendChild(option);
+        }
+        return node;
+    }
+
+    function dropDown(values) {
+        return A3(Element.newElement, 100, 24, {
+            ctor: 'Custom',
+            type: 'DropDown',
+            render: renderDropDown,
+            update: updateDropDown,
+            model: {
+                values: values
+            }
+        });
+    }
+
+    function renderButton(model) {
+        var node = NativeElement.createNode('button');
+        node.style.display = 'block';
+        node.style.pointerEvents = 'auto';
+        node.elm_message = model.message;
+        function click() {
+            node.elm_message();
+        }
+        node.addEventListener('click', click);
+        node.innerHTML = model.text;
+        return node;
+    }
+
+    function updateButton(node, oldModel, newModel) {
+        node.elm_message = newModel.message;
+        var txt = newModel.text;
+        if (oldModel.text !== txt) {
+            node.innerHTML = txt;
+        }
+        return node;
+    }
+
+    function button(message, text) {
+        return A3(Element.newElement, 100, 40, {
+            ctor: 'Custom',
+            type: 'Button',
+            render: renderButton,
+            update: updateButton,
+            model: {
+                message: message,
+                text:text
+            }
+        });
+    }
+
+    function renderCustomButton(model) {
+        var btn = NativeElement.createNode('div');
+        btn.style.pointerEvents = 'auto';
+        btn.elm_message = model.message;
+
+        btn.elm_up    = NativeElement.render(model.up);
+        btn.elm_hover = NativeElement.render(model.hover);
+        btn.elm_down  = NativeElement.render(model.down);
+
+        btn.elm_up.style.display = 'block';
+        btn.elm_hover.style.display = 'none';
+        btn.elm_down.style.display = 'none';
+  
+        btn.appendChild(btn.elm_up);
+        btn.appendChild(btn.elm_hover);
+        btn.appendChild(btn.elm_down);
+
+        function swap(visibleNode, hiddenNode1, hiddenNode2) {
+            visibleNode.style.display = 'block';
+            hiddenNode1.style.display = 'none';
+            hiddenNode2.style.display = 'none';
+        }
+
+        var overCount = 0;
+        function over(e) {
+            if (overCount++ > 0) return;
+            swap(btn.elm_hover, btn.elm_down, btn.elm_up);
+        }
+        function out(e) {
+            if (btn.contains(e.toElement || e.relatedTarget)) return;
+            overCount = 0;
+            swap(btn.elm_up, btn.elm_down, btn.elm_hover);
+        }
+        function up() {
+            swap(btn.elm_hover, btn.elm_down, btn.elm_up);
+            btn.elm_message();
+        }
+        function down() {
+            swap(btn.elm_down, btn.elm_hover, btn.elm_up);
+        }
+
+        btn.addEventListener('mouseover', over);
+        btn.addEventListener('mouseout' , out);
+        btn.addEventListener('mousedown', down);
+        btn.addEventListener('mouseup'  , up);
+
+        return btn;
+    }
+
+    function updateCustomButton(node, oldModel, newModel) {
+        node.elm_message = newModel.message;
+
+        var kids = node.childNodes;
+        var styleUp    = kids[0].style.display;
+        var styleHover = kids[1].style.display;
+        var styleDown  = kids[2].style.display;
+
+        NativeElement.updateAndReplace(kids[0], oldModel.up, newModel.up);
+        NativeElement.updateAndReplace(kids[1], oldModel.hover, newModel.hover);
+        NativeElement.updateAndReplace(kids[2], oldModel.down, newModel.down);
+
+        var kids = node.childNodes;
+        kids[0].style.display = styleUp;
+        kids[1].style.display = styleHover;
+        kids[2].style.display = styleDown;
+
+        return node;
+    }
+
+    function max3(a,b,c) {
+        var ab = a > b ? a : b;
+        return ab > c ? ab : c;
+    }
+
+    function customButton(message, up, hover, down) {
+        return A3(Element.newElement,
+                  max3(up.props.width, hover.props.width, down.props.width),
+                  max3(up.props.height, hover.props.height, down.props.height),
+                  { ctor: 'Custom',
+                    type: 'CustomButton',
+                    render: renderCustomButton,
+                    update: updateCustomButton,
+                    model: {
+                        message: message,
+                        up: up,
+                        hover: hover,
+                        down: down
+                    }
+                  });
+    }
+
+    function renderCheckbox(model) {
+        var node = NativeElement.createNode('input');
+        node.type = 'checkbox';
+        node.checked = model.checked;
+        node.style.display = 'block';
+        node.style.pointerEvents = 'auto';
+        node.elm_handler = model.handler;
+        function change() {
+            node.elm_handler(node.checked)();
+        }
+        node.addEventListener('change', change);
+        return node;
+    }
+
+    function updateCheckbox(node, oldModel, newModel) {
+        node.elm_handler = newModel.handler;
+        node.checked = newModel.checked;
+        return node;
+    }
+
+    function checkbox(handler, checked) {
+        return A3(Element.newElement, 13, 13, {
+            ctor: 'Custom',
+            type: 'CheckBox',
+            render: renderCheckbox,
+            update: updateCheckbox,
+            model: { handler:handler, checked:checked }
+        });
+    }
+
+    function setRange(node, start, end, dir) {
+        if (node.parentNode) {
+            node.setSelectionRange(start, end, dir);
+        } else {
+            setTimeout(function(){node.setSelectionRange(start, end, dir);}, 0);
+        }
+    }
+
+    function updateIfNeeded(css, attribute, latestAttribute) {
+        if (css[attribute] !== latestAttribute) {
+            css[attribute] = latestAttribute;
+        }
+    }
+    function cssDimensions(dimensions) {
+        return dimensions.top    + 'px ' +
+               dimensions.right  + 'px ' +
+               dimensions.bottom + 'px ' +
+               dimensions.left   + 'px';
+    }
+    function updateFieldStyle(css, style) {
+        updateIfNeeded(css, 'padding', cssDimensions(style.padding));
+
+        var outline = style.outline;
+        updateIfNeeded(css, 'border-width', cssDimensions(outline.width));
+        updateIfNeeded(css, 'border-color', Color.toCss(outline.color));
+        updateIfNeeded(css, 'border-radius', outline.radius + 'px');
+
+        var highlight = style.highlight;
+        if (highlight.width === 0) {
+            css.outline = 'none';
+        } else {
+            updateIfNeeded(css, 'outline-width', highlight.width + 'px');
+            updateIfNeeded(css, 'outline-color', Color.toCss(highlight.color));
+        }
+
+        var textStyle = style.style;
+        updateIfNeeded(css, 'color', Color.toCss(textStyle.color));
+        if (textStyle.typeface.ctor !== '[]') {
+            updateIfNeeded(css, 'font-family', Text.toTypefaces(textStyle.typeface));
+        }
+        if (textStyle.height.ctor !== "Nothing") {
+            updateIfNeeded(css, 'font-size', textStyle.height._0 + 'px');
+        }
+        updateIfNeeded(css, 'font-weight', textStyle.bold ? 'bold' : 'normal');
+        updateIfNeeded(css, 'font-style', textStyle.italic ? 'italic' : 'normal');
+        if (textStyle.line.ctor !== 'Nothing') {
+            updateIfNeeded(css, 'text-decoration', Text.toLine(textStyle.line._0));
+        }
+    }
+
+    function renderField(model) {
+        var field = NativeElement.createNode('input');
+        updateFieldStyle(field.style, model.style);
+        field.style.borderStyle = 'solid';
+        field.style.pointerEvents = 'auto';
+
+        field.type = model.type;
+        field.placeholder = model.placeHolder;
+        field.value = model.content.string;
+
+        field.elm_handler = model.handler;
+        field.elm_old_value = field.value;
+
+        function inputUpdate(event) {
+            var curr = field.elm_old_value;
+            var next = field.value;
+            if (curr === next) {
+                return;
+            }
+
+            var direction = field.selectionDirection === 'forward' ? 'Forward' : 'Backward';
+            var start = field.selectionStart;
+            var end = field.selectionEnd;
+            field.value = field.elm_old_value;
+
+            field.elm_handler({
+                _:{},
+                string: next,
+                selection: {
+                    _:{},
+                    start: start,
+                    end: end,
+                    direction: { ctor: direction }
+                }
+            })();
+        }
+
+        field.addEventListener('input', inputUpdate);
+        field.addEventListener('focus', function() {
+            field.elm_hasFocus = true;
+        });
+        field.addEventListener('blur', function() {
+            field.elm_hasFocus = false;
+        });
+
+        return field;
+    }
+
+    function updateField(field, oldModel, newModel) {
+        if (oldModel.style !== newModel.style) {
+            updateFieldStyle(field.style, newModel.style);
+        }
+        field.elm_handler = newModel.handler;
+
+        field.type = newModel.type;
+        field.placeholder = newModel.placeHolder;
+        var value = newModel.content.string;
+        field.value = value;
+        field.elm_old_value = value;
+        if (field.elm_hasFocus) {
+            var selection = newModel.content.selection;
+            var direction = selection.direction.ctor === 'Forward' ? 'forward' : 'backward';
+            setRange(field, selection.start, selection.end, direction);
+        }
+        return field;
+    }
+
+    function mkField(type) {
+        function field(style, handler, placeHolder, content) {
+            var padding = style.padding;
+            var outline = style.outline.width;
+            var adjustWidth = padding.left + padding.right + outline.left + outline.right;
+            var adjustHeight = padding.top + padding.bottom + outline.top + outline.bottom;
+            return A3(Element.newElement, 200, 30, {
+                ctor: 'Custom',
+                type: type + 'Field',
+                adjustWidth: adjustWidth,
+                adjustHeight: adjustHeight,
+                render: renderField,
+                update: updateField,
+                model: {
+                    handler:handler,
+                    placeHolder:placeHolder,
+                    content:content,
+                    style:style,
+                    type:type
+                }
+            });
+        }
+        return F4(field);
+    }
+
+    function hoverable(handler, elem) {
+        function onHover(bool) {
+            handler(bool)();
+        }
+        var props = Utils.replace([['hover',onHover]], elem.props);
+        return { props:props, element:elem.element };
+    }
+
+    function clickable(message, elem) {
+        function onClick() {
+            message();
+        }
+        var props = Utils.replace([['click',onClick]], elem.props);
+        return { props:props, element:elem.element };
+    }
+
+    return Elm.Native.Graphics.Input.values = {
+        button: F2(button),
+        customButton: F4(customButton),
+        checkbox: F2(checkbox),
+        dropDown: dropDown,
+        field: mkField('text'),
+        email: mkField('email'),
+        password: mkField('password'),
+        hoverable: F2(hoverable),
+        clickable: F2(clickable)
     };
 
 };
@@ -12765,21 +13577,306 @@ Elm.Native.Window.make = function(localRuntime) {
 
 Elm.Outline = Elm.Outline || {};
 Elm.Outline.Document = Elm.Outline.Document || {};
-Elm.Outline.Document.make = function (_elm) {
+Elm.Outline.Document.Actions = Elm.Outline.Document.Actions || {};
+Elm.Outline.Document.Actions.make = function (_elm) {
    "use strict";
    _elm.Outline = _elm.Outline || {};
    _elm.Outline.Document = _elm.Outline.Document || {};
-   if (_elm.Outline.Document.values)
-   return _elm.Outline.Document.values;
+   _elm.Outline.Document.Actions = _elm.Outline.Document.Actions || {};
+   if (_elm.Outline.Document.Actions.values)
+   return _elm.Outline.Document.Actions.values;
    var _op = {},
    _N = Elm.Native,
    _U = _N.Utils.make(_elm),
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
-   $moduleName = "Outline.Document",
-   $Outline$Entry = Elm.Outline.Entry.make(_elm);
-   _elm.Outline.Document.values = {_op: _op};
-   return _elm.Outline.Document.values;
+   $moduleName = "Outline.Document.Actions",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Scratch$Actions = Elm.Outline.Scratch.Actions.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
+   var $do = F3(function (scratchFn,
+   entryFn,
+   zipper) {
+      return function () {
+         switch (zipper.ctor)
+         {case "InOutline":
+            return function () {
+                 var _v5 = entryFn(zipper._1);
+                 switch (_v5.ctor)
+                 {case "Delete":
+                    return $Core$Action.NoChange;
+                    case "EnterNext":
+                    return $Core$Action.NoChange;
+                    case "EnterPrev":
+                    return function () {
+                         var _v10 = A2($Core$Array.firstZipperM,
+                         $Outline$Scratch$Model.endZipper,
+                         zipper._0);
+                         switch (_v10.ctor)
+                         {case "Just":
+                            return $Core$Action.Update(A2($Outline$Document$Model.InScratch,
+                              _v10._0,
+                              $Outline$Entry.toValue(zipper._1)));
+                            case "Nothing":
+                            return $Core$Action.NoChange;}
+                         _U.badCase($moduleName,
+                         "between lines 27 and 30");
+                      }();
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return $Core$Action.NoChange;
+                    case "Update":
+                    return $Core$Action.Update(A2($Outline$Document$Model.InOutline,
+                      zipper._0,
+                      _v5._0));}
+                 _U.badCase($moduleName,
+                 "between lines 23 and 31");
+              }();
+            case "InScratch":
+            return function () {
+                 var _v12 = A5($Core$Array.$do,
+                 $Outline$Scratch$Model.toValue,
+                 $Outline$Scratch$Model.endZipper,
+                 $Outline$Scratch$Model.endZipper,
+                 scratchFn,
+                 zipper._0);
+                 switch (_v12.ctor)
+                 {case "Delete":
+                    return $Core$Action.NoChange;
+                    case "EnterNext":
+                    return $Core$Action.Update(A2($Outline$Document$Model.InOutline,
+                      A2($Core$Array.toValue,
+                      $Outline$Scratch$Model.toValue,
+                      zipper._0),
+                      $Outline$Entry.textZipper(zipper._1)));
+                    case "EnterPrev":
+                    return $Core$Action.NoChange;
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return $Core$Action.NoChange;
+                    case "Update":
+                    return $Core$Action.Update(A2($Outline$Document$Model.InScratch,
+                      _v12._0,
+                      zipper._1));}
+                 _U.badCase($moduleName,
+                 "between lines 16 and 23");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 15 and 31");
+      }();
+   });
+   var doEntry = function (entryFn) {
+      return A2($do,
+      function (_v17) {
+         return function () {
+            return $Core$Action.NoChange;
+         }();
+      },
+      entryFn);
+   };
+   var doText = function (stringFn) {
+      return A2($do,
+      $Outline$Scratch$Actions.$do(stringFn),
+      $Outline$Entry.$do(stringFn));
+   };
+   var enter = A2($do,
+   $Outline$Scratch$Actions.$do($Core$String.insert("\n")),
+   $Outline$Entry.$do($Core$String.split));
+   _elm.Outline.Document.Actions.values = {_op: _op
+                                          ,$do: $do
+                                          ,doEntry: doEntry
+                                          ,doText: doText
+                                          ,enter: enter};
+   return _elm.Outline.Document.Actions.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Document = Elm.Outline.Document || {};
+Elm.Outline.Document.Json = Elm.Outline.Document.Json || {};
+Elm.Outline.Document.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Document = _elm.Outline.Document || {};
+   _elm.Outline.Document.Json = _elm.Outline.Document.Json || {};
+   if (_elm.Outline.Document.Json.values)
+   return _elm.Outline.Document.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Document.Json",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm);
+   var toJson = function (v) {
+      return A2($Basics._op["++"],
+      "{\"scratch\":",
+      A2($Basics._op["++"],
+      A2($Core$Array.toJson,
+      $Outline$Scratch$Json.toJson,
+      v.scratch),
+      A2($Basics._op["++"],
+      ",\"outline\":",
+      A2($Basics._op["++"],
+      $Outline$Entry.toJson(v.outline),
+      "}"))));
+   };
+   _elm.Outline.Document.Json.values = {_op: _op
+                                       ,toJson: toJson};
+   return _elm.Outline.Document.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Document = Elm.Outline.Document || {};
+Elm.Outline.Document.Model = Elm.Outline.Document.Model || {};
+Elm.Outline.Document.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Document = _elm.Outline.Document || {};
+   _elm.Outline.Document.Model = _elm.Outline.Document.Model || {};
+   if (_elm.Outline.Document.Model.values)
+   return _elm.Outline.Document.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Document.Model",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
+   var toValue = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InOutline": return {_: {}
+                                   ,outline: $Outline$Entry.toValue(z._1)
+                                   ,scratch: z._0};
+            case "InScratch": return {_: {}
+                                     ,outline: z._1
+                                     ,scratch: A2($Core$Array.toValue,
+                                     $Outline$Scratch$Model.toValue,
+                                     z._0)};}
+         _U.badCase($moduleName,
+         "between lines 18 and 20");
+      }();
+   };
+   var outlineValue = function (z) {
+      return function (_) {
+         return _.outline;
+      }(toValue(z));
+   };
+   var scratchValue = function (z) {
+      return function (_) {
+         return _.scratch;
+      }(toValue(z));
+   };
+   var InOutline = F2(function (a,
+   b) {
+      return {ctor: "InOutline"
+             ,_0: a
+             ,_1: b};
+   });
+   var outlineZipper = function (_v5) {
+      return function () {
+         return A2(InOutline,
+         _v5.scratch,
+         $Outline$Entry.textZipper(_v5.outline));
+      }();
+   };
+   var InScratch = F2(function (a,
+   b) {
+      return {ctor: "InScratch"
+             ,_0: a
+             ,_1: b};
+   });
+   var scratchZipper = F2(function (i,
+   _v7) {
+      return function () {
+         return function () {
+            var _v9 = A3($Core$Array.zipperAtM,
+            i,
+            $Outline$Scratch$Model.endZipper,
+            _v7.scratch);
+            switch (_v9.ctor)
+            {case "Just":
+               return A2(InScratch,
+                 _v9._0,
+                 _v7.outline);}
+            _U.badCase($moduleName,
+            "between lines 29 and 31");
+         }();
+      }();
+   });
+   var replaceOutline = F2(function (z,
+   outline) {
+      return function () {
+         switch (z.ctor)
+         {case "InOutline":
+            return A2(InOutline,
+              z._0,
+              $Outline$Entry.textZipper(outline));
+            case "InScratch":
+            return A2(InScratch,
+              z._0,
+              outline);}
+         _U.badCase($moduleName,
+         "between lines 37 and 39");
+      }();
+   });
+   var replaceScratch = F2(function (z,
+   scratch) {
+      return function () {
+         switch (z.ctor)
+         {case "InOutline":
+            return A2(InOutline,
+              scratch,
+              z._1);
+            case "InScratch":
+            return function () {
+                 var _v21 = A2($Core$Array.firstZipperM,
+                 $Outline$Scratch$Model.endZipper,
+                 scratch);
+                 switch (_v21.ctor)
+                 {case "Just":
+                    return A2(InScratch,
+                      _v21._0,
+                      z._1);
+                    case "Nothing": return z;}
+                 _U.badCase($moduleName,
+                 "between lines 43 and 46");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 42 and 46");
+      }();
+   });
+   var Value = F2(function (a,b) {
+      return {_: {}
+             ,outline: b
+             ,scratch: a};
+   });
+   _elm.Outline.Document.Model.values = {_op: _op
+                                        ,toValue: toValue
+                                        ,scratchValue: scratchValue
+                                        ,outlineValue: outlineValue
+                                        ,scratchZipper: scratchZipper
+                                        ,outlineZipper: outlineZipper
+                                        ,replaceOutline: replaceOutline
+                                        ,replaceScratch: replaceScratch
+                                        ,Value: Value
+                                        ,InScratch: InScratch
+                                        ,InOutline: InOutline};
+   return _elm.Outline.Document.Model.values;
 };
 Elm.Outline = Elm.Outline || {};
 Elm.Outline.Entry = Elm.Outline.Entry || {};
@@ -12837,7 +13934,7 @@ Elm.Outline.Entry.make = function (_elm) {
               entry._0.children),
               "}"))))))));}
          _U.badCase($moduleName,
-         "between lines 319 and 324");
+         "between lines 306 and 311");
       }();
    };
    var swap = F5(function (ai,
@@ -13467,16 +14564,6 @@ Elm.Outline.Entry.make = function (_elm) {
          "between lines 232 and 262");
       }();
    });
-   var goLeft = $do($Core$String.goLeft);
-   var goRight = $do($Core$String.goRight);
-   var backspace = $do($Core$String.backspace);
-   var $delete = $do($Core$String.$delete);
-   var insert = function (s) {
-      return $do($Core$String.insert(s));
-   };
-   var enter = $do($Core$String.split);
-   var goNext = $do($Core$Action.always($Core$Action.EnterNext));
-   var goPrev = $do($Core$Action.always($Core$Action.EnterPrev));
    var addInboxItem__ = F2(function (s,
    en) {
       return function () {
@@ -13687,20 +14774,12 @@ Elm.Outline.Entry.make = function (_elm) {
       }();
    })))));
    _elm.Outline.Entry.values = {_op: _op
-                               ,insert: insert
-                               ,backspace: backspace
-                               ,enter: enter
                                ,addInboxItem: addInboxItem
                                ,promote: promote
                                ,moveInto: moveInto
                                ,missort: missort
                                ,moveChildUp: moveChildUp
                                ,moveChildDown: moveChildDown
-                               ,$delete: $delete
-                               ,goLeft: goLeft
-                               ,goRight: goRight
-                               ,goNext: goNext
-                               ,goPrev: goPrev
                                ,decoder: decoder
                                ,toJson: toJson
                                ,emptyEntry: emptyEntry
@@ -13723,6 +14802,85 @@ Elm.Outline.Entry.make = function (_elm) {
                                ,InInbox: InInbox
                                ,InChild: InChild};
    return _elm.Outline.Entry.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Scratch = Elm.Outline.Scratch || {};
+Elm.Outline.Scratch.Actions = Elm.Outline.Scratch.Actions || {};
+Elm.Outline.Scratch.Actions.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Scratch = _elm.Outline.Scratch || {};
+   _elm.Outline.Scratch.Actions = _elm.Outline.Scratch.Actions || {};
+   if (_elm.Outline.Scratch.Actions.values)
+   return _elm.Outline.Scratch.Actions.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Scratch.Actions",
+   $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
+   var $do = function (stringFn) {
+      return stringFn;
+   };
+   _elm.Outline.Scratch.Actions.values = {_op: _op
+                                         ,$do: $do};
+   return _elm.Outline.Scratch.Actions.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Scratch = Elm.Outline.Scratch || {};
+Elm.Outline.Scratch.Json = Elm.Outline.Scratch.Json || {};
+Elm.Outline.Scratch.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Scratch = _elm.Outline.Scratch || {};
+   _elm.Outline.Scratch.Json = _elm.Outline.Scratch.Json || {};
+   if (_elm.Outline.Scratch.Json.values)
+   return _elm.Outline.Scratch.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Scratch.Json",
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
+   var decoder = $Core$String.decoder;
+   var listDecoder = $Json$Decode.list(decoder);
+   var toJson = $Core$String.toJson;
+   _elm.Outline.Scratch.Json.values = {_op: _op
+                                      ,toJson: toJson
+                                      ,decoder: decoder
+                                      ,listDecoder: listDecoder};
+   return _elm.Outline.Scratch.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Scratch = Elm.Outline.Scratch || {};
+Elm.Outline.Scratch.Model = Elm.Outline.Scratch.Model || {};
+Elm.Outline.Scratch.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Scratch = _elm.Outline.Scratch || {};
+   _elm.Outline.Scratch.Model = _elm.Outline.Scratch.Model || {};
+   if (_elm.Outline.Scratch.Model.values)
+   return _elm.Outline.Scratch.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Scratch.Model",
+   $Core$String = Elm.Core.String.make(_elm);
+   var endZipper = $Core$String.endZipper;
+   var toValue = $Core$String.toValue;
+   _elm.Outline.Scratch.Model.values = {_op: _op
+                                       ,toValue: toValue
+                                       ,endZipper: endZipper};
+   return _elm.Outline.Scratch.Model.values;
 };
 Elm.Regex = Elm.Regex || {};
 Elm.Regex.make = function (_elm) {
@@ -13876,133 +15034,138 @@ Elm.SampleData.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "SampleData",
    $Outline$Entry = Elm.Outline.Entry.make(_elm);
-   var template = $Outline$Entry.Entry({_: {}
-                                       ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
-                                                                                     ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "daily"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "weekly"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "waiting on"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "monthly"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "yearly, etc."})])
-                                                                                     ,description: ""
-                                                                                     ,inbox: _L.fromArray([])
-                                                                                     ,text: "By time (deadline)"})
-                                                               ,$Outline$Entry.Entry({_: {}
-                                                                                     ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "daily"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "weekly"})
-                                                                                                             ,$Outline$Entry.Entry({_: {}
-                                                                                                                                   ,children: _L.fromArray([])
-                                                                                                                                   ,description: ""
-                                                                                                                                   ,inbox: _L.fromArray([])
-                                                                                                                                   ,text: "monthly"})])
-                                                                                     ,description: ""
-                                                                                     ,inbox: _L.fromArray([])
-                                                                                     ,text: "Habits"})
-                                                               ,$Outline$Entry.Entry({_: {}
-                                                                                     ,children: _L.fromArray([])
-                                                                                     ,description: ""
-                                                                                     ,inbox: _L.fromArray([])
-                                                                                     ,text: "By priorty"})
-                                                               ,$Outline$Entry.Entry({_: {}
-                                                                                     ,children: _L.fromArray([])
-                                                                                     ,description: ""
-                                                                                     ,inbox: _L.fromArray([])
-                                                                                     ,text: "By project"})])
-                                       ,description: ""
-                                       ,inbox: _L.fromArray([$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "sdfs"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Bacon"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Freddy"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Jo-jo"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Fish"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Fries"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Pork"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Lacey"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "quux"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "sdfsd"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Billy"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "Camilla"})
-                                                            ,$Outline$Entry.Entry({_: {}
-                                                                                  ,children: _L.fromArray([])
-                                                                                  ,description: ""
-                                                                                  ,inbox: _L.fromArray([])
-                                                                                  ,text: "baz"})])
-                                       ,text: "Tasks (LOADING...)"});
+   var outline = $Outline$Entry.Entry({_: {}
+                                      ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
+                                                                                    ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "daily"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "weekly"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "waiting on"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "monthly"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "yearly, etc."})])
+                                                                                    ,description: ""
+                                                                                    ,inbox: _L.fromArray([])
+                                                                                    ,text: "By time (deadline)"})
+                                                              ,$Outline$Entry.Entry({_: {}
+                                                                                    ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "daily"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "weekly"})
+                                                                                                            ,$Outline$Entry.Entry({_: {}
+                                                                                                                                  ,children: _L.fromArray([])
+                                                                                                                                  ,description: ""
+                                                                                                                                  ,inbox: _L.fromArray([])
+                                                                                                                                  ,text: "monthly"})])
+                                                                                    ,description: ""
+                                                                                    ,inbox: _L.fromArray([])
+                                                                                    ,text: "Habits"})
+                                                              ,$Outline$Entry.Entry({_: {}
+                                                                                    ,children: _L.fromArray([])
+                                                                                    ,description: ""
+                                                                                    ,inbox: _L.fromArray([])
+                                                                                    ,text: "By priorty"})
+                                                              ,$Outline$Entry.Entry({_: {}
+                                                                                    ,children: _L.fromArray([])
+                                                                                    ,description: ""
+                                                                                    ,inbox: _L.fromArray([])
+                                                                                    ,text: "By project"})])
+                                      ,description: ""
+                                      ,inbox: _L.fromArray([$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "sdfs"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Bacon"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Freddy"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Jo-jo"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Fish"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Fries"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Pork"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Lacey"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "quux"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "sdfsd"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Billy"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "Camilla"})
+                                                           ,$Outline$Entry.Entry({_: {}
+                                                                                 ,children: _L.fromArray([])
+                                                                                 ,description: ""
+                                                                                 ,inbox: _L.fromArray([])
+                                                                                 ,text: "baz"})])
+                                      ,text: "Tasks (LOADING...)"});
+   var template = {_: {}
+                  ,outline: outline
+                  ,scratch: _L.fromArray(["Scratch 3"
+                                         ,"Scratch 2"])};
    _elm.SampleData.values = {_op: _op
+                            ,outline: outline
                             ,template: template};
    return _elm.SampleData.values;
 };
