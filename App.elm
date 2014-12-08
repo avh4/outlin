@@ -17,6 +17,7 @@ import Color (..)
 import Text
 import Outline.Document.Model as Document
 import Outline.Document.Actions as Document
+import Outline.Scratch.Json as Scratch
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
 import Graphics.Collage (collage, toForm, rotate)
@@ -54,7 +55,8 @@ updateText stringFn z = case Document.doText stringFn z of
 
 type Command
   = Key Keys.KeyCombo
-  | Loaded String
+  | LoadedOutline String
+  | LoadedScratch String
   | Tab String
   | Scratch Int
 
@@ -91,8 +93,11 @@ step c m = case c of
   
   Scratch i -> updateValue (Document.scratchZipper i) m
 
-  -- Loaded s -> case Json.Decode.decodeString Entry.decoder s of
-  --   Ok doc -> Document.outlineZipper doc
-  --   x -> fst (m, Debug.log "Load failed" x)
-  
+  LoadedOutline s -> case Json.Decode.decodeString Entry.decoder s of
+    Ok doc -> Document.replaceOutline m doc
+    x -> fst (m, Debug.log "Load failed" x)
+  LoadedScratch s -> case Json.Decode.decodeString Scratch.listDecoder s of
+    Ok doc -> Document.replaceScratch m doc
+    x -> fst (m, Debug.log "Load failed" x)
+
   x -> fst (m, Debug.log "Unhandled command" x)
