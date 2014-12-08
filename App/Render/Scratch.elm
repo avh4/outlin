@@ -8,9 +8,12 @@ import Graphics.Input (clickable)
 import Color (..)
 import Text (plainText)
 import Signal
+import String
+import List
 
 navItem : Signal.Channel Int -> Int -> Scratch.Value -> Element
 navItem channel i v = v
+  |> String.split "\n" |> List.head
   |> plainText
   |> width 200
   |> height 40
