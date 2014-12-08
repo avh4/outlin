@@ -55,6 +55,7 @@ updateText stringFn z = case Document.doText stringFn z of
 
 type Command
   = Key Keys.KeyCombo
+  | Paste String
   | LoadedOutline String
   | LoadedScratch String
   | Tab String
@@ -87,6 +88,7 @@ step c m = case c of
   Key (Keys.Shift (Keys.Left)) -> updateEntry EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
+  Paste s -> updateText (Core.String.insert s) m
   
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m
