@@ -69,8 +69,6 @@ step c m = case c of
   Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
   Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
   Key (Keys.Single (Keys.Enter)) -> updateZipper Document.enter m
-  Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
-  Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
   Key (Keys.CommandCharacter "d") -> updateText Core.String.delete m
   Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m
@@ -88,7 +86,15 @@ step c m = case c of
   Key (Keys.Shift (Keys.Left)) -> updateEntry EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
+
+  -- Text
+  Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
+  Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Paste s -> updateText (Core.String.insert s) m
+
+  -- Selection
+  Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStart m
+  Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEnd m
   
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m

@@ -1,4 +1,4 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt, toTuple, decoder) where
+module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, toJson, startZipper, endZipper, toValue, zipper, zipperAt, decoder) where
 
 import Core.Action as Action
 import String
@@ -8,62 +8,53 @@ import Html.Attributes (class)
 import Json.Decode
 
 type alias Value = String
-type alias Zipper = (String,Int)
+type alias Zipper = (String,String,String)
 type alias Result = Action.Result Value Zipper
 
 startZipper : Value -> Zipper
-startZipper v = (v,0)
+startZipper v = ("","",v)
 
 endZipper : Value -> Zipper
-endZipper v = (v,String.length v)
+endZipper v = (v,"","")
 
 zipper : String -> String -> Zipper
-zipper left right = (left ++ right, String.length left)
+zipper left right = (left,"",right)
 
 zipperAt : Int -> Value -> Zipper
-zipperAt i s = (s, i)
+zipperAt i s = (String.left i s, "", String.dropLeft i s)
 
 toValue : Zipper -> Value
-toValue (v,_) = v
-
-toTuple : Zipper -> (String,String)
-toTuple (s,i) = (String.left i s, String.dropLeft i s)
-
-split_ : Zipper -> (Value, Zipper)
-split_ (v,i) = (String.left i v, startZipper (String.dropLeft i v))
-
-update char value cursor =
-  (String.left cursor value)
-  ++ char
-  ++ (String.dropLeft cursor value)
-
-move char value cursor =
-  cursor + String.length char
+toValue (left,sel,right) = left ++ sel ++ right
 
 insert : String -> Zipper -> Result
-insert s (v,c) = Action.Update ((update s v c),(move s v c))
+insert s (left,sel,right) = Action.Update (left ++ s, "", right)
 
 backspace : Zipper -> Result
-backspace (v,c) = case (v,c) of
-  (_, 0) -> Action.NoChange
-  _ -> Action.Update ((String.left (c-1) v ++ String.dropLeft c v),(c-1))
+backspace z = case z of
+  ("", "", _) -> Action.NoChange
+  (left, "", right) -> Action.Update (String.dropRight 1 left, "", right)
+  (left, _, right) -> Action.Update (left, "", right)
 
-goLeft = Action.nav (\_ c -> if c > 0 then c-1 else c)
-goRight = Action.nav (\v c -> min (String.length v) (c+1))
+goLeft z = case z of
+  ("", "", _) -> Action.NoChange
+  (left, "", right) -> Action.Update (String.dropRight 1 left, "", String.right 1 left ++ right)
+  (left, sel, right) -> Action.Update (left, "", sel ++ right)
 
-delete = Action.always Action.Delete
+goRight z = case z of
+  (_, "", "") -> Action.NoChange
+  (left, "", right) -> Action.Update (left ++ String.left 1 right, "", String.dropLeft 1 right)
+  (left, sel, right) -> Action.Update (left ++ sel, "", right)
+
+delete z = Action.Delete
 
 split : Zipper -> Result
-split (s,n) = Action.Split [String.left n s] (String.dropLeft n s, 0) []
+split (left,_,right) = Action.Split [left] (startZipper right) []
 
-renderValue : Value -> Html
-renderValue value = text value
+selectToStart : Zipper -> Result
+selectToStart (left,sel,right) = Action.Update ("", left ++ sel, right)
 
-renderZipper : Zipper -> Html
-renderZipper (value,cursor) = node "span" [] [
-  text <| String.left cursor value,
-  node "span" [ class "cursor" ] [ text "^" ],
-  text <| String.dropLeft cursor value ]
+selectToEnd : Zipper -> Result
+selectToEnd (left,sel,right) = Action.Update (left, sel ++ right, "")
 
 ---- JSON
 

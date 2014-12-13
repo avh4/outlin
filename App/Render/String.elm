@@ -16,11 +16,13 @@ lines stringWithNewlines = stringWithNewlines
   |> List.map line
 
 render : Core.String.Zipper -> Element
-render (value,cursor) = node "span"
+render (left,sel,right) = node "span"
   [ style [ ("white-space", "pre-wrap")]
   ]
-  [ text <| String.left cursor value
+  [ text <| left
   , node "span" [ class "cursor" ] [ text "^" ]
-  , text <| String.dropLeft cursor value
+  , text <| sel
+  , node "span" [ class "cursor" ] [ text "^" ]
+  , text <| right
   ]
   |> toElement 100 100

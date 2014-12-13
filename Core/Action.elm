@@ -1,4 +1,4 @@
-module Core.Action (nav, change, always, Result(..)) where
+module Core.Action (always, Result(..)) where
 
 type Result value zipper =
   Update zipper |
@@ -7,11 +7,6 @@ type Result value zipper =
   EnterPrev | EnterNext |
   NoChange
 
-nav : (v -> c -> c) -> (v,c) -> Result v (v,c)
-nav fn = \(v,c) -> Update (v, (fn v c))
-
-change : (v -> c -> v) -> (v,c) -> Result v (v,c)
-change fn = \(v,c) -> Update ((fn v c), c)
-
-always : Result v (v,c) -> (v,c) -> Result v (v,c)
-always r = \_ -> r
+-- TODO: get rid of this--only used in tests
+always : Result v z -> z -> Result v z
+always r _ = r
