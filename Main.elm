@@ -27,14 +27,25 @@ dropbox = Dropbox.client "mjplyqeks6z3js8"
 tabsChannel = Signal.channel ""
 scratchChannel = Signal.channel 0
 
+decode : Json.Decode.Decoder x -> String -> Maybe x
+decode decoder s = case Json.Decode.decodeString decoder s of
+  Ok doc -> Just doc
+  x -> fst (Nothing, Debug.log "Load failed" x)
+
+fromDropbox : String -> Json.Decode.Decoder x -> (Maybe x -> Command)
+fromDropbox filename decoder fn =
+  dropbox.read filename
+  |> decode decoder
+  |> Signal.map fn
+
 commands : Signal Command
 commands = Signal.mergeMany
   [ Signal.map Key Keys.lastPressed
   , Signal.map Paste Keys.pastes
   , Signal.map Tab (Signal.subscribe tabsChannel)
   , Signal.map Scratch (Signal.subscribe scratchChannel)
-  , Signal.map LoadedOutline <| dropbox.read "outlin.json"
-  , Signal.map LoadedScratch <| dropbox.read "scratch.json"
+  , fromDropbox "outlin.json" Entry.decoder LoadedOutline
+  , fromDropbox "scratch.json" Scratch.listDecoder LoadedScratch
   ]
 
 initialDocument = (Document.scratchZipper 0 SampleData.template)

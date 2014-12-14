@@ -1,4 +1,4 @@
-module Core.Array (Value, Zipper, toValue, do, split, toJson, firstZipper, lastZipper, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
+module Core.Array (Value, Zipper, toValue, do, toJson, firstZipper, lastZipper, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action as Action
 import List
@@ -116,13 +116,6 @@ do toVal nextFn prevFn action (left,cur,right) = case action cur of
     (next :: tail) -> Action.Update (tail, prevFn next, toVal cur :: right)
     [] -> Action.EnterPrev
   Action.NoChange -> Action.NoChange
-
-split_ : (z -> (v, z)) -> z -> Action.Result v z
-split_ fn z = case fn z of
-  (v1, new) -> Action.Split [v1] new []
-
-split : (z -> v) -> (v -> z) -> (v -> z) -> (z -> (v, z)) -> Zipper v z -> Result v z
-split toVal nextCursor prevCursor fn = do toVal nextCursor prevCursor (split_ fn)
 
 moveUp : Zipper v z -> Maybe (Zipper v z)
 moveUp (left,cur,right) = case left of

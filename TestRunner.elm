@@ -1,14 +1,16 @@
 module Main where
 
-import Test
-import ElmTest.Run as Run
-import ElmTest.Runner.Element as Element
-import ElmTest.Runner.String  as String
+import IO.IO (..)
+import IO.Runner (Request, Response, run)
 
-prettyOut : Element
-prettyOut = Element.runDisplay Test.suite
+import ElmTest.Runner.Console (runDisplay)
 
-main : Element
-main = flow down [ plainText "\nThe Element runner:\n\n"
-                 , prettyOut
-                 ]
+import Tests
+
+testRunner : IO ()
+testRunner = runDisplay Tests.all
+
+port requests : Signal Request
+port requests = run responses testRunner
+
+port responses : Signal Response

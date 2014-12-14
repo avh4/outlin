@@ -7,117 +7,127 @@ import Core.Action as Action
 import Outline.Entry as Entry
 import Outline.Entry (entry,BaseZipper(..))
 import Core.Array
+import Core.String
+import List (map)
 
 textEntry s = entry s "" [] []
 
 simpleTree = (entry "root" "" [] [textEntry "a", textEntry "b"])
 
+backspace = Entry.do Core.String.backspace
+enter = Entry.do Core.String.split
+goLeft = Entry.do Core.String.goLeft
+goRight = Entry.do Core.String.goRight
+goNext = Entry.do (\_ -> Action.EnterNext)
+goPrev = Entry.do (\_ -> Action.EnterPrev)
+delete = Entry.do (\_ -> Action.Delete)
+
 backspaceTest : Test
 backspaceTest = Suite "backspace"
-  [ Entry.backspace (textEntry "Elm" |> Entry.textZipperAt 1)
+  [ backspace (textEntry "Elm" |> Entry.textZipperAt 1)
       `equals` Action.Update (textEntry "lm" |> Entry.textZipperAt 0)
   ]
 
 navTest = Suite "navigation"
   [ Suite "text"
     [ test "can go left in text" <|
-      Entry.goLeft (textEntry "ab" |> Entry.textZipperAt 1)
+      goLeft (textEntry "ab" |> Entry.textZipperAt 1)
         `assertEqual` Action.Update (textEntry "ab" |> Entry.textZipperAt 0)
     , test "go left stops at the edge" <|
-      Entry.goLeft ((textEntry "ab") |> Entry.textZipperAt 0)
-        `assertEqual` Action.Update ((textEntry "ab") |> Entry.textZipperAt 0)
+      goLeft ((textEntry "ab") |> Entry.textZipperAt 0)
+        `assertEqual` Action.NoChange
     , test "can go right in text" <|
-      Entry.goRight ((textEntry "ab") |> Entry.textZipperAt 1)
+      goRight ((textEntry "ab") |> Entry.textZipperAt 1)
         `assertEqual` Action.Update ((textEntry "ab") |> Entry.textZipperAt 2)
     , test "go right stops at the edge" <|
-      Entry.goRight ((textEntry "ab") |> Entry.textZipperAt 2)
-        `assertEqual` Action.Update ((textEntry "ab") |> Entry.textZipperAt 2)
+      goRight ((textEntry "ab") |> Entry.textZipperAt 2)
+        `assertEqual` Action.NoChange
     ]
   , Suite "children"
     [ test "can go to next child" <|
-      Entry.goNext (Entry.childZipper (Core.Array.firstZipper Entry.textZipper) simpleTree)
+      goNext (Entry.childZipper (Core.Array.firstZipper Entry.textZipper) simpleTree)
         `assertEqual` Action.Update (Entry.childZipper (Core.Array.lastZipper Entry.textZipper) simpleTree)
     , test "can go to prev child" <|
-      Entry.goPrev (simpleTree |> (Entry.childZipper <| Core.Array.lastZipper Entry.textZipper))
+      goPrev (simpleTree |> (Entry.childZipper <| Core.Array.lastZipper Entry.textZipper))
         `assertEqual` Action.Update (simpleTree |> (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))
     , test "can go into child" <|
-      Entry.goNext (simpleTree |> Entry.textZipper)
+      goNext (simpleTree |> Entry.textZipper)
         `assertEqual` Action.Update (simpleTree |> (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))
     , test "can go out of child" <|
-      Entry.goPrev (simpleTree |> (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))
+      goPrev (simpleTree |> (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))
         `assertEqual` Action.Update (simpleTree |> Entry.textZipper)
     , test "can go to next parent" <|
       let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
-      in Entry.goNext (tree |> (Entry.childZipper (Core.Array.firstZipper (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))))
+      in goNext (tree |> (Entry.childZipper (Core.Array.firstZipper (Entry.childZipper <| Core.Array.firstZipper Entry.textZipper))))
         `assertEqual` Action.Update (tree |> (Entry.childZipper <| Core.Array.lastZipper Entry.textZipper))
     , test "can go to child of previous parent" <|
       let tree = (entry "" "" [] [entry "" "" [] [textEntry "a"], entry "" "" [] []])
-      in Entry.goPrev (tree |> Entry.childZipper (Core.Array.lastZipper Entry.textZipper))
+      in goPrev (tree |> Entry.childZipper (Core.Array.lastZipper Entry.textZipper))
         `assertEqual` Action.Update (tree |> Entry.childZipper (Core.Array.firstZipper (Entry.childZipper (Core.Array.firstZipper Entry.textZipper))))
     ]
   , Suite "inbox" <|
     let tree = (entry "" "" [textEntry "a",textEntry "b"] [])
     in
     [ test "can go to next inbox item" <|
-      Entry.goNext (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
+      goNext (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
         `assertEqual` Action.Update (tree |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
     , test "can enter inbox item" <|
-      Entry.goNext (tree |> Entry.textZipper)
+      goNext (tree |> Entry.textZipper)
         `assertEqual` Action.Update (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
     , test "can exit last inbox item into children" <|
-      Entry.goNext ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
+      goNext ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
         `assertEqual` Action.Update ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
     , test "can exit last inbox item with no children" <|
-      Entry.goNext (tree |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
+      goNext (tree |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
         `assertEqual` Action.EnterNext
     , test "can go to prev inbox item" <|
-      Entry.goPrev (tree |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
+      goPrev (tree |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
         `assertEqual` Action.Update (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
     , test "can enter inbox from bottom" <|
-      Entry.goPrev ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
+      goPrev ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
         `assertEqual` Action.Update ((entry "" "" [textEntry "a",textEntry "b"] [textEntry "x"]) |> Entry.inboxZipper (Core.Array.lastZipper Entry.textZipper))
     , test "can exit first inbox item" <|
-      Entry.goPrev (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
+      goPrev (tree |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
         `assertEqual` Action.Update (tree |> Entry.textZipper)
     ]
   ]
 
 editTest = Suite "basic editing"
   [ test "can insert text" <|
-    Entry.insert "xx" ((textEntry "ab") |> Entry.textZipperAt 1)
+    Entry.do (Core.String.insert "xx") ((textEntry "ab") |> Entry.textZipperAt 1)
       `assertEqual` Action.Update ((textEntry "axxb") |> Entry.textZipperAt 3)
   , test "can backspace text" <|
-    Entry.backspace ((textEntry "Elm") |> Entry.textZipperAt 1)
+    backspace ((textEntry "Elm") |> Entry.textZipperAt 1)
       `assertEqual` Action.Update ((textEntry "lm") |> Entry.textZipperAt 0)
   , test "backspace stops at edge" <|
-    Entry.backspace ((textEntry "Elm") |> Entry.textZipperAt 0)
+    backspace ((textEntry "Elm") |> Entry.textZipperAt 0)
       `assertEqual` Action.NoChange
   ]
 
 enterTest = Suite "enter"
   [ test "can split an Entry" <|
-    Entry.enter ((textEntry "ab") |> Entry.textZipperAt 1)
+    enter ((textEntry "ab") |> Entry.textZipperAt 1)
       `assertEqual` Action.Split [textEntry "a"] (textEntry "b" |> Entry.textZipperAt 0) []
   , test "can split a child Entry" <|
-    Entry.enter ((entry "" "" [] [textEntry "ab"]) |> Entry.childZipper (Core.Array.firstZipper <| Entry.textZipperAt 1))
+    enter ((entry "" "" [] [textEntry "ab"]) |> Entry.childZipper (Core.Array.firstZipper <| Entry.textZipperAt 1))
       `assertEqual` Action.Update ((entry "" "" [] [textEntry "a", textEntry "b"]) |> Entry.childZipper (Core.Array.lastZipper <| Entry.textZipperAt 0))
   ]
 
 deleteTest = Suite "delete"
   [ test "can delete an inbox item" <|
-    Entry.delete ((entry "" "" [textEntry "a", textEntry "b"] []) |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
+    delete ((entry "" "" [textEntry "a", textEntry "b"] []) |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
       `assertEqual` Action.Update ((entry "" "" [textEntry "b"] []) |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
   , test "can delete the last inbox item" <|
-    Entry.delete ((entry "" "" [textEntry "a"] []) |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
+    delete ((entry "" "" [textEntry "a"] []) |> Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper))
       `assertEqual` Action.Update ((entry "" "" [] []) |> Entry.textZipper)
   , test "can delete a child" <|
-    Entry.delete ((entry "" "" [] [textEntry "a", textEntry "b"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
+    delete ((entry "" "" [] [textEntry "a", textEntry "b"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
       `assertEqual` Action.Update ((entry "" "" [] [textEntry "b"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
   , test "can delete the terminal child" <|
-    Entry.delete ((entry "" "" [] [textEntry "a", textEntry "b"]) |> Entry.childZipper (Core.Array.lastZipper Entry.textZipper))
+    delete ((entry "" "" [] [textEntry "a", textEntry "b"]) |> Entry.childZipper (Core.Array.lastZipper Entry.textZipper))
       `assertEqual` Action.Update ((entry "" "" [] [textEntry "a"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
   , test "can delete the last child" <|
-    Entry.delete ((entry "" "" [] [textEntry "a"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
+    delete ((entry "" "" [] [textEntry "a"]) |> Entry.childZipper (Core.Array.firstZipper Entry.textZipper))
       `assertEqual` Action.Update ((entry "" "" [] []) |> Entry.textZipper)
   ]
 

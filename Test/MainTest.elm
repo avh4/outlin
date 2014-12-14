@@ -5,24 +5,30 @@ import ElmTest.Test (..)
 
 import App
 import App (Command(..))
-import Keys (KeyInput(..))
+import Keys (..)
 import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry
-import Outline.Document as Document
+import Outline.Document.Model as Document
 import Core.String
 import Core.Array
+import List (foldl)
+
+emptyDocument = Document.outlineZipper {scratch=[], outline=Entry.emptyEntry}
+
+assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
+assertEqualOutline doc entry = assertEqual doc (Document.InOutline [] entry)
 
 test1 = test "first-use scenario" <|
-  foldl App.step (Entry.textZipper Entry.emptyEntry)
+  foldl App.step emptyDocument
     [ Key (Character "Tasks")
-    , Key (Command "a") -- add
+    , Key (CommandCharacter"a") -- add
     , Key (Character "By time")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Habits")
-    , Key (Command "p") -- promote
-    , Key (Command "p")
+    , Key (CommandCharacter "p") -- promote
+    , Key (CommandCharacter "p")
     ]
-  `assertEqual`
+  `assertEqualOutline`
   Entry.childZipper (Core.Array.firstZipper Entry.textZipper)
     ( entry "Tasks" "" []
       [ entry "By time" "" [] []
@@ -31,41 +37,42 @@ test1 = test "first-use scenario" <|
     )
 
 test2 = test "sorting in an empty template" <|
-  foldl App.step
-    (Entry.textZipper <| entry "Tasks" "" []
-      [ entry "By time" "" []
-        [ entry "daily" "" [] []
-        , entry "weekly" "" [] []
-        , entry "waiting on" "" [] []
-        , entry "monthly" "" [] []
-        , entry "yearly" "" [] []
+  foldl App.step emptyDocument
+    [ LoadedOutline (Just
+      ( entry "Tasks" "" []
+        [ entry "By time" "" []
+          [ entry "daily" "" [] []
+          , entry "weekly" "" [] []
+          , entry "waiting on" "" [] []
+          , entry "monthly" "" [] []
+          , entry "yearly" "" [] []
+          ]
+        , entry "Habits" "" []
+          [ entry "daily" "" [] []
+          , entry "weekly" "" [] []
+          , entry "monthly" "" [] []
+          ]
+        , entry "By priority" "" [] []
+        , entry "By projet" "" [] []
         ]
-      , entry "Habits" "" []
-        [ entry "daily" "" [] []
-        , entry "weekly" "" [] []
-        , entry "monthly" "" [] []
-        ]
-      , entry "By priority" "" [] []
-      , entry "By projet" "" [] []
-      ]
-    )
-    [ Key (Command "a") -- add
+      ))
+    , Key (CommandCharacter "a") -- add
     , Key (Character "Watch Strange Loop videos")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Read Illustrated guide to objc_msgSend")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "get volunteers for Girl Develop It")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Read voting guide")
-    , Key (Command "a")
+    , Key (CommandCharacter "a")
     , Key (Character "get foam mattress topper")
-    , Key (Command "3") -- mattress topper -> priority
-    , Key (Command "4") -- Strange Loop -> project
-    , Key (Command "4") -- objc_msgSend -> project
-    , Key (Command "1") -- Girl Develop It -> time
-    , Key (Command "1") -- voting guide -> time
+    , Key (CommandCharacter "3") -- mattress topper -> priority
+    , Key (CommandCharacter "4") -- Strange Loop -> project
+    , Key (CommandCharacter "4") -- objc_msgSend -> project
+    , Key (CommandCharacter "1") -- Girl Develop It -> time
+    , Key (CommandCharacter "1") -- voting guide -> time
     ]
-  `assertEqual`
+  `assertEqualOutline`
   Entry.childZipper (Core.Array.firstZipper (Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper)))
     ( entry "Tasks" "" []
       [ entry "By time" ""
