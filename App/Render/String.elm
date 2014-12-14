@@ -21,8 +21,7 @@ render (left,sel,right) = node "span"
   ]
   [ text <| left
   , node "span" [ class "cursor" ] [ text "^" ]
-  , text <| sel
-  , node "span" [ class "cursor" ] [ text "^" ]
+  , node "span" [ class "selection" ] [ text sel ]
   , text <| right
   ]
   |> toElement 100 100
