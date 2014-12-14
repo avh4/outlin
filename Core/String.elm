@@ -1,4 +1,4 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, toJson, startZipper, endZipper, toValue, zipper, zipperAt, decoder) where
+module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectLeft, selectRight, toJson, startZipper, endZipper, toValue, zipper, zipperAt, decoder) where
 
 import Core.Action as Action
 import String
@@ -49,6 +49,16 @@ delete z = Action.Delete
 
 split : Zipper -> Result
 split (left,_,right) = Action.Split [left] (startZipper right) []
+
+selectLeft : Zipper -> Result
+selectLeft z = case z of
+  ("", _, _) -> Action.NoChange
+  (left,sel,right) -> Action.Update (String.dropRight 1 left, String.right 1 left ++ sel, right)
+
+selectRight : Zipper -> Result
+selectRight z = case z of
+  (_, _, "") -> Action.NoChange
+  (left,sel,right) -> Action.Update (left, sel ++ String.left 1 right, String.dropLeft 1 right)
 
 selectToStart : Zipper -> Result
 selectToStart (left,sel,right) = Action.Update ("", left ++ sel, right)

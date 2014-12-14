@@ -80,10 +80,10 @@ step c m = case c of
   Key (Keys.CommandCharacter "5") -> updateEntry (Entry.moveInto 4) m
   Key (Keys.CommandCharacter "6") -> updateEntry (Entry.moveInto 5) m
   Key (Keys.CommandCharacter "7") -> updateEntry (Entry.moveInto 6) m
-  Key (Keys.Shift (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
-  Key (Keys.Shift (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
-  Key (Keys.Shift (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
-  Key (Keys.Shift (Keys.Left)) -> updateEntry EntryNav.goToParent m
+  Key (Keys.Alt (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
+  Key (Keys.Alt (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
+  Key (Keys.Alt (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
+  Key (Keys.Alt (Keys.Left)) -> updateEntry EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
 
@@ -93,6 +93,8 @@ step c m = case c of
   Paste s -> updateText (Core.String.insert s) m
 
   -- Selection
+  Key (Keys.Shift (Keys.Left)) -> updateText Core.String.selectLeft m
+  Key (Keys.Shift (Keys.Right)) -> updateText Core.String.selectRight m
   Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStart m
   Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEnd m
   
