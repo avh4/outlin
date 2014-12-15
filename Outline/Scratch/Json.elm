@@ -5,12 +5,13 @@ import Core.Array
 import Core.String
 import Outline.Scratch.Model (..)
 import Json.Decode
+import Outline.RichText.Json as RichText
 
-toJson = Core.String.toJson
+toJson : Value -> String
+toJson = RichText.toJson
 
 decoder : Json.Decode.Decoder Value
-decoder = Core.String.decoder
+decoder = RichText.decoder
 
 listDecoder : Json.Decode.Decoder (Core.Array.Value Value)
-listDecoder =
-  Json.Decode.list decoder
+listDecoder = Json.Decode.list decoder

@@ -3,11 +3,11 @@ module Outline.Scratch.Model where
 import Core.Action
 import Core.Array
 import Core.String
+import Outline.RichText.Model as RichText
 
-type alias Value = Core.String.Value
-type alias Zipper = Core.String.Zipper
+type alias Value = RichText.Value
+type alias Zipper = RichText.Zipper
 
-toValue : Zipper -> Value
-toValue = Core.String.toValue
+toValue = RichText.toValue
 
-endZipper = Core.String.endZipper
+endZipper = RichText.endZipper

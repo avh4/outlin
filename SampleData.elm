@@ -1,6 +1,7 @@
 module SampleData where
 
 import Outline.Entry as Entry
+import Outline.RichText.Span.Model (Type(..))
 
 outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   [ Entry.Entry { text="sdfs", description="", inbox=[], children=[] }
@@ -33,4 +34,10 @@ outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   Entry.Entry { text="By project", description="", inbox=[], children=[] }
   ] }
 
-template = {scratch=["Scratch 3", "Scratch 2"], outline=outline}
+template =
+  { scratch=
+    [ [(Normal, "Scratch 3\nThis is "), (Bold, "important"), (Normal, ".")]
+    , [(Normal, "Scratch 2")]
+    ]
+  , outline=outline
+  }

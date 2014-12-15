@@ -1,4 +1,4 @@
-module App.Render.String (render) where
+module App.Render.String (render, toHtml) where
 
 import Core.String
 import Graphics.Element (..)
@@ -15,8 +15,8 @@ lines stringWithNewlines = stringWithNewlines
   |> String.split "\n"
   |> List.map line
 
-render : Core.String.Zipper -> Element
-render (left,sel,right) = node "span"
+toHtml : Core.String.Zipper -> Html
+toHtml (left,sel,right) = node "span"
   [ style [ ("white-space", "pre-wrap")]
   ]
   [ text <| left
@@ -24,4 +24,6 @@ render (left,sel,right) = node "span"
   , node "span" [ class "selection" ] [ text sel ]
   , text <| right
   ]
-  |> toElement 100 100
+
+render : Core.String.Zipper -> Element
+render z = toHtml z |> toElement 100 100

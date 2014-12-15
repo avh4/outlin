@@ -8,7 +8,7 @@ import String
 import Json.Decode
 import Json.Decode (..)
 import Json.Encode
-import Core.Action as Action
+import Core.Action (..)
 import Debug
 import Maybe
 import List
@@ -29,8 +29,7 @@ entry t d i c = Entry {text=t, description=d, inbox=i, children=c}
 
 type alias Value = BaseValue String
 type alias Zipper = BaseZipper String Core.String.Zipper
-type alias StringAction = Core.String.Zipper -> Core.String.Result
-type alias Result = Action.Result Value Zipper
+type alias Result = ActionResult Value Zipper
 
 toValue : Zipper -> Value
 toValue z = case z of
@@ -79,9 +78,9 @@ addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- s :: e.inbox }
 
 addInboxItem_ : Value -> Zipper -> Result
 addInboxItem_ newEntry z = case z of
-  InText e -> Action.Update <| InInbox { e | text <- Core.String.toValue e.text, inbox <- Core.Array.firstZipper textZipper (newEntry :: e.inbox) }
-  InInbox e -> Action.Update <| InInbox { e | inbox <- Core.Array.firstZipper textZipper (newEntry :: Core.Array.toValue toValue e.inbox) }
-  _ -> Action.NoChange
+  InText e -> Update <| InInbox { e | text <- Core.String.toValue e.text, inbox <- Core.Array.firstZipper textZipper (newEntry :: e.inbox) }
+  InInbox e -> Update <| InInbox { e | inbox <- Core.Array.firstZipper textZipper (newEntry :: Core.Array.toValue toValue e.inbox) }
+  _ -> NoChange
 
 addInboxItem = doEntry (addInboxItem_ emptyEntry)
 
@@ -98,15 +97,15 @@ promote_ : Zipper -> Result
 promote_ z = case z of
   InInbox e -> let i = Core.Array.active e.inbox
     in case Core.Array.remove textZipper e.inbox of
-      Just newInbox -> Action.Update <| InInbox { e
+      Just newInbox -> Update <| InInbox { e
         | inbox <- newInbox
         , children <- (toValue i) :: e.children
         }
-      Nothing -> Action.Update <| InChild { e
+      Nothing -> Update <| InChild { e
         | inbox <- []
         , children <- Core.Array.zipper [] i e.children
         }
-  _ -> Action.NoChange
+  _ -> NoChange
 
 promote = doEntry promote_
 
@@ -159,7 +158,7 @@ try = tryMap identity
 
 moveToInboxOfFirstChildOrNext : Value -> Result
 moveToInboxOfFirstChildOrNext en = case en of
-  Entry e -> Maybe.map Action.Update (firstChildInboxZipper en) ? Action.EnterNext
+  Entry e -> Maybe.map Update (firstChildInboxZipper en) ? EnterNext
 
 appendToInboxOfChild : Int -> Value -> Core.Array.Value Value -> Core.Array.Value Value
 appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- Core.Array.prepend v e.inbox }) children
@@ -167,11 +166,11 @@ appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e 
 moveInto_ : Int -> Zipper -> Result
 moveInto_ n z = case z of
   InInbox e -> if
-    | n >= length e.children -> Action.NoChange
+    | n >= length e.children -> NoChange
     | otherwise -> case Core.Array.remove textZipper e.inbox of
-      Just newZ -> Action.Update <| InInbox { e | inbox <- newZ, children <- appendToInboxOfChild n (Core.Array.active e.inbox |> toValue) e.children }
+      Just newZ -> Update <| InInbox { e | inbox <- newZ, children <- appendToInboxOfChild n (Core.Array.active e.inbox |> toValue) e.children }
       Nothing -> moveToInboxOfFirstChildOrNext (Entry { e | inbox <- [], children <- appendToInboxOfChild n (Core.Array.active e.inbox |> toValue) e.children })
-  _ -> Action.NoChange
+  _ -> NoChange
 
 moveInto n = doEntry (moveInto_ n)
 
@@ -181,18 +180,18 @@ missort_ z = case z of
     InInbox e' -> let item = Core.Array.active e'.inbox |> toValue
                       withNewInbox = { e | inbox <- Core.Array.prepend item e.inbox }
       in case Core.Array.remove textZipper e'.inbox of
-        Just remaining -> Action.Update <| InChild { withNewInbox | children <- Core.Array.update (InInbox { e' | inbox <- remaining }) e.children }
-        Nothing -> Action.Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InInbox e'' -> Entry { e'' | inbox <- [] }) e.children })
+        Just remaining -> Update <| InChild { withNewInbox | children <- Core.Array.update (InInbox { e' | inbox <- remaining }) e.children }
+        Nothing -> Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InInbox e'' -> Entry { e'' | inbox <- [] }) e.children })
     InChild e' -> case Core.Array.active e'.children of
-      InChild _ -> Action.NoChange
-      InInbox _ -> Action.NoChange
+      InChild _ -> NoChange
+      InInbox _ -> NoChange
       _ -> let item = Core.Array.active e'.children |> toValue
                withNewInbox = { e | inbox <- Core.Array.prepend item e.inbox }
         in case Core.Array.remove textZipper e'.children of
-          Just remaining -> Action.Update <| InChild { withNewInbox | children <- Core.Array.update (InChild { e' | children <- remaining }) e.children }
-          Nothing -> Action.Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InChild e'' -> Entry { e'' | children <- [] }) e.children })
-    _ -> Action.NoChange
-  _ -> Action.NoChange
+          Just remaining -> Update <| InChild { withNewInbox | children <- Core.Array.update (InChild { e' | children <- remaining }) e.children }
+          Nothing -> Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InChild e'' -> Entry { e'' | children <- [] }) e.children })
+    _ -> NoChange
+  _ -> NoChange
 
 missort = doEntry missort_
 
@@ -206,12 +205,12 @@ swap ai a bi b list = list |> indexedMap
 swapChildren : (Core.Array.Zipper Value Zipper -> Maybe (Core.Array.Zipper Value Zipper)) -> Zipper -> Result
 swapChildren fn z = case z of
   InChild e -> case Core.Array.active e.children of
-    InChild _ -> Action.NoChange
-    InInbox _ -> Action.NoChange
+    InChild _ -> NoChange
+    InInbox _ -> NoChange
     _ -> case fn e.children of
-      Just result -> Action.Update <| InChild { e | children <- result }
-      Nothing -> Action.Update <| InChild e
-  _ -> Action.NoChange
+      Just result -> Update <| InChild { e | children <- result }
+      Nothing -> Update <| InChild e
+  _ -> NoChange
 
 moveChildUp = doEntry <| swapChildren Core.Array.moveUp
 moveChildDown = doEntry <| swapChildren Core.Array.moveDown
@@ -220,46 +219,46 @@ moveChildDown = doEntry <| swapChildren Core.Array.moveDown
 doEntry : (Zipper -> Result) -> Zipper -> Result
 doEntry action z = case z of
   InChild e -> case action z of
-    Action.NoChange -> case Core.Array.do toValue textZipper findLastCursor (doEntry action) e.children of
-      Action.Update newChildren -> Action.Update <| InChild { e | children <- newChildren }
-      Action.NoChange -> Action.NoChange
+    NoChange -> case Core.Array.do toValue textZipper findLastCursor (doEntry action) e.children of
+      Update newChildren -> Update <| InChild { e | children <- newChildren }
+      NoChange -> NoChange
     x -> x
   _ -> action z
 
 -- TODO: rewrite to utilize doEntry for the recursion
 -- TODO: give a better name
-do : StringAction -> Zipper -> Result
+do : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
 do stringAction z = case z of
   InText e -> case stringAction e.text of
-    Action.Update newZ -> Action.Update <| InText { e | text <- newZ }
-    Action.Delete -> Action.Delete
-    Action.NoChange -> Action.NoChange
-    Action.Split left newZ right -> Action.Split (List.map textEntry left) (InText { e | text <- newZ }) (List.map textEntry right)
-    Action.EnterPrev -> Action.EnterPrev
-    Action.EnterNext -> try
-      [ firstInboxZipper (toValue z) |> Maybe.map Action.Update
-      , firstChildZipper (toValue z) |> Maybe.map Action.Update
-      ] Action.EnterNext
+    Update newZ -> Update <| InText { e | text <- newZ }
+    Delete -> Delete
+    NoChange -> NoChange
+    Split left newZ right -> Split (List.map textEntry left) (InText { e | text <- newZ }) (List.map textEntry right)
+    EnterPrev -> EnterPrev
+    EnterNext -> try
+      [ firstInboxZipper (toValue z) |> Maybe.map Update
+      , firstChildZipper (toValue z) |> Maybe.map Update
+      ] EnterNext
   InDescription e -> case stringAction e.description of
-    Action.Update newZ -> Action.Update <| InDescription { e | description <- newZ }
-    Action.Delete -> Action.Delete
-    Action.NoChange -> Action.NoChange
+    Update newZ -> Update <| InDescription { e | description <- newZ }
+    Delete -> Delete
+    NoChange -> NoChange
   InInbox e -> case Core.Array.do toValue textZipper textZipper (do stringAction) e.inbox of
-    Action.Update newZ -> Action.Update <| InInbox { e | inbox <- newZ }
-    Action.Delete -> Action.Update <| InText { e | inbox <- [], text <- Core.String.endZipper e.text }
-    Action.NoChange -> Action.NoChange
-    Action.EnterNext -> try
-      [ firstChildZipper (toValue z) |> Maybe.map Action.Update
-      ] Action.EnterNext
-    Action.EnterPrev -> (textZipper (toValue z) |> Action.Update)
+    Update newZ -> Update <| InInbox { e | inbox <- newZ }
+    Delete -> Update <| InText { e | inbox <- [], text <- Core.String.endZipper e.text }
+    NoChange -> NoChange
+    EnterNext -> try
+      [ firstChildZipper (toValue z) |> Maybe.map Update
+      ] EnterNext
+    EnterPrev -> (textZipper (toValue z) |> Update)
   InChild e -> case Core.Array.do toValue textZipper findLastCursor (do stringAction) e.children of
-    Action.Update newZ -> Action.Update <| InChild { e | children <- newZ }
-    Action.Delete -> Action.Update <| InText { e | children <- [], text <- Core.String.endZipper e.text }
-    Action.EnterNext -> Action.EnterNext
-    Action.EnterPrev -> try
-      [ lastInboxZipper (toValue z) |> Maybe.map Action.Update
-      ] (Action.Update <| textZipper (toValue z))
-    Action.NoChange -> Action.NoChange
+    Update newZ -> Update <| InChild { e | children <- newZ }
+    Delete -> Update <| InText { e | children <- [], text <- Core.String.endZipper e.text }
+    EnterNext -> EnterNext
+    EnterPrev -> try
+      [ lastInboxZipper (toValue z) |> Maybe.map Update
+      ] (Update <| textZipper (toValue z))
+    NoChange -> NoChange
 
 ---- RENDER
 

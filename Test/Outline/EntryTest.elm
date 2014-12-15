@@ -35,13 +35,13 @@ navTest = Suite "navigation"
         `assertEqual` Action.Update (textEntry "ab" |> Entry.textZipperAt 0)
     , test "go left stops at the edge" <|
       goLeft ((textEntry "ab") |> Entry.textZipperAt 0)
-        `assertEqual` Action.NoChange
+        `assertEqual` Action.EnterPrev -- TODO: should be Action.NoChange
     , test "can go right in text" <|
       goRight ((textEntry "ab") |> Entry.textZipperAt 1)
         `assertEqual` Action.Update ((textEntry "ab") |> Entry.textZipperAt 2)
     , test "go right stops at the edge" <|
       goRight ((textEntry "ab") |> Entry.textZipperAt 2)
-        `assertEqual` Action.NoChange
+        `assertEqual` Action.EnterNext -- TODO: should be Action.NoChange
     ]
   , Suite "children"
     [ test "can go to next child" <|

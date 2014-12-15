@@ -3,6 +3,9 @@ module App.Render.Scratch (render) where
 import Core.Array
 import Outline.Scratch.Model as Scratch
 import App.Render.String as String
+import Outline.RichText.Model as RichText
+import Outline.RichText.Render as RichText
+import App.Render.RichText as RichText
 import Graphics.Element (..)
 import Graphics.Input (clickable)
 import Color (..)
@@ -13,10 +16,8 @@ import List
 
 navItem : Signal.Channel Int -> Int -> Scratch.Value -> Element
 navItem channel i v = v
-  |> String.split "\n" |> List.head
-  |> plainText
-  |> width 200
-  |> height 40
+  |> RichText.split "\n" |> List.head
+  |> RichText.toElement 200 40
   |> clickable (Signal.send channel i)
 
 selectedNavItem : Signal.Channel Int -> Int -> Scratch.Zipper -> Element
@@ -30,7 +31,7 @@ list channel z = z
   |> flow down
 
 renderZipper : Scratch.Zipper -> Element
-renderZipper z = String.render z
+renderZipper z = RichText.render z
 
 render : Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
 render scratchChannel z = flow right

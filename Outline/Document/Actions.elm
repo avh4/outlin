@@ -1,7 +1,6 @@
 module Outline.Document.Actions (Result, do, doEntry, doText, enter) where
 
 import Outline.Document.Model (..)
-import Core.Action
 import Core.Action (..)
 import Core.Array
 import Core.String
@@ -9,7 +8,7 @@ import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
 
-type alias Result = Core.Action.Result Value Zipper
+type alias Result = ActionResult Value Zipper
 
 do : (Scratch.Zipper -> Scratch.Result) -> (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 do scratchFn entryFn zipper = case zipper of
@@ -35,10 +34,10 @@ doEntry entryFn = do (\_ -> NoChange) entryFn
 
 doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
 doText stringFn = do
-  (Scratch.do stringFn)
+  (Scratch.doText stringFn)
   (Entry.do stringFn)
 
 enter : Zipper -> Result
 enter = do
-  (Scratch.do (Core.String.insert "\n"))
+  (Scratch.doText (Core.String.insert "\n"))
   (Entry.do Core.String.split)

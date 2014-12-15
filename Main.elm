@@ -19,6 +19,7 @@ import Signal
 import Debug
 import Core.Array
 import Outline.Scratch.Json as Scratch
+import Json.Decode
 
 ---- SIGNALS
 

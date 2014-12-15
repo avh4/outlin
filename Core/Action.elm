@@ -1,6 +1,6 @@
-module Core.Action (always, Result(..)) where
+module Core.Action (always, ActionResult(..)) where
 
-type Result value zipper =
+type ActionResult value zipper =
   Update zipper |
   Split (List value) zipper (List value) |
   Delete |
@@ -8,5 +8,5 @@ type Result value zipper =
   NoChange
 
 -- TODO: get rid of this--only used in tests
-always : Result v z -> z -> Result v z
+always : ActionResult v z -> z -> ActionResult v z
 always r _ = r
