@@ -19,6 +19,8 @@ import Outline.Document.Model as Document
 import Outline.Document.Actions as Document
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
+import Outline.RichText.Span.Model as Span
+import Outline.RichText.Span.Actions as Span
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
 import Graphics.Collage (collage, toForm, rotate)
@@ -41,16 +43,9 @@ updateZipper action z = case action z of
   Action.EnterPrev -> z
   Action.NoChange -> z
 
-updateEntry : (Entry.Zipper -> Entry.Result) -> Document.Zipper -> Document.Zipper
-updateEntry action z = case Document.doEntry action z of
-  Action.Update z' -> z'
-  _ -> z
-
--- TODO: extract common code from update*
-updateText : (Core.String.Zipper -> Core.String.Result) -> Document.Zipper -> Document.Zipper
-updateText stringFn z = case Document.doText stringFn z of
-  Action.Update z' -> z'
-  _ -> z
+updateEntry action = updateZipper (Document.doEntry action)
+updateText action = updateZipper (Document.doText action)
+updateSpan action = updateZipper (Document.doSpan action)
 
 ---- INPUT
 
@@ -98,6 +93,9 @@ step c m = case c of
   Key (Keys.Shift (Keys.Right)) -> updateText Core.String.selectRight m
   Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStart m
   Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEnd m
+
+  -- Formatting
+  Key (Keys.CommandCharacter "b") -> updateSpan (Span.applyStyle Span.Bold) m
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m

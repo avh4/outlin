@@ -1,4 +1,8 @@
-module Outline.RichText.Span.Model (Type(..), Value, Zipper, toValue, value, startZipper, endZipper) where
+module Outline.RichText.Span.Model
+  ( Type(..), Value, Zipper
+  , toValue, value
+  , startZipper, endZipper, allZipper, rangeZipper
+  ) where
 
 import Core.String
 import Core.Array
@@ -18,8 +22,17 @@ toValue (t,z) = (t, Core.String.toValue z)
 value : Type -> String -> Value
 value t s = (t, s)
 
+stringZipper : (Core.String.Value -> Core.String.Zipper) -> Value -> Zipper
+stringZipper fn (t,v) = (t, fn v)
+
 startZipper : Value -> Zipper
-startZipper (t,v) = (t, Core.String.startZipper v)
+startZipper = stringZipper Core.String.startZipper
 
 endZipper : Value -> Zipper
-endZipper (t,v) = (t, Core.String.endZipper v)
+endZipper = stringZipper Core.String.endZipper
+
+allZipper : Value -> Zipper
+allZipper = stringZipper Core.String.allZipper
+
+rangeZipper : (Int,Int) -> Value -> Zipper
+rangeZipper range = stringZipper (Core.String.rangeZipper range)

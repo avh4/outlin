@@ -1,4 +1,9 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectLeft, selectRight, toJson, startZipper, endZipper, toValue, zipper, zipperAt, decoder) where
+module Core.String
+  ( Value, Zipper, Result
+  , toValue, destructure
+  , startZipper, endZipper, allZipper, rangeZipper
+  , insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectLeft, selectRight, toJson, zipper, zipperAt, decoder
+  ) where
 
 import Core.Action (..)
 import String
@@ -11,20 +16,33 @@ type alias Value = String
 type alias Zipper = (String,String,String)
 type alias Result = ActionResult Value Zipper
 
+toValue : Zipper -> Value
+toValue (left,sel,right) = left ++ sel ++ right
+
+destructure : Zipper -> (String,String,String)
+destructure z = z
+
 startZipper : Value -> Zipper
 startZipper v = ("","",v)
 
 endZipper : Value -> Zipper
 endZipper v = (v,"","")
 
+allZipper : Value -> Zipper
+allZipper v = ("",v,"")
+
+rangeZipper : (Int,Int) -> Value -> Zipper
+rangeZipper (start,length) s =
+  ( String.left start s
+  , String.dropLeft start s |> String.left length
+  , String.dropLeft start s |> String.dropLeft length
+  )
+
 zipper : String -> String -> Zipper
 zipper left right = (left,"",right)
 
 zipperAt : Int -> Value -> Zipper
 zipperAt i s = (String.left i s, "", String.dropLeft i s)
-
-toValue : Zipper -> Value
-toValue (left,sel,right) = left ++ sel ++ right
 
 insert : String -> Zipper -> Result
 insert s (left,sel,right) = Update (left ++ s, "", right)

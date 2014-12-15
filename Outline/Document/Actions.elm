@@ -1,4 +1,4 @@
-module Outline.Document.Actions (Result, do, doEntry, doText, enter) where
+module Outline.Document.Actions (Result, do, doEntry, doSpan, doText, enter) where
 
 import Outline.Document.Model (..)
 import Core.Action (..)
@@ -7,6 +7,8 @@ import Core.String
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
+import Outline.RichText.Span.Model as Span
+import Outline.RichText.Span.Actions as Span
 
 type alias Result = ActionResult Value Zipper
 
@@ -31,6 +33,11 @@ do scratchFn entryFn zipper = case zipper of
 
 doEntry : (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 doEntry entryFn = do (\_ -> NoChange) entryFn
+
+doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
+doSpan spanFn = do
+  (Scratch.doSpan spanFn)
+  (\_ -> NoChange)
 
 doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
 doText stringFn = do

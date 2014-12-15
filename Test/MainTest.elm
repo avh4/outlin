@@ -38,7 +38,7 @@ test1 = test "first-use scenario" <|
 
 test2 = test "sorting in an empty template" <|
   foldl App.step emptyDocument
-    [ LoadedOutline (Just
+    [ LoadedOutline (Ok
       ( entry "Tasks" "" []
         [ entry "By time" "" []
           [ entry "daily" "" [] []
