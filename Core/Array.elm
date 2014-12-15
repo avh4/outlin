@@ -1,4 +1,5 @@
-module Core.Array (Value, Zipper, value, toValue, do, toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
+module Core.Array (Value, Zipper,
+  value, toValue, do, toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
 
 import Core.Action (..)
 import List

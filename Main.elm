@@ -28,15 +28,13 @@ dropbox = Dropbox.client "mjplyqeks6z3js8"
 tabsChannel = Signal.channel ""
 scratchChannel = Signal.channel 0
 
-decode : Json.Decode.Decoder x -> String -> Maybe x
-decode decoder s = case Json.Decode.decodeString decoder s of
-  Ok doc -> Just doc
-  x -> fst (Nothing, Debug.log "Load failed" x)
+decode : Json.Decode.Decoder x -> String -> Result String x
+decode decoder s = Json.Decode.decodeString decoder s
 
-fromDropbox : String -> Json.Decode.Decoder x -> (Maybe x -> Command)
+fromDropbox : String -> Json.Decode.Decoder x -> (Result String x -> Command) -> Signal Command
 fromDropbox filename decoder fn =
   dropbox.read filename
-  |> decode decoder
+  |> Signal.map (decode decoder)
   |> Signal.map fn
 
 commands : Signal Command

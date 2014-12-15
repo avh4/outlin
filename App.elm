@@ -57,8 +57,8 @@ updateText stringFn z = case Document.doText stringFn z of
 type Command
   = Key Keys.KeyCombo
   | Paste String
-  | LoadedOutline (Maybe Entry.Value)
-  | LoadedScratch (Maybe (List Scratch.Value))
+  | LoadedOutline (Result String Entry.Value)
+  | LoadedScratch (Result String (List Scratch.Value))
   | Tab String
   | Scratch Int
 
@@ -104,7 +104,7 @@ step c m = case c of
 
   Scratch i -> updateValue (Document.scratchZipper i) m
 
-  LoadedOutline (Just e) -> Document.replaceOutline m e
-  LoadedScratch (Just s) -> Document.replaceScratch m s
+  LoadedOutline (Ok e) -> Document.replaceOutline m e
+  LoadedScratch (Ok s) -> Document.replaceScratch m s
 
   x -> fst (m, Debug.log "Unhandled command" x)
