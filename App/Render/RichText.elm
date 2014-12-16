@@ -13,8 +13,8 @@ import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Model (Type(..))
 import App.Render.String as String
 
-render : RichText.Zipper -> Element
-render z = node "span"
+render : Int -> RichText.Zipper -> Element
+render w z = node "span"
   [ style [ ("white-space", "pre-wrap")] ]
   (Core.Array.map (RichText.toHtml text) (RichText.toHtml String.toHtml) z)
-  |> toElement 100 100
+  |> toElement w 100

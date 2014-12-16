@@ -14,27 +14,27 @@ import Signal
 import String
 import List
 
-navItem : Signal.Channel Int -> Int -> Scratch.Value -> Element
-navItem channel i v = v
+navItem : Int -> Signal.Channel Int -> Int -> Scratch.Value -> Element
+navItem w channel i v = v
   |> RichText.split "\n" |> List.head
-  |> RichText.toElement 200 40
+  |> RichText.toElement w 40
   |> clickable (Signal.send channel i)
 
-selectedNavItem : Signal.Channel Int -> Int -> Scratch.Zipper -> Element
-selectedNavItem channel i z = z
+selectedNavItem : Int -> Signal.Channel Int -> Int -> Scratch.Zipper -> Element
+selectedNavItem w channel i z = z
   |> Scratch.toValue
-  |> navItem channel i
+  |> navItem w channel i
   |> color yellow
 
-list channel z = z
-  |> Core.Array.indexedMap (navItem channel) (selectedNavItem channel)
+list w channel z = z
+  |> Core.Array.indexedMap (navItem w channel) (selectedNavItem w channel)
   |> flow down
 
-renderZipper : Scratch.Zipper -> Element
-renderZipper z = RichText.render z
+renderZipper : Int -> Scratch.Zipper -> Element
+renderZipper w z = RichText.render w z
 
-render : Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render scratchChannel z = flow right
-  [ list scratchChannel z
-  , Core.Array.active z |> renderZipper
+render : Int -> Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render w scratchChannel z = flow right
+  [ list 200 scratchChannel z
+  , Core.Array.active z |> renderZipper (w-200)
   ]

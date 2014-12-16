@@ -35,7 +35,7 @@ render : Signal.Channel String -> Signal.Channel Int -> (Int,Int) -> Zipper -> E
 render tabChannel scratchChannel (w,h) z = case z of
   InScratch sZip _ -> flow down
     [ tabs tabChannel [] "Scratch" ["Tasks"]
-    , Scratch.render scratchChannel sZip
+    , Scratch.render w scratchChannel sZip
     ]
   InOutline sVal eZip -> flow down
     [ tabs tabChannel ["Scratch"] "Tasks" []
