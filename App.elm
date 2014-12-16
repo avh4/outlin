@@ -92,8 +92,8 @@ step c m = case c of
   -- Selection
   Key (Keys.Shift (Keys.Left)) -> updateText Core.String.selectLeft m
   Key (Keys.Shift (Keys.Right)) -> updateText Core.String.selectRight m
-  Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStart m
-  Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEnd m
+  Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStartOfLine m
+  Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEndOfLine m
 
   -- Formatting
   Key (Keys.CommandCharacter "b") -> updateSpan (Span.applyStyle Span.Bold) m

@@ -110,6 +110,7 @@ test3 = test "Add tasks when processing scratch" <|
     [ Tab "Scratch"
     , Key (Character "Weekly review")
     , Key (Single Enter)
+    , Key (Single Enter)
     , Key (Character "review finances")
     , Key (CommandShift Left)
     , Key (CommandCharacter "b") -- mark task

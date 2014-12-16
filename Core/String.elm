@@ -2,11 +2,12 @@ module Core.String
   ( Value, Zipper, Result
   , toValue, destructure
   , startZipper, endZipper, allZipper, rangeZipper
-  , insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectLeft, selectRight, toJson, zipper, zipperAt, decoder
+  , insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight, toJson, zipper, zipperAt, decoder
   ) where
 
 import Core.Action (..)
 import String
+import List
 import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -83,6 +84,22 @@ selectToStart (left,sel,right) = Update ("", left ++ sel, right)
 
 selectToEnd : Zipper -> Result
 selectToEnd (left,sel,right) = Update (left, sel ++ right, "")
+
+takeLast : String -> String -> (String, String)
+takeLast needle s = if
+  | String.contains needle s ->
+    case String.split needle s of
+    [] -> ("", "")
+    tokens -> case List.reverse tokens of
+      (last::rest) -> (String.join needle (List.reverse rest) ++ "\n", last)
+  | True -> ("", s)
+
+selectToStartOfLine : Zipper -> Result
+selectToStartOfLine (left,sel,right) = case takeLast "\n" left of
+  (rest, last) -> Update (rest, last ++ sel, right)
+
+selectToEndOfLine : Zipper -> Result
+selectToEndOfLine (left,sel,right) = Update (left, sel ++ right, "") -- TODO
 
 ---- JSON
 
