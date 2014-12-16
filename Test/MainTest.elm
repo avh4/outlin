@@ -17,7 +17,7 @@ import List (foldl)
 initialDocument = Document.emptyValue |> Document.scratchZipper 0
 
 assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
-assertEqualOutline doc entry = assertEqual doc (Document.InOutline [Scratch.value "Scratch 1\n\n"] entry)
+assertEqualOutline doc entry = assertEqual doc (Document.InOutline [Scratch.value "Scratch 1"] entry)
 
 test1 = test "first-use scenario" <|
   foldl App.step initialDocument

@@ -40,7 +40,7 @@ scratchValue z = z |> toValue |> .scratch
 scratchZipper : Int -> Value -> Zipper
 scratchZipper i {scratch,outline} = case Core.Array.zipperAtM i Scratch.endZipper scratch of
   Just zipper -> InScratch zipper outline
-  Nothing -> InScratch ([Scratch.value "Scratch 1\n\n"] |> Core.Array.firstZipper Scratch.endZipper) outline
+  Nothing -> InScratch ([Scratch.value "Scratch 1"] |> Core.Array.firstZipper Scratch.allZipper) outline
 
 outlineZipper : Value -> Zipper
 outlineZipper {scratch,outline} = InOutline scratch (Entry.textZipper outline)

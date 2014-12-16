@@ -2,7 +2,7 @@ module Outline.Scratch.Model
   ( Value, Zipper
   , value
   , toValue
-  , endZipper
+  , endZipper, allZipper
   ) where
 
 import Core.Action
@@ -19,3 +19,4 @@ value = RichText.value
 toValue = RichText.toValue
 
 endZipper = RichText.endZipper
+allZipper = RichText.allZipper

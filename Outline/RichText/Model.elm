@@ -2,7 +2,7 @@ module Outline.RichText.Model
   ( Value, Zipper
   , value
   , toValue, split, filter
-  , endZipper
+  , endZipper, allZipper
   ) where
 
 import Core.String
@@ -22,10 +22,18 @@ value s = [(Span.Normal, s)]
 toValue : Zipper -> Value
 toValue = Core.Array.toValue Span.toValue
 
+emptyZipper : Zipper
+emptyZipper = Core.Array.zipper [] (Span.endZipper <| Span.value Span.Normal "") []
+
 endZipper : Value -> Zipper
 endZipper v = case Core.Array.lastZipperM Span.endZipper v of
   Just z -> z
-  Nothing -> Core.Array.zipper [] (Span.endZipper <| Span.value Span.Normal "") []
+  Nothing -> emptyZipper
+
+allZipper : Value -> Zipper
+allZipper v = case Core.Array.lastZipperM Span.allZipper v of
+  Just z -> z
+  Nothing -> emptyZipper
 
 splitOne : String -> Span.Value -> List Span.Value
 splitOne needle (t,s) = String.split needle s |> List.map (\s -> (t,s))
