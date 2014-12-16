@@ -26,6 +26,26 @@ actionsTest = Suite "(actions)"
       `assertEqual`
       Update ("x\n", "ab", "c")
     ]
+  , Suite "moveToEndOfLine"
+    [ test "in last line" <|
+      moveToEndOfLine ("a", "b", "c")
+      `assertEqual`
+      Update ("abc", "", "")
+    , test "in early line" <|
+      moveToEndOfLine ("a", "b", "c\nx")
+      `assertEqual`
+      Update ("abc", "", "\nx")
+    ]
+  , Suite "moveToStartOfLine"
+    [ test "in first line" <|
+      moveToStartOfLine ("a", "b", "c")
+      `assertEqual`
+      Update ("", "", "abc")
+    , test "in late line" <|
+      moveToStartOfLine ("x\na", "b", "c")
+      `assertEqual`
+      Update ("x\n", "", "abc")
+    ]
   ]
 
 suite = Suite "Core.String"

@@ -83,6 +83,8 @@ step c m = case c of
   Key (Keys.Alt (Keys.Left)) -> updateEntry EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
+  Key (Keys.Command (Keys.Right)) -> updateText Core.String.moveToEndOfLine m
+  Key (Keys.Command (Keys.Left)) -> updateText Core.String.moveToStartOfLine m
 
   -- Text
   Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m

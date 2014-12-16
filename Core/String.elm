@@ -2,7 +2,10 @@ module Core.String
   ( Value, Zipper, Result
   , toValue, destructure
   , startZipper, endZipper, allZipper, rangeZipper
-  , insert, backspace, goLeft, goRight, delete, split, selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight, toJson, zipper, zipperAt, decoder
+  , goLeft, goRight, moveToStartOfLine, moveToEndOfLine
+  , insert, backspace, delete, split
+  , selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight
+  , toJson, zipper, zipperAt, decoder
   ) where
 
 import Core.Action (..)
@@ -64,6 +67,14 @@ goRight z = case z of
   (left, "", right) -> Update (left ++ String.left 1 right, "", String.dropLeft 1 right)
   (left, sel, right) -> Update (left ++ sel, "", right)
 
+moveToStartOfLine : Zipper -> Result
+moveToStartOfLine (left, sel, right) = case takeLast "\n" left of
+  (rest, a) -> Update (rest, "", a ++ sel ++ right)
+
+moveToEndOfLine : Zipper -> Result
+moveToEndOfLine (left, sel, right) = case takeFirst "\n" right of
+  (a, rest) -> Update (left ++ sel ++ a, "", rest)
+
 delete z = Delete
 
 split : Zipper -> Result
@@ -85,13 +96,21 @@ selectToStart (left,sel,right) = Update ("", left ++ sel, right)
 selectToEnd : Zipper -> Result
 selectToEnd (left,sel,right) = Update (left, sel ++ right, "")
 
+takeFirst : String -> String -> (String, String)
+takeFirst needle s = if
+  | String.contains needle s ->
+    case String.split needle s of
+      [] -> ("", "")
+      (first::rest) -> (first, needle ++ String.join needle rest)
+  | True -> (s, "")
+
 takeLast : String -> String -> (String, String)
 takeLast needle s = if
   | String.contains needle s ->
     case String.split needle s of
     [] -> ("", "")
     tokens -> case List.reverse tokens of
-      (last::rest) -> (String.join needle (List.reverse rest) ++ "\n", last)
+      (last::rest) -> (String.join needle (List.reverse rest) ++ needle, last)
   | True -> ("", s)
 
 selectToStartOfLine : Zipper -> Result
