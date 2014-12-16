@@ -1,4 +1,8 @@
-module Outline.RichText.Model (Value, Zipper, toValue, endZipper, split) where
+module Outline.RichText.Model
+  ( Value, Zipper
+  , toValue, split, filter
+  , endZipper
+  ) where
 
 import Core.String
 import Core.Array
@@ -33,3 +37,8 @@ split : String -> Value -> List Value
 split needle v = List.map (splitOne needle) v
   |> List.foldl splitAppend_ ([],[])
   |> (\(acc,finished) -> List.reverse (List.reverse acc::finished))
+
+filter : (Span.Type -> String -> Bool) -> Zipper -> List Span.Value
+filter predicate z = z
+  |> Core.Array.map identity Span.toValue
+  |> List.filter (\(t,s) -> predicate t s)
