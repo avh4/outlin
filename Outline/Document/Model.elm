@@ -1,4 +1,10 @@
-module Outline.Document.Model (Value, Zipper(..), toValue, scratchValue, outlineValue, scratchZipper, outlineZipper, replaceOutline, replaceScratch) where
+module Outline.Document.Model
+  ( Value, Zipper(..)
+  , emptyValue
+  , toValue, scratchValue, outlineValue
+  , scratchZipper, outlineZipper
+  , replaceOutline, replaceScratch
+  ) where
 
 import Core.Action
 import Core.Action (..)
@@ -14,6 +20,12 @@ type Zipper
   = InScratch (Core.Array.Zipper Scratch.Value Scratch.Zipper) Entry.Value
   | InOutline (Core.Array.Value Scratch.Value) Entry.Zipper
 
+emptyValue : Value
+emptyValue =
+  { scratch=[]
+  , outline=Entry.emptyEntry
+  }
+
 toValue : Zipper -> Value
 toValue z = case z of
   InScratch sZip eVal -> {scratch=Core.Array.toValue Scratch.toValue sZip, outline=eVal}
@@ -28,7 +40,7 @@ scratchValue z = z |> toValue |> .scratch
 scratchZipper : Int -> Value -> Zipper
 scratchZipper i {scratch,outline} = case Core.Array.zipperAtM i Scratch.endZipper scratch of
   Just zipper -> InScratch zipper outline
-  -- Nothing ->  TODO-- should create an empty scratch
+  Nothing -> InScratch ([Scratch.value "Scratch 1\n\n"] |> Core.Array.firstZipper Scratch.endZipper) outline
 
 outlineZipper : Value -> Zipper
 outlineZipper {scratch,outline} = InOutline scratch (Entry.textZipper outline)

@@ -56,6 +56,7 @@ type Command
   | LoadedScratch (Result String (List Scratch.Value))
   | Tab String
   | Scratch Int
+  | ProcessScratch
 
 -- TODO: refactor to keep trailing 'm' out of here
 step : Command -> Document.Zipper -> Document.Zipper

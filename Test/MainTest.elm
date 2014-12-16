@@ -9,18 +9,20 @@ import Keys (..)
 import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry
 import Outline.Document.Model as Document
+import Outline.Scratch.Model as Scratch
 import Core.String
 import Core.Array
 import List (foldl)
 
-emptyDocument = Document.outlineZipper {scratch=[], outline=Entry.emptyEntry}
+initialDocument = Document.emptyValue |> Document.scratchZipper 0
 
 assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
-assertEqualOutline doc entry = assertEqual doc (Document.InOutline [] entry)
+assertEqualOutline doc entry = assertEqual doc (Document.InOutline [Scratch.value "Scratch 1\n\n"] entry)
 
 test1 = test "first-use scenario" <|
-  foldl App.step emptyDocument
-    [ Key (Character "Tasks")
+  foldl App.step initialDocument
+    [ Tab "Tasks"
+    , Key (Character "Tasks")
     , Key (CommandCharacter"a") -- add
     , Key (Character "By time")
     , Key (Single Enter)
@@ -37,8 +39,9 @@ test1 = test "first-use scenario" <|
     )
 
 test2 = test "sorting in an empty template" <|
-  foldl App.step emptyDocument
-    [ LoadedOutline (Ok
+  foldl App.step initialDocument
+    [ Tab "Tasks"
+    , LoadedOutline (Ok
       ( entry "Tasks" "" []
         [ entry "By time" "" []
           [ entry "daily" "" [] []
@@ -102,7 +105,35 @@ test2 = test "sorting in an empty template" <|
       ]
     )
 
+test3 = test "Add tasks when processing scratch" <|
+  foldl App.step initialDocument
+    [ Tab "Scratch"
+    , Key (Character "Weekly review")
+    , Key (Single Enter)
+    , Key (Character "review finances")
+    , Key (CommandShift Left)
+    , Key (CommandCharacter "b") -- mark task
+    , Key (Command Right)
+    , Key (Single Enter)
+    , Key (Character "book flight to Toronto")
+    , Key (CommandShift Left)
+    , Key (CommandCharacter "b") -- mark task
+    , ProcessScratch
+    ]
+  `assertEqual`
+  ({scratch = []
+  , outline = entry "Tasks" ""
+    [ entry "review finances" "" [] []
+    , entry "book flight to Toronto" "" [] []
+    ]
+    []
+  -- , tasks = [ "review finances", "book flight to Toronto" ]
+  -- , notes = [ "Weekly review\nreview finances\nbook flight to Toronto" ]
+  }
+  |> Document.outlineZipper)
+
 suite = Suite "Integration tests"
   [ test1
   , test2
+  -- , test3
   ]

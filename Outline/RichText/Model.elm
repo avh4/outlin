@@ -1,5 +1,6 @@
 module Outline.RichText.Model
   ( Value, Zipper
+  , value
   , toValue, split, filter
   , endZipper
   ) where
@@ -14,6 +15,9 @@ import List ((::))
 
 type alias Value = Core.Array.Value Span.Value
 type alias Zipper = Core.Array.Zipper Span.Value Span.Zipper
+
+value : String -> Value
+value s = [(Span.Normal, s)]
 
 toValue : Zipper -> Value
 toValue = Core.Array.toValue Span.toValue
