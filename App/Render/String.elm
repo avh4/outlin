@@ -21,7 +21,11 @@ toHtml (left,sel,right) = node "span"
   ]
   [ text <| left
   , node "span" [ class "cursor" ] [ text "^" ]
-  , node "span" [ class "selection" ] [ text sel ]
+  , node "span"
+    [ class "selection"
+    , style [ ("background", "lightblue") ]
+    ]
+    [ text sel ]
   , text <| right
   ]
 
