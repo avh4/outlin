@@ -124,7 +124,7 @@ test3 = test "Add tasks when processing scratch" <|
     ]
   `assertEqual`
   ({scratch = []
-  , outline = entry "Tasks" ""
+  , outline = entry "" ""
     [ entry "review finances" "" [] []
     , entry "book flight to Toronto" "" [] []
     ]
@@ -137,5 +137,5 @@ test3 = test "Add tasks when processing scratch" <|
 suite = Suite "Integration tests"
   [ test1
   , test2
-  -- , test3
+  , test3
   ]

@@ -23,7 +23,7 @@ type Result
 doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
 doSpan spanFn (t,z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper Span.endZipper spanFn z of
   Span.Update z -> Update (t,z)
-  Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (t,z) (map (\s -> (t,s)) rights)
+  Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (Paragraph,z) (map (\s -> (Paragraph,s)) rights)
   Span.Delete -> Delete
   Span.EnterNext -> EnterNext
   Span.EnterPrev -> EnterPrev
@@ -38,7 +38,7 @@ toggleStyle t' (t,sz) = Update (toggle t t',sz) -- TODO
 split : Zipper -> Result
 split (t, z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper Span.endZipper (Span.do Core.String.split) z of
   Span.Update z -> Update (t,z)
-  Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (t,z) (map (\s -> (t,s)) rights)
+  Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (Paragraph,z) (map (\s -> (Paragraph,s)) rights)
   Span.Delete -> Delete
   Span.EnterNext -> EnterNext
   Span.EnterPrev -> EnterPrev

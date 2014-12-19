@@ -23,6 +23,10 @@ actionsTest = Suite "Actions"
       split (paragraph (Span.normal "ab") |> startZipper)
       `assertEqual`
       Split [paragraph (Span.normal "")] (paragraph (Span.normal "ab") |> startZipper) []
+    , test "in task block, creates new paragraph" <|
+      split (value Task [(Span.normal "ab")] |> startZipper)
+      `assertEqual`
+      Split [value Task [(Span.normal "")]] (paragraph (Span.normal "ab") |> startZipper) []
     ]
   , Suite "backspace"
     [ test "tries to backspace text" <|
