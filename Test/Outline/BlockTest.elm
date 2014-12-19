@@ -3,7 +3,6 @@ module Test.Outline.BlockTest (suite) where
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)
 
-import Core.Action (..)
 import Outline.RichText.Block.Model (..)
 import Outline.RichText.Block.Actions (..)
 import Outline.RichText.Span.Model as Span
@@ -24,6 +23,16 @@ actionsTest = Suite "Actions"
       split (paragraph (Span.normal "ab") |> startZipper)
       `assertEqual`
       Split [paragraph (Span.normal "")] (paragraph (Span.normal "ab") |> startZipper) []
+    ]
+  , Suite "backspace"
+    [ test "tries to backspace text" <|
+      backspace (paragraph (Span.normal "ab") |> endZipper)
+      `assertEqual`
+      Update (paragraph (Span.normal "a") |> endZipper)
+    , test "joins if at start of block" <|
+      backspace (paragraph (Span.normal "ab") |> startZipper)
+      `assertEqual`
+      Join (paragraph (Span.normal "ab"))
     ]
   ]
 

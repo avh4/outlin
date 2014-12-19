@@ -90,7 +90,7 @@ step c m = case c of
   Key (Keys.Command (Keys.Left)) -> updateText Core.String.moveToStartOfLine m
 
   -- Text
-  Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
+  Key (Keys.Single (Keys.Backspace)) -> updateZipper Document.backspace m
   Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Paste s -> updateText (Core.String.insert s) m
 

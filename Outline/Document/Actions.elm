@@ -1,7 +1,7 @@
 module Outline.Document.Actions
   ( Result
   , do, doEntry, doBlock, doSpan, doText
-  , enter, processScratch
+  , enter, backspace, processScratch
   ) where
 
 import Outline.Document.Model (..)
@@ -62,6 +62,11 @@ doText stringFn = do
 
 enter : Zipper -> Result
 enter = doText Core.String.split
+
+backspace : Zipper -> Result
+backspace = do
+  (Scratch.doBlock Block.backspace)
+  (Entry.do Core.String.backspace)
 
 replaceTasks : Entry.Value -> Zipper -> Zipper
 replaceTasks newTasks z = case z of

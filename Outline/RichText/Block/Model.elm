@@ -1,6 +1,7 @@
 module Outline.RichText.Block.Model
   ( Type(..), Value, Zipper
   , toValue, toString, paragraph, value, empty
+  , mergeZipper
   , startZipper, endZipper, allZipper
   ) where
 
@@ -34,6 +35,11 @@ toValue = Tagged.toValue (Core.Array.toValue Span.toValue)
 
 toString : Value -> String
 toString (t,v) = String.join "" (List.map Span.toString v)
+
+mergeZipper : Value -> Value -> Zipper
+mergeZipper (t1,spans1) (t2,spans2) = case spans2 of
+  [] -> (t1,spans1) |> endZipper
+  (head::rest) -> (t1, Core.Array.zipper spans1 (head |> Span.startZipper) rest)
 
 j : (a -> b) -> (b -> c) -> a -> c
 j f1 f2 v = f1 v |> f2

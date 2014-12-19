@@ -1,6 +1,7 @@
 module Core.Array
   ( Value, Zipper
   , value, toValue, single
+  , replaceActive, mergeActive, joinActive
   , do, doPropagatingSplits
   , toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
 
@@ -29,6 +30,18 @@ at i list = list |> List.drop i |> List.head
 
 toValue : (z -> v) -> Zipper v z -> Value v
 toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
+
+replaceActive : z -> Zipper v z -> Zipper v z
+replaceActive active' (left,active,right) = (left, active', right)
+
+mergeActive : List v -> z -> List v -> Zipper v z -> Zipper v z
+mergeActive left' active' right' (left,active,right) =
+  (reverse left' ++ left,active',right' ++ right)
+
+joinActive : (v -> v -> z) -> v -> Zipper v z -> Maybe (Zipper v z)
+joinActive mergeFn active' (left,_,right) = case left of
+  (prev::rest) -> Just (rest, mergeFn prev active', right)
+  [] -> Nothing
 
 countLeft : Zipper v z -> Int -- TODO: removing the type annotation causes compile errors
 countLeft (left,_,_) = List.length left
@@ -118,9 +131,9 @@ remove fn (left,cur,right) =
 -- TODO: instead of passing in nextCursor/prevCursor eagerly, can we flip it around so that there is an ActionResult that has a function : c -> Array.Cursor c
 do : (z -> v) -> (v -> z) -> (v -> z) -> (z -> ActionResult v z) -> Zipper v z -> Result v z
 do toVal nextFn prevFn action (left,cur,right) = case action cur of
-  Update new -> Update (left,new,right)
-  Split newLeft new newRight ->
-    Update (reverse newLeft ++ left,new,newRight ++ right)
+  Update active' -> Update <| replaceActive active' (left,cur,right)
+  Split left' active' right' ->
+    Update <| mergeActive left' active' right' (left,cur,right)
   Delete -> case right of
     (next :: tail) -> Update (left, nextFn next, tail)
     [] -> case left of

@@ -13,7 +13,15 @@ import Core.Array
 type alias Result = ActionResult Value Zipper
 
 doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
-doBlock fn = Core.Array.do Block.toValue Block.startZipper Block.endZipper fn
+doBlock fn z = case fn (Core.Array.active z) of
+  Block.Update z' -> Update <| Core.Array.replaceActive z' z
+  Block.Split left z' right -> Update <| Core.Array.mergeActive left z' right z
+  Block.Join v' -> case Core.Array.joinActive Block.mergeZipper v' z of
+    Nothing -> NoChange
+    Just z'' -> Update z''
+  Block.NoChange -> NoChange
+  Block.EnterPrev -> NoChange
+  Block.EnterNext -> NoChange
 
 -- TODO: on a split, or update, merge adjacent spans with the same type
 doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
