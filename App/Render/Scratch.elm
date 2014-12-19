@@ -49,14 +49,15 @@ tasks w z = z
   |> List.map (task w)
   |> flow down
 
-renderZipper : Int -> Scratch.Zipper -> Element
-renderZipper w z = flow down
+renderZipper : Int -> Signal.Channel () -> Scratch.Zipper -> Element
+renderZipper w processChannel z = flow down
   [ RichText.render w z
   , tasks w z
+  , plainText "[PROCESS]" |> color red |> clickable (Signal.send processChannel ())
   ]
 
-render : Int -> Signal.Channel Int -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render w scratchChannel z = flow right
+render : Int -> Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render w scratchChannel processChannel z = flow right
   [ list 200 scratchChannel z
-  , Core.Array.active z |> renderZipper (w-200)
+  , Core.Array.active z |> renderZipper (w-200) processChannel
   ]

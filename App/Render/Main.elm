@@ -31,11 +31,11 @@ tabs channel l sel r = flow right
   ++ (List.map (clickableTab channel) r)
   )
 
-render : Signal.Channel String -> Signal.Channel Int -> (Int,Int) -> Zipper -> Element
-render tabChannel scratchChannel (w,h) z = case z of
+render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> (Int,Int) -> Zipper -> Element
+render tabChannel scratchChannel processScratchChannel (w,h) z = case z of
   InScratch sZip _ -> flow down
     [ tabs tabChannel [] "Scratch" ["Tasks"]
-    , Scratch.render w scratchChannel sZip
+    , Scratch.render w scratchChannel processScratchChannel sZip
     ]
   InOutline sVal eZip -> flow down
     [ tabs tabChannel ["Scratch"] "Tasks" []
