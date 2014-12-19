@@ -1,6 +1,6 @@
 [submodule "elm-stuff/packages/avh4/elm-keys/0.0.1"]
-	path = elm-stuff/packages/avh4/elm-keys/0.0.1
+	path = submodules/elm-keys
 	url = https://github.com/avh4/elm-keys.git
 [submodule "elm-stuff/packages/avh4/elm-dropbox/0.0.1"]
-	path = elm-stuff/packages/avh4/elm-dropbox/0.0.1
+	path = submodules/elm-dropbox
 	url = https://github.com/avh4/elm-dropbox.git

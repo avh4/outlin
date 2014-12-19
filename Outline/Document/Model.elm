@@ -12,6 +12,8 @@ import Core.Array
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 
+
+-- TODO: rename outline -> tasks?
 type alias Value =
   { scratch:Core.Array.Value Scratch.Value
   , outline:Entry.Value
@@ -45,13 +47,13 @@ scratchZipper i {scratch,outline} = case Core.Array.zipperAtM i Scratch.endZippe
 outlineZipper : Value -> Zipper
 outlineZipper {scratch,outline} = InOutline scratch (Entry.textZipper outline)
 
-replaceOutline : Zipper -> Entry.Value -> Zipper
-replaceOutline z outline = case z of
+replaceOutline : Entry.Value -> Zipper -> Zipper
+replaceOutline outline z = case z of
   InScratch sZip _ -> InScratch sZip outline
   InOutline sVal _ -> InOutline sVal (Entry.textZipper outline)
 
-replaceScratch : Zipper -> Core.Array.Value Scratch.Value -> Zipper
-replaceScratch z scratch = case z of
+replaceScratch : Core.Array.Value Scratch.Value -> Zipper -> Zipper
+replaceScratch scratch z = case z of
   InScratch _ eVal -> case Core.Array.firstZipperM Scratch.endZipper scratch of
     Just sZip -> InScratch sZip eVal
     Nothing -> z -- TODO: should create an empty scratch

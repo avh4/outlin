@@ -1,11 +1,12 @@
 module Outline.RichText.Span.Model
   ( Type(..), Value, Zipper
-  , toValue, value
+  , toValue, toString, value, normal, empty
   , startZipper, endZipper, allZipper, rangeZipper
   ) where
 
 import Core.String
 import Core.Array
+import Core.Tagged.Model as Tagged
 
 type Type
   = Normal
@@ -13,26 +14,32 @@ type Type
   | Task
   | Link String
 
-type alias Value = (Type, Core.String.Value)
-type alias Zipper = (Type, Core.String.Zipper)
+type alias Value = Tagged.Value Type Core.String.Value
+type alias Zipper = Tagged.Zipper Type Core.String.Zipper
 
 toValue : Zipper -> Value
-toValue (t,z) = (t, Core.String.toValue z)
+toValue = Tagged.toValue Core.String.toValue
+
+toString : Value -> String
+toString (t,s) = s
 
 value : Type -> String -> Value
-value t s = (t, s)
+value = Tagged.value
 
-stringZipper : (Core.String.Value -> Core.String.Zipper) -> Value -> Zipper
-stringZipper fn (t,v) = (t, fn v)
+normal : String -> Value
+normal = Tagged.value Normal
+
+empty : Value
+empty = normal ""
 
 startZipper : Value -> Zipper
-startZipper = stringZipper Core.String.startZipper
+startZipper = Tagged.toZipper Core.String.startZipper
 
 endZipper : Value -> Zipper
-endZipper = stringZipper Core.String.endZipper
+endZipper = Tagged.toZipper Core.String.endZipper
 
 allZipper : Value -> Zipper
-allZipper = stringZipper Core.String.allZipper
+allZipper = Tagged.toZipper Core.String.allZipper
 
 rangeZipper : (Int,Int) -> Value -> Zipper
-rangeZipper range = stringZipper (Core.String.rangeZipper range)
+rangeZipper range = Tagged.toZipper (Core.String.rangeZipper range)

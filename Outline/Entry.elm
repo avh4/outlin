@@ -1,4 +1,8 @@
-module Outline.Entry (BaseValue(..), BaseZipper(..), Value, Zipper, Result, addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper) where
+module Outline.Entry
+  ( BaseValue(..), BaseZipper(..), Value, Zipper, Result
+  , addToInbox
+  , addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper
+  ) where
 
 import Html (Html, node, text)
 import Html.Attributes (class)
@@ -37,6 +41,10 @@ toValue z = case z of
   InDescription e -> Entry { e | description <- Core.String.toValue e.description }
   InInbox e -> Entry { e | inbox <- Core.Array.toValue toValue e.inbox }
   InChild e -> Entry { e | children <- Core.Array.toValue toValue e.children }
+
+addToInbox : List String -> Value -> Value
+addToInbox list v = case v of
+  Entry e -> Entry { e | inbox <- (List.map textEntry list) ++ e.inbox }
 
 textValue : Zipper -> String
 textValue z = case toValue z of
@@ -158,7 +166,7 @@ try = tryMap identity
 
 moveToInboxOfFirstChildOrNext : Value -> Result
 moveToInboxOfFirstChildOrNext en = case en of
-  Entry e -> Maybe.map Update (firstChildInboxZipper en) ? EnterNext
+  Entry e -> Maybe.map Update (firstChildInboxZipper en) |> Maybe.withDefault EnterNext
 
 appendToInboxOfChild : Int -> Value -> Core.Array.Value Value -> Core.Array.Value Value
 appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- Core.Array.prepend v e.inbox }) children

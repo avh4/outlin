@@ -21,6 +21,8 @@ import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
 import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Actions as Block
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
 import Graphics.Collage (collage, toForm, rotate)
@@ -45,6 +47,7 @@ updateZipper action z = case action z of
 
 updateEntry action = updateZipper (Document.doEntry action)
 updateText action = updateZipper (Document.doText action)
+updateBlock action = updateZipper (Document.doBlock action)
 updateSpan action = updateZipper (Document.doSpan action)
 
 ---- INPUT
@@ -98,14 +101,16 @@ step c m = case c of
   Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEndOfLine m
 
   -- Formatting
-  Key (Keys.CommandCharacter "b") -> updateSpan (Span.applyStyle Span.Bold) m
+  Key (Keys.CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task) m
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m
 
   Scratch i -> updateValue (Document.scratchZipper i) m
 
-  LoadedOutline (Ok e) -> Document.replaceOutline m e
-  LoadedScratch (Ok s) -> Document.replaceScratch m s
+  LoadedOutline (Ok e) -> Document.replaceOutline e m
+  LoadedScratch (Ok s) -> Document.replaceScratch s m
+
+  ProcessScratch -> Document.processScratch m
 
   x -> fst (m, Debug.log "Unhandled command" x)

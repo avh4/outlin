@@ -1,5 +1,8 @@
-module Core.Array (Value, Zipper,
-  value, toValue, do, toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
+module Core.Array
+  ( Value, Zipper
+  , value, toValue, single
+  , do, doPropagatingSplits
+  , toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
 
 import Core.Action (..)
 import List
@@ -13,6 +16,9 @@ type alias Result v z = ActionResult (Value v) (Zipper v z)
 
 value : List a -> Value a
 value = identity
+
+single : a -> Value a
+single a = [a]
 
 replaceAt : a -> Int -> List a -> List a
 replaceAt a index list =
@@ -113,7 +119,26 @@ remove fn (left,cur,right) =
 do : (z -> v) -> (v -> z) -> (v -> z) -> (z -> ActionResult v z) -> Zipper v z -> Result v z
 do toVal nextFn prevFn action (left,cur,right) = case action cur of
   Update new -> Update (left,new,right)
-  Split newLeft new newRight -> Update (reverse newLeft ++ left,new,newRight ++ right)
+  Split newLeft new newRight ->
+    Update (reverse newLeft ++ left,new,newRight ++ right)
+  Delete -> case right of
+    (next :: tail) -> Update (left, nextFn next, tail)
+    [] -> case left of
+      (next :: tail) -> Update (tail, prevFn next, right)
+      [] -> Delete
+  EnterNext -> case right of
+    (next :: tail) -> Update (toVal cur :: left, nextFn next, tail)
+    [] -> EnterNext
+  EnterPrev -> case left of
+    (next :: tail) -> Update (tail, prevFn next, toVal cur :: right)
+    [] -> EnterPrev
+  NoChange -> NoChange
+
+doPropagatingSplits : (z -> v) -> (v -> z) -> (v -> z) -> (z -> ActionResult v z) -> Zipper v z -> Result v z
+doPropagatingSplits toVal nextFn prevFn action (left,cur,right) = case action cur of
+  Update new -> Update (left,new,right)
+  Split newLeft new newRight ->
+    Split [reverse left ++ newLeft] ([], new, newRight ++ right) []
   Delete -> case right of
     (next :: tail) -> Update (left, nextFn next, tail)
     [] -> case left of

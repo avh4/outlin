@@ -1,20 +1,16 @@
-module Outline.RichText.Render (toElement, toHtml) where
+module Outline.RichText.Render
+  ( toHtml
+  ) where
 
 import Outline.RichText.Span.Model (Type(..))
+import Outline.RichText.Block.Render as Block
 import Outline.RichText.Model (..)
-import Html
-import Html (Html)
+import Html (..)
 import List
-import Graphics.Element (..)
+import Core.Array
+import App.Render.String as String
 
-toHtml : (a -> Html) -> (Type,a) -> Html
-toHtml fn (t,s) = case t of
-  Normal -> fn s
-  Bold -> Html.node "b" [] [ fn s ]
-  --TODO: more cases
-  _ -> Html.text <| "(?? " ++ (toString s) ++ " ??)"
-
-toElement : Int -> Int -> Value -> Element
-toElement w h v =
-  Html.node "div" [] (List.map (toHtml Html.text) v)
-  |> Html.toElement w h
+toHtml : Zipper -> Html
+toHtml z = z
+  |> Core.Array.map Block.valueToHtml Block.zipperToHtml
+  |> node "div" []

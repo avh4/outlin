@@ -1,56 +1,41 @@
 module Outline.RichText.Model
   ( Value, Zipper
   , value
-  , toValue, split, filter
+  , toValue
   , endZipper, allZipper
+  , getTasks
   ) where
 
 import Core.String
 import Core.Array
 import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Json as Span
+import Outline.RichText.Block.Model as Block
 import String
 import List
 import List ((::))
+import Maybe (Maybe(..), withDefault)
 
-type alias Value = Core.Array.Value Span.Value
-type alias Zipper = Core.Array.Zipper Span.Value Span.Zipper
+type alias Value = Core.Array.Value Block.Value
+type alias Zipper = Core.Array.Zipper Block.Value Block.Zipper
 
 value : String -> Value
-value s = [(Span.Normal, s)]
+value s = s |> Span.normal |> Block.paragraph |> Core.Array.single
 
 toValue : Zipper -> Value
-toValue = Core.Array.toValue Span.toValue
+toValue = Core.Array.toValue Block.toValue
 
 emptyZipper : Zipper
-emptyZipper = Core.Array.zipper [] (Span.endZipper <| Span.value Span.Normal "") []
+emptyZipper = Core.Array.zipper [] (Block.endZipper <| Block.paragraph <| Span.normal "") []
 
 endZipper : Value -> Zipper
-endZipper v = case Core.Array.lastZipperM Span.endZipper v of
-  Just z -> z
-  Nothing -> emptyZipper
+endZipper v = Core.Array.lastZipperM Block.endZipper v
+  |> withDefault emptyZipper
 
 allZipper : Value -> Zipper
-allZipper v = case Core.Array.lastZipperM Span.allZipper v of
-  Just z -> z
-  Nothing -> emptyZipper
+allZipper v = Core.Array.lastZipperM Block.allZipper v
+  |> withDefault emptyZipper
 
-splitOne : String -> Span.Value -> List Span.Value
-splitOne needle (t,s) = String.split needle s |> List.map (\s -> (t,s))
-
-splitAppend_ : List a -> (List a, List (List a)) -> (List a, List (List a))
-splitAppend_ next (acc,finished) = case next of
-  [] -> (acc,finished)
-  (single::[]) -> (single::acc,finished)
-  (first::rest) -> case List.reverse rest of
-    (last::mid) -> ([last], (List.map (\x -> [x]) mid) ++ ((List.reverse (first::acc))::finished))
-
-split : String -> Value -> List Value
-split needle v = List.map (splitOne needle) v
-  |> List.foldl splitAppend_ ([],[])
-  |> (\(acc,finished) -> List.reverse (List.reverse acc::finished))
-
-filter : (Span.Type -> String -> Bool) -> Zipper -> List Span.Value
-filter predicate z = z
-  |> Core.Array.map identity Span.toValue
-  |> List.filter (\(t,s) -> predicate t s)
+getTasks : Value -> List Block.Value
+getTasks v = v
+  |> List.filter (\(t,s) -> t == Block.Task)

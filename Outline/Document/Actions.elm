@@ -1,4 +1,8 @@
-module Outline.Document.Actions (Result, do, doEntry, doSpan, doText, enter) where
+module Outline.Document.Actions
+  ( Result
+  , do, doEntry, doBlock, doSpan, doText
+  , enter, processScratch
+  ) where
 
 import Outline.Document.Model (..)
 import Core.Action (..)
@@ -7,8 +11,12 @@ import Core.String
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
+import Outline.RichText.Model as RichText
 import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Actions as Block
+import List
 
 type alias Result = ActionResult Value Zipper
 
@@ -31,8 +39,16 @@ do scratchFn entryFn zipper = case zipper of
     EnterNext -> NoChange
     NoChange -> NoChange
 
+doScratch : (Scratch.Zipper -> Scratch.Result) -> Zipper -> Result
+doScratch scratchFn = do scratchFn (\_ -> NoChange)
+
 doEntry : (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 doEntry entryFn = do (\_ -> NoChange) entryFn
+
+doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
+doBlock blockFn = do
+  (Scratch.doBlock blockFn)
+  (\_ -> NoChange)
 
 doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
 doSpan spanFn = do
@@ -45,6 +61,21 @@ doText stringFn = do
   (Entry.do stringFn)
 
 enter : Zipper -> Result
-enter = do
-  (Scratch.doText (Core.String.insert "\n"))
-  (Entry.do Core.String.split)
+enter = doText Core.String.split
+
+replaceTasks : Entry.Value -> Zipper -> Zipper
+replaceTasks newTasks z = case z of
+  InScratch sz tv -> InScratch sz newTasks
+  InOutline sv tz -> InOutline sv (newTasks |> Entry.textZipper)
+
+processScratch : Zipper -> Zipper
+processScratch m = case m of
+  InScratch z ev ->
+    let
+      currentScratch = Core.Array.active z
+      newTasks = currentScratch |> Scratch.toValue |> RichText.getTasks |> List.map Block.toString
+    in
+      case m |> doScratch (\_ -> Delete) of
+        Update m' -> m' |> replaceTasks (Entry.addToInbox newTasks ev)
+        _ -> InOutline [] (Entry.addToInbox newTasks ev |> Entry.textZipper)
+  _ -> m

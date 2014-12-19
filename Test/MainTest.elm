@@ -108,6 +108,7 @@ test2 = test "sorting in an empty template" <|
 test3 = test "Add tasks when processing scratch" <|
   foldl App.step initialDocument
     [ Tab "Scratch"
+    , Key (CommandShift Left)
     , Key (Character "Weekly review")
     , Key (Single Enter)
     , Key (Single Enter)
