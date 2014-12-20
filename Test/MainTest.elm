@@ -105,34 +105,42 @@ test2 = test "sorting in an empty template" <|
       ]
     )
 
-test3 = test "Add tasks when processing scratch" <|
-  foldl App.step initialDocument
-    [ Tab "Scratch"
-    , Key (CommandShift Left)
-    , Key (Character "Weekly review")
-    , Key (Single Enter)
-    , Key (Single Enter)
-    , Key (Character "review finances")
-    , Key (CommandShift Left)
-    , Key (CommandCharacter "b") -- mark task
-    , Key (Command Right)
-    , Key (Single Enter)
-    , Key (Character "book flight to Toronto")
-    , Key (CommandShift Left)
-    , Key (CommandCharacter "b") -- mark task
-    , ProcessScratch
+test3 =
+  case foldl App.step initialDocument
+      [ Tab "Scratch"
+      , Key (CommandShift Left)
+      , Key (Character "Weekly review")
+      , Key (Single Enter)
+      , Key (Single Enter)
+      , Key (Character "review finances")
+      , Key (CommandShift Left)
+      , Key (CommandCharacter "b") -- mark task
+      , Key (Command Right)
+      , Key (Single Enter)
+      , Key (Character "book flight to Toronto")
+      , Key (CommandShift Left)
+      , Key (CommandCharacter "b") -- mark task
+      , ProcessScratch
+      ] of
+  result ->
+    Suite "Processing scratch files"
+    [ test "adds tasks" <|
+      (result |> Document.toValue |> .outline)
+      `assertEqual`
+      entry "" ""
+      [ entry "review finances" "" [] []
+      , entry "book flight to Toronto" "" [] []
+      ] []
+    , test "removes processed scratch" <|
+      (result |> Document.toValue |> .scratch)
+      `assertEqual`
+      []
+    -- , test "archives processed scratch to notes" <|
+    --   (result |> Document.toValue |> .notes)
+    --   `assertEqual`
+    --   [ "Weekly review\nreview finances\nbook flight to Toronto" ]
+    -- , test "archives tasks"
     ]
-  `assertEqual`
-  ({scratch = []
-  , outline = entry "" ""
-    [ entry "review finances" "" [] []
-    , entry "book flight to Toronto" "" [] []
-    ]
-    []
-  -- , tasks = [ "review finances", "book flight to Toronto" ]
-  -- , notes = [ "Weekly review\nreview finances\nbook flight to Toronto" ]
-  }
-  |> Document.outlineZipper)
 
 suite = Suite "Integration tests"
   [ test1
