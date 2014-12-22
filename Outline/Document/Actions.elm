@@ -42,6 +42,7 @@ do scratchFn entryFn zipper = case zipper of
       Nothing -> NoChange -- TODO: make a new empty scratch
     EnterNext -> NoChange
     NoChange -> NoChange
+  InNotesArchive r -> NoChange
 
 doScratch : (Scratch.Zipper -> Scratch.Result) -> Zipper -> Result
 doScratch scratchFn = do scratchFn (\_ -> NoChange)
@@ -76,11 +77,13 @@ replaceOutline : Entry.Value -> Zipper -> Zipper
 replaceOutline outline' z = case z of
   InScratch r -> InScratch { r | outline <- outline' }
   InOutline r -> InOutline { r | outline <- outline' |> Entry.textZipper }
+  InNotesArchive r -> InNotesArchive { r | outline <- outline' }
 
 addNote : RichText.Value -> Zipper -> Zipper
 addNote note z = case z of
   InScratch r -> InScratch { r | notes <- note :: r.notes }
   InOutline r -> InOutline { r | notes <- note :: r.notes }
+  InNotesArchive r -> InNotesArchive { r | notes <- note :: r.notes }
 
 processScratch : Zipper -> Zipper
 processScratch m = case m of

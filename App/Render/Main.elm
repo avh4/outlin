@@ -11,6 +11,7 @@ import Color (..)
 import Graphics.Element (..)
 import App.Render.Scratch as Scratch
 import App.Render.Outline as Outline
+import App.Render.Notes as Notes
 import List
 import Graphics.Input (clickable)
 import Signal
@@ -34,10 +35,14 @@ tabs channel l sel r = flow right
 render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> (Int,Int) -> Zipper -> Element
 render tabChannel scratchChannel processScratchChannel (w,h) z = case z of
   InScratch r -> flow down
-    [ tabs tabChannel [] "Scratch" ["Tasks"]
+    [ tabs tabChannel [] "Scratch" ["Tasks", "Notes"]
     , Scratch.render w scratchChannel processScratchChannel r.scratch
     ]
   InOutline r -> flow down
-    [ tabs tabChannel ["Scratch"] "Tasks" []
+    [ tabs tabChannel ["Scratch"] "Tasks" ["Notes"]
     , Outline.render (w,h-50) r.outline
+    ]
+  InNotesArchive r -> flow down
+    [ tabs tabChannel ["Scratch", "Tasks"] "Notes" []
+    , Notes.render (w,h) r.notes
     ]

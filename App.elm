@@ -105,6 +105,7 @@ step c m = case c of
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m
+  Tab "Notes" -> updateValue Document.notesZipper m
 
   Scratch i -> updateValue (Document.scratchZipper i) m
 
