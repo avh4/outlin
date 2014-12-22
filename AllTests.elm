@@ -9,6 +9,7 @@ import Test.Outline.SpanTest
 import Test.Outline.BlockTest
 import Test.Outline.EntryTest
 import Test.MainTest
+import Test.Migration.ScratchTest
 
 all = Suite "outlin"
   [ Test.Core.StringTest.suite
@@ -17,4 +18,5 @@ all = Suite "outlin"
   , Test.Outline.BlockTest.suite
   , Test.Outline.EntryTest.suite
   , Test.MainTest.suite
+  , Test.Migration.ScratchTest.suite
   ]

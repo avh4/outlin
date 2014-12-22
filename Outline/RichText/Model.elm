@@ -20,7 +20,8 @@ type alias Value = Core.Array.Value Block.Value
 type alias Zipper = Core.Array.Zipper Block.Value Block.Zipper
 
 value : String -> Value
-value s = s |> Span.normal |> Block.paragraph |> Core.Array.single
+value s = s |> String.split "\n"
+  |> List.map (\s -> s |> Span.normal |> Block.paragraph)
 
 toValue : Zipper -> Value
 toValue = Core.Array.toValue Block.toValue

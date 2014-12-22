@@ -1,4 +1,7 @@
-module Outline.Scratch.Json (toJson, decoder, listDecoder) where
+module Outline.Scratch.Json
+  ( toJson
+  , decoder, listDecoder
+  ) where
 
 import Core.Action
 import Core.Array
@@ -11,7 +14,10 @@ toJson : Value -> String
 toJson = RichText.toJson
 
 decoder : Json.Decode.Decoder Value
-decoder = RichText.decoder
+decoder = Json.Decode.oneOf
+  [ RichText.decoder
+  , RichText.stringDecoder
+  ]
 
 listDecoder : Json.Decode.Decoder (Core.Array.Value Value)
 listDecoder = Json.Decode.list decoder

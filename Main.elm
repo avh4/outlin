@@ -44,12 +44,13 @@ commands = Signal.mergeMany
   , Signal.map Paste Keys.pastes
   , Signal.map Tab (Signal.subscribe tabsChannel)
   , Signal.map Scratch (Signal.subscribe scratchChannel)
+  , Signal.map (\_ -> ProcessScratch) (Signal.subscribe processScratchChannel)
   , fromDropbox "outlin.json" Entry.decoder LoadedOutline
   , fromDropbox "scratch.json" Scratch.listDecoder LoadedScratch
-  , Signal.map (\_ -> ProcessScratch) (Signal.subscribe processScratchChannel)
   ]
 
-initialDocument = (Document.scratchZipper 0 SampleData.template)
+-- initialDocument = (Document.scratchZipper 0 SampleData.template)
+initialDocument = Document.emptyValue |> Document.scratchZipper 0
 
 state = Signal.foldp App.step initialDocument commands
 
@@ -57,9 +58,9 @@ state = Signal.foldp App.step initialDocument commands
 
 main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel) Window.dimensions state
 
-outlineOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.outlineValue |> Entry.toJson) state
+outlineOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.toValue |> .outline |> Entry.toJson) state
 
-scratchOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.scratchValue |> Core.Array.toJson Scratch.toJson) state
+scratchOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.toValue |> .scratch |> Core.Array.toJson Scratch.toJson) state
 
 outlineToDropbox = dropbox.write "outlin.json" outlineOutput
 scratchToDropbox = dropbox.write "scratch.json" scratchOutput
