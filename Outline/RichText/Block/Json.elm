@@ -10,6 +10,7 @@ import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Json as Span
 
 typeString t = case t of
+  Heading -> "Heading"
   Paragraph -> "Paragraph"
   Quote -> "Quote"
   Task -> "Task"
@@ -21,6 +22,7 @@ toJson (t,v) = "{\"type\":\"" ++ typeString t
 
 typeDecoder : Json.Decode.Decoder Type
 typeDecoder = Json.Decode.string |> Json.Decode.map (\s -> case s of
+  "Heading" -> Heading
   "Paragraph" -> Paragraph
   "Quote" -> Quote
   "Task" -> Task

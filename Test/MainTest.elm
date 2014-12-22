@@ -10,6 +10,9 @@ import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry
 import Outline.Document.Model as Document
 import Outline.Scratch.Model as Scratch
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Model (Type(..))
+import Outline.RichText.Span.Model as Span
 import Core.String
 import Core.Array
 import List (foldl)
@@ -17,7 +20,7 @@ import List (foldl)
 initialDocument = Document.emptyValue |> Document.scratchZipper 0
 
 assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
-assertEqualOutline doc entry = assertEqual doc (Document.InOutline [Scratch.value "Scratch 1"] entry)
+assertEqualOutline doc entry = assertEqual doc (Document.InOutline {scratch=[Scratch.value "Scratch 1"], outline=entry, notes=[]})
 
 test1 = test "first-use scenario" <|
   foldl App.step initialDocument
@@ -111,7 +114,6 @@ test3 =
       , Key (CommandShift Left)
       , Key (Character "Weekly review")
       , Key (Single Enter)
-      , Key (Single Enter)
       , Key (Character "review finances")
       , Key (CommandShift Left)
       , Key (CommandCharacter "b") -- mark task
@@ -135,10 +137,15 @@ test3 =
       (result |> Document.toValue |> .scratch)
       `assertEqual`
       []
-    -- , test "archives processed scratch to notes" <|
-    --   (result |> Document.toValue |> .notes)
-    --   `assertEqual`
-    --   [ "Weekly review\nreview finances\nbook flight to Toronto" ]
+    , test "archives processed scratch to notes" <|
+      (result |> Document.toValue |> .notes)
+      `assertEqual`
+      [
+        [ Block.value Heading [Span.normal "Weekly review"]
+        , Block.value Task [Span.normal "review finances"]
+        , Block.value Task [Span.normal "book flight to Toronto"]
+        ]
+      ]
     -- , test "archives tasks"
     ]
 

@@ -17,24 +17,28 @@ import Outline.RichText.Span.Actions as Span
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import List
+import List ((::))
 
 type alias Result = ActionResult Value Zipper
 
 do : (Scratch.Zipper -> Scratch.Result) -> (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 do scratchFn entryFn zipper = case zipper of
-  InScratch sZipper eVal -> case Core.Array.do Scratch.toValue Scratch.endZipper Scratch.endZipper scratchFn sZipper of
-    Update sZipper' -> Update <| InScratch sZipper' eVal
-    Split _ _ _ -> NoChange -- Core.Array can't even propogate a split, right?
+  InScratch r -> case Core.Array.do Scratch.toValue Scratch.endZipper Scratch.endZipper scratchFn r.scratch of
+    Update sZipper' -> Update <| InScratch { r | scratch <- sZipper' }
+    Split _ _ _ -> NoChange -- Core.Array.do can't even propogate a split, right?
     Delete -> NoChange -- TODO: replace scratches with new empty scratch
     EnterPrev -> NoChange
-    EnterNext -> Update <| InOutline (Core.Array.toValue Scratch.toValue sZipper) (Entry.textZipper eVal)
+    EnterNext -> Update <| (zipper |> toValue |> outlineZipper)
     NoChange -> NoChange
-  InOutline sVal eZipper -> case entryFn eZipper of
-    Update eZipper' -> Update <| InOutline sVal eZipper'
+  InOutline r -> case entryFn r.outline of
+    Update eZipper' -> Update <| InOutline { r | outline <- eZipper' }
     Split _ _ _ -> NoChange -- Not allowed to split the root node
     Delete -> NoChange -- Not allowed to delete the root node
-    EnterPrev -> case Core.Array.firstZipperM Scratch.endZipper sVal of
-      Just sZipper -> Update <| InScratch sZipper (Entry.toValue eZipper)
+    EnterPrev -> case Core.Array.firstZipperM Scratch.endZipper r.scratch of
+      Just sZipper -> Update <| InScratch { r
+        | scratch <- sZipper
+        , outline <- Entry.toValue r.outline
+        }
       Nothing -> NoChange -- TODO: make a new empty scratch
     EnterNext -> NoChange
     NoChange -> NoChange
@@ -68,19 +72,31 @@ backspace = do
   (Scratch.doBlock Block.backspace)
   (Entry.do Core.String.backspace)
 
-replaceTasks : Entry.Value -> Zipper -> Zipper
-replaceTasks newTasks z = case z of
-  InScratch sz tv -> InScratch sz newTasks
-  InOutline sv tz -> InOutline sv (newTasks |> Entry.textZipper)
+replaceOutline : Entry.Value -> Zipper -> Zipper
+replaceOutline outline' z = case z of
+  InScratch r -> InScratch { r | outline <- outline' }
+  InOutline r -> InOutline { r | outline <- outline' |> Entry.textZipper }
+
+addNote : RichText.Value -> Zipper -> Zipper
+addNote note z = case z of
+  InScratch r -> InScratch { r | notes <- note :: r.notes }
+  InOutline r -> InOutline { r | notes <- note :: r.notes }
 
 processScratch : Zipper -> Zipper
 processScratch m = case m of
-  InScratch z ev ->
+  InScratch r ->
     let
-      currentScratch = Core.Array.active z
-      newTasks = currentScratch |> Scratch.toValue |> RichText.getTasks |> List.map Block.toString
+      currentScratch = Core.Array.active r.scratch
+      scratchValue = currentScratch |> Scratch.toValue
+      newTasks = scratchValue |> RichText.getTasks |> List.map Block.toString
     in
       case m |> doScratch (\_ -> Delete) of
-        Update m' -> m' |> replaceTasks (Entry.addToInbox newTasks ev)
-        _ -> InOutline [] (Entry.addToInbox newTasks ev |> Entry.textZipper)
+        Update m' -> m'
+          |> replaceOutline (Entry.addToInbox newTasks r.outline)
+          |> addNote scratchValue
+        _ -> InOutline { r
+          | scratch <- []
+          , outline <- (Entry.addToInbox newTasks r.outline |> Entry.textZipper)
+          }
+          |> addNote scratchValue
   _ -> m

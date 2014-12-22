@@ -14,7 +14,8 @@ import String
 import List
 
 type Type
-  = Paragraph
+  = Heading
+  | Paragraph
   | Quote
   | Task
 

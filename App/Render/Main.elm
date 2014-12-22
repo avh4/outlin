@@ -33,11 +33,11 @@ tabs channel l sel r = flow right
 
 render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> (Int,Int) -> Zipper -> Element
 render tabChannel scratchChannel processScratchChannel (w,h) z = case z of
-  InScratch sZip _ -> flow down
+  InScratch r -> flow down
     [ tabs tabChannel [] "Scratch" ["Tasks"]
-    , Scratch.render w scratchChannel processScratchChannel sZip
+    , Scratch.render w scratchChannel processScratchChannel r.scratch
     ]
-  InOutline sVal eZip -> flow down
+  InOutline r -> flow down
     [ tabs tabChannel ["Scratch"] "Tasks" []
-    , Outline.render (w,h-50) eZip
+    , Outline.render (w,h-50) r.outline
     ]

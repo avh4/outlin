@@ -20,9 +20,8 @@ import Html
 
 navItem : Int -> Signal.Channel Int -> Int -> Scratch.Value -> Element
 navItem w channel i v = v
-  -- |> RichText.split "\n" |> List.head
   |> List.head
-  |> Block.valueToHtml |> Html.toElement w 40
+  |> Block.spanToHtml |> Html.toElement w 40
   |> clickable (Signal.send channel i)
 
 selectedNavItem : Int -> Signal.Channel Int -> Int -> Scratch.Zipper -> Element

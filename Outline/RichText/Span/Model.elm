@@ -11,8 +11,7 @@ import Core.Tagged.Model as Tagged
 type Type
   = Normal
   | Bold
-  | Task
-  | Link String
+  -- | Link String
 
 type alias Value = Tagged.Value Type Core.String.Value
 type alias Zipper = Tagged.Zipper Type Core.String.Zipper
