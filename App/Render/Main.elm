@@ -6,43 +6,40 @@ import Core.Action (..)
 import Core.Array
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
-import Text (asText, plainText)
-import Color (..)
-import Graphics.Element (..)
 import App.Render.Scratch as Scratch
 import App.Render.Outline as Outline
 import App.Render.Notes as Notes
 import List
-import Graphics.Input (clickable)
 import Signal
+import Text
 
-tab : String -> Element
-tab label = label |> plainText |> width 80
+import Rectified (..)
+import App.Styles (..)
 
-clickableTab channel label = tab label
-  |> clickable (Signal.send channel label)
+tab channel (isSelected,label) = case isSelected of
+  True -> centeredText bold label |> highlight
+  False -> centeredText plain label
+    |> clickable (Signal.send channel label)
 
-selectedTab label = tab label
-  |> color yellow
+tabbar : Signal.Channel String -> List (Bool,String) -> Element
+tabbar channel vs = row 0 (tab channel) vs |> panel
 
-tabs : Signal.Channel String -> List String -> String -> List String -> Element
-tabs channel l sel r = flow right
-  (  (List.map (clickableTab channel) l)
-  ++ [sel |> selectedTab]
-  ++ (List.map (clickableTab channel) r)
-  )
+tabNames = ["Scratch", "Tasks", "Notes"]
 
-render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> (Int,Int) -> Zipper -> Element
-render tabChannel scratchChannel processScratchChannel (w,h) z = case z of
-  InScratch r -> flow down
-    [ tabs tabChannel [] "Scratch" ["Tasks", "Notes"]
-    , Scratch.render w scratchChannel processScratchChannel r.scratch
-    ]
-  InOutline r -> flow down
-    [ tabs tabChannel ["Scratch"] "Tasks" ["Notes"]
-    , Outline.render (w,h-50) r.outline
-    ]
-  InNotesArchive r -> flow down
-    [ tabs tabChannel ["Scratch", "Tasks"] "Notes" []
-    , Notes.render (w,h) r.notes
-    ]
+selectTab name = List.map (\t -> (name == t, t)) tabNames
+tabName z = case z of
+  InScratch _ -> "Scratch"
+  InOutline _ -> "Tasks"
+  InNotesArchive _ -> "Notes"
+
+body scratchChannel processScratchChannel z = case z of
+  InScratch r -> Scratch.render scratchChannel processScratchChannel r.scratch
+  InOutline r -> Outline.render r.outline
+  InNotesArchive r -> Notes.render r.notes
+
+render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> Zipper -> Element
+render tabChannel scratchChannel processScratchChannel z =
+  top 60 0
+    (tabbar tabChannel (selectTab <| tabName z))
+    (body scratchChannel processScratchChannel z)
+  |> background

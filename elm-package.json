@@ -6,7 +6,8 @@
     "source-directories": [
         ".",
         "submodules/elm-dropbox",
-        "submodules/elm-keys"
+        "submodules/elm-keys",
+        "submodules/rectified-elm"
     ],
     "native-modules": true,
     "exposed-modules": [],

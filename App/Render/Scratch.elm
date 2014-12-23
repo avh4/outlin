@@ -9,54 +9,42 @@ import App.Render.RichText as RichText
 import Outline.RichText.Span.Model as Span
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Render as Block
-import Graphics.Element (..)
-import Graphics.Input (clickable)
-import Color (..)
-import Text (plainText)
+import Rectified (..)
 import Signal
 import String
 import List
 import Html
 
-navItem : Int -> Signal.Channel Int -> Int -> Scratch.Value -> Element
-navItem w channel i v = v
-  |> List.head
-  |> Block.spanToHtml |> Html.toElement w 40
-  |> clickable (Signal.send channel i)
+import App.Styles (..)
 
-selectedNavItem : Int -> Signal.Channel Int -> Int -> Scratch.Zipper -> Element
-selectedNavItem w channel i z = z
-  |> Scratch.toValue
-  |> navItem w channel i
-  |> color yellow
+type Foo = Val Int Scratch.Value | Zip Int Scratch.Zipper
 
-list w channel z = z
-  |> Core.Array.indexedMap (navItem w channel) (selectedNavItem w channel)
-  |> flow down
+item channel n = case n of
+  Zip _ _ -> empty
+  Val i v -> (v |> List.head |> Block.spanToHtml |> html margin) |> panel
+      |> clickable (Signal.send channel i)
 
-task : Int -> Block.Value -> Element
-task w (_,s) = flow right
-  [ plainText ">>> " |> color blue
-  , plainText (toString s)
-  ]
-  |> width w
+navbar : Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+navbar scratchChannel processChannel z = z
+  |> Core.Array.indexedMap (\i v -> Val i v) (\i z -> Zip i z)
+  |> list 60 2 (item scratchChannel)
 
-tasks : Int -> Scratch.Zipper -> Element
-tasks w z = z
-  |> RichText.toValue
-  |> RichText.getTasks
-  |> List.map (task w)
-  |> flow down
+task : Block.Value -> Element
+task b = b
+  |> Block.spanToHtml
+  |> html 0
+  |> left 30 0 (text bold 0 ">>>" |> grey 20)
 
-renderZipper : Int -> Signal.Channel () -> Scratch.Zipper -> Element
-renderZipper w processChannel z = flow down
-  [ RichText.render w z
-  , tasks w z
-  , plainText "[PROCESS]" |> color red |> clickable (Signal.send processChannel ())
-  ]
+content : Signal.Channel () -> Scratch.Zipper -> Element
+content processChannel z =
+  let tasks = (z |> RichText.toValue |> RichText.getTasks)
+  in
+    html margin (RichText.toHtml z)
+    |> bottom (20*List.length tasks) margin (list 20 0 task tasks)
+    |> bottom 50 margin
+      (debug "[PROCESS]" |> grey 60 |> clickable (Signal.send processChannel ()))
+    |> panel
 
-render : Int -> Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render w scratchChannel processChannel z = flow right
-  [ list 200 scratchChannel z
-  , Core.Array.active z |> renderZipper (w-200) processChannel
-  ]
+render : Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render scratchChannel processChannel z =
+  left 280 margin (navbar scratchChannel processChannel z) (content processChannel <| Core.Array.active z) |> inset margin

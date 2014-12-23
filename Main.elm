@@ -56,7 +56,7 @@ state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel) Window.dimensions state
+main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel) state Window.dimensions
 
 outlineOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.toValue |> .outline |> Entry.toJson) state
 

@@ -1,4 +1,4 @@
-module App.Render.String (render, toHtml) where
+module App.Render.String (toHtml) where
 
 import Core.String
 import Graphics.Element (..)
@@ -28,6 +28,3 @@ toHtml (left,sel,right) = node "span"
     [ text sel ]
   , text <| right
   ]
-
-render : Core.String.Zipper -> Element
-render z = toHtml z |> toElement 100 100
