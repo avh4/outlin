@@ -1,7 +1,7 @@
 module Outline.Document.Actions
   ( Result
   , do, doEntry, doBlock, doSpan, doText
-  , enter, backspace, processScratch
+  , enter, backspace, processScratch, newScratch
   ) where
 
 import Outline.Document.Model (..)
@@ -103,3 +103,13 @@ processScratch m = case m of
           }
           |> addNote scratchValue
   _ -> m
+
+addScratch : Value -> Value
+addScratch r = case ("Scratch " ++ toString (1 + List.length r.scratch)) of
+  title -> { r | scratch <- (RichText.heading title) :: r.scratch }
+
+newScratch : Zipper -> Zipper
+newScratch z = case z |> toValue of
+  v -> v
+    |> addScratch
+    |> scratchZipper 0

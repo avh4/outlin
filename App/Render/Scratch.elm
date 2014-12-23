@@ -24,10 +24,15 @@ item channel n = case n of
   Val i v -> (v |> List.head |> Block.spanToHtml |> html margin) |> panel
       |> clickable (Signal.send channel i)
 
-navbar : Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-navbar scratchChannel processChannel z = z
+newScratchButton channel = text dim margin "+ New Scratch..."
+  |> grey 70
+  |> clickable (Signal.send channel ())
+
+navbar : Signal.Channel Int -> Signal.Channel () -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+navbar scratchChannel processChannel newScratchChannel z = z
   |> Core.Array.indexedMap (\i v -> Val i v) (\i z -> Zip i z)
   |> list 60 2 (item scratchChannel)
+  |> top 40 2 (newScratchButton newScratchChannel)
 
 task : Block.Value -> Element
 task b = b
@@ -45,6 +50,8 @@ content processChannel z =
       (debug "[PROCESS]" |> grey 60 |> clickable (Signal.send processChannel ()))
     |> panel
 
-render : Signal.Channel Int -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render scratchChannel processChannel z =
-  left 280 margin (navbar scratchChannel processChannel z) (content processChannel <| Core.Array.active z) |> inset margin
+render : Signal.Channel Int -> Signal.Channel () -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render scratchChannel processChannel newScratchChannel z =
+  Core.Array.active z |> content processChannel
+  |> left 280 margin (navbar scratchChannel processChannel newScratchChannel z)
+  |> inset margin

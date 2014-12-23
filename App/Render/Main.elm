@@ -32,14 +32,14 @@ tabName z = case z of
   InOutline _ -> "Tasks"
   InNotesArchive _ -> "Notes"
 
-body scratchChannel processScratchChannel z = case z of
-  InScratch r -> Scratch.render scratchChannel processScratchChannel r.scratch
+body scratchChannel processScratchChannel newScratchChannel z = case z of
+  InScratch r -> Scratch.render scratchChannel processScratchChannel newScratchChannel r.scratch
   InOutline r -> Outline.render r.outline
   InNotesArchive r -> Notes.render r.notes
 
-render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> Zipper -> Element
-render tabChannel scratchChannel processScratchChannel z =
+render : Signal.Channel String -> Signal.Channel Int -> Signal.Channel () -> Signal.Channel () -> Zipper -> Element
+render tabChannel scratchChannel processScratchChannel newScratchChannel z =
   top 60 0
     (tabbar tabChannel (selectTab <| tabName z))
-    (body scratchChannel processScratchChannel z)
+    (body scratchChannel processScratchChannel newScratchChannel z)
   |> background

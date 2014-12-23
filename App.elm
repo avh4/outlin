@@ -60,6 +60,7 @@ type Command
   | Tab String
   | Scratch Int
   | ProcessScratch
+  | NewScratch
 
 -- TODO: refactor to keep trailing 'm' out of here
 step : Command -> Document.Zipper -> Document.Zipper
@@ -113,5 +114,6 @@ step c m = case c of
   LoadedScratch (Ok s) -> Document.replaceScratch s m
 
   ProcessScratch -> Document.processScratch m
+  NewScratch -> Document.newScratch m
 
   x -> fst (m, Debug.log "Unhandled command" x)

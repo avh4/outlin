@@ -28,6 +28,7 @@ dropbox = Dropbox.client "mjplyqeks6z3js8"
 tabsChannel = Signal.channel ""
 scratchChannel = Signal.channel 0
 processScratchChannel = Signal.channel ()
+newScratchChannel = Signal.channel ()
 
 decode : Json.Decode.Decoder x -> String -> Result String x
 decode decoder s = Json.Decode.decodeString decoder s
@@ -45,6 +46,7 @@ commands = Signal.mergeMany
   , Signal.map Tab (Signal.subscribe tabsChannel)
   , Signal.map Scratch (Signal.subscribe scratchChannel)
   , Signal.map (\_ -> ProcessScratch) (Signal.subscribe processScratchChannel)
+  , Signal.map (\_ -> NewScratch) (Signal.subscribe newScratchChannel)
   , fromDropbox "outlin.json" Entry.decoder LoadedOutline
   , fromDropbox "scratch.json" Scratch.listDecoder LoadedScratch
   ]
@@ -56,7 +58,7 @@ state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel) state Window.dimensions
+main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel newScratchChannel) state Window.dimensions
 
 outlineOutput = Signal.dropRepeats <| Signal.map (\x -> x |> Document.toValue |> .outline |> Entry.toJson) state
 

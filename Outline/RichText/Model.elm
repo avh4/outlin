@@ -1,6 +1,6 @@
 module Outline.RichText.Model
   ( Value, Zipper
-  , value
+  , value, heading
   , toValue
   , endZipper, allZipper
   , getTasks
@@ -22,6 +22,10 @@ type alias Zipper = Core.Array.Zipper Block.Value Block.Zipper
 value : String -> Value
 value s = s |> String.split "\n"
   |> List.map (\s -> s |> Span.normal |> Block.paragraph)
+
+heading : String -> Value
+heading s = s |> String.split "\n"
+  |> List.map (\s -> Block.value Block.Heading [s |> Span.normal])
 
 toValue : Zipper -> Value
 toValue = Core.Array.toValue Block.toValue
