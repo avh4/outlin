@@ -6,4 +6,4 @@
 	url = https://github.com/avh4/elm-dropbox.git
 [submodule "submodules/rectified-elm"]
 	path = submodules/rectified-elm
-	url = git@github.com:avh4/rectified-elm.git
+	url = https://github.com/avh4/rectified-elm.git
