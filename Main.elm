@@ -58,8 +58,8 @@ dropboxChannels =
 
 toDropbox (filename, _, fn) = state
   |> Signal.map Document.toValue
-  |> Signal.map fn
   |> Signal.dropRepeats
+  |> Signal.map fn
   |> dropbox.write filename
 
 commands : Signal Command
