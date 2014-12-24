@@ -4,13 +4,17 @@
     "repository": "https://github.com/avh4/outlin.git",
     "license": "BSD3",
     "source-directories": [
-        "."
+        ".",
+        "submodules/elm-dropbox",
+        "submodules/elm-keys",
+        "submodules/rectified-elm"
     ],
+    "native-modules": true,
     "exposed-modules": [],
     "dependencies": {
+        "deadfoxygrandpa/Elm-Test": "1.0.2 <= v < 2.0.0",
+        "maxsnew/IO": "1.0.0 <= v < 2.0.0",
         "elm-lang/core": "1.0.0 <= v < 2.0.0",
-        "evancz/elm-html": "1.0.0 <= v < 2.0.0",
-        "avh4/elm-keys": "0.0.1 <= v < 1.0.0",
-        "avh4/elm-dropbox": "0.0.1 <= v < 1.0.0"
+        "evancz/elm-html": "1.0.0 <= v < 2.0.0"
     }
 }

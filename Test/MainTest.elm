@@ -5,24 +5,35 @@ import ElmTest.Test (..)
 
 import App
 import App (Command(..))
-import Keys (KeyInput(..))
+import Keys (..)
 import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry
-import Outline.Document as Document
+import Outline.Document.Model as Document
+import Outline.Scratch.Model as Scratch
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Model (Type(..))
+import Outline.RichText.Span.Model as Span
 import Core.String
 import Core.Array
+import List (foldl)
+
+initialDocument = Document.emptyValue |> Document.scratchZipper 0
+
+assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
+assertEqualOutline doc entry = assertEqual doc (Document.InOutline {scratch=[Scratch.value "Scratch 1"], outline=entry, notes=[]})
 
 test1 = test "first-use scenario" <|
-  foldl App.step (Entry.textZipper Entry.emptyEntry)
-    [ Key (Character "Tasks")
-    , Key (Command "a") -- add
+  foldl App.step initialDocument
+    [ Tab "Tasks"
+    , Key (Character "Tasks")
+    , Key (CommandCharacter"a") -- add
     , Key (Character "By time")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Habits")
-    , Key (Command "p") -- promote
-    , Key (Command "p")
+    , Key (CommandCharacter "p") -- promote
+    , Key (CommandCharacter "p")
     ]
-  `assertEqual`
+  `assertEqualOutline`
   Entry.childZipper (Core.Array.firstZipper Entry.textZipper)
     ( entry "Tasks" "" []
       [ entry "By time" "" [] []
@@ -31,41 +42,43 @@ test1 = test "first-use scenario" <|
     )
 
 test2 = test "sorting in an empty template" <|
-  foldl App.step
-    (Entry.textZipper <| entry "Tasks" "" []
-      [ entry "By time" "" []
-        [ entry "daily" "" [] []
-        , entry "weekly" "" [] []
-        , entry "waiting on" "" [] []
-        , entry "monthly" "" [] []
-        , entry "yearly" "" [] []
+  foldl App.step initialDocument
+    [ Tab "Tasks"
+    , LoadedOutline (Ok
+      ( entry "Tasks" "" []
+        [ entry "By time" "" []
+          [ entry "daily" "" [] []
+          , entry "weekly" "" [] []
+          , entry "waiting on" "" [] []
+          , entry "monthly" "" [] []
+          , entry "yearly" "" [] []
+          ]
+        , entry "Habits" "" []
+          [ entry "daily" "" [] []
+          , entry "weekly" "" [] []
+          , entry "monthly" "" [] []
+          ]
+        , entry "By priority" "" [] []
+        , entry "By projet" "" [] []
         ]
-      , entry "Habits" "" []
-        [ entry "daily" "" [] []
-        , entry "weekly" "" [] []
-        , entry "monthly" "" [] []
-        ]
-      , entry "By priority" "" [] []
-      , entry "By projet" "" [] []
-      ]
-    )
-    [ Key (Command "a") -- add
+      ))
+    , Key (CommandCharacter "a") -- add
     , Key (Character "Watch Strange Loop videos")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Read Illustrated guide to objc_msgSend")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "get volunteers for Girl Develop It")
-    , Key (Enter)
+    , Key (Single Enter)
     , Key (Character "Read voting guide")
-    , Key (Command "a")
+    , Key (CommandCharacter "a")
     , Key (Character "get foam mattress topper")
-    , Key (Command "3") -- mattress topper -> priority
-    , Key (Command "4") -- Strange Loop -> project
-    , Key (Command "4") -- objc_msgSend -> project
-    , Key (Command "1") -- Girl Develop It -> time
-    , Key (Command "1") -- voting guide -> time
+    , Key (CommandCharacter "3") -- mattress topper -> priority
+    , Key (CommandCharacter "4") -- Strange Loop -> project
+    , Key (CommandCharacter "4") -- objc_msgSend -> project
+    , Key (CommandCharacter "1") -- Girl Develop It -> time
+    , Key (CommandCharacter "1") -- voting guide -> time
     ]
-  `assertEqual`
+  `assertEqualOutline`
   Entry.childZipper (Core.Array.firstZipper (Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper)))
     ( entry "Tasks" "" []
       [ entry "By time" ""
@@ -95,7 +108,49 @@ test2 = test "sorting in an empty template" <|
       ]
     )
 
+test3 =
+  case foldl App.step initialDocument
+      [ Tab "Scratch"
+      , Key (CommandShift Left)
+      , Key (Character "Weekly review")
+      , Key (Single Enter)
+      , Key (Character "review finances")
+      , Key (CommandShift Left)
+      , Key (CommandCharacter "b") -- mark task
+      , Key (Command Right)
+      , Key (Single Enter)
+      , Key (Character "book flight to Toronto")
+      , Key (CommandShift Left)
+      , Key (CommandCharacter "b") -- mark task
+      , ProcessScratch
+      ] of
+  result ->
+    Suite "Processing scratch files"
+    [ test "adds tasks" <|
+      (result |> Document.toValue |> .outline)
+      `assertEqual`
+      entry "" ""
+      [ entry "review finances" "" [] []
+      , entry "book flight to Toronto" "" [] []
+      ] []
+    , test "removes processed scratch" <|
+      (result |> Document.toValue |> .scratch)
+      `assertEqual`
+      []
+    , test "archives processed scratch to notes" <|
+      (result |> Document.toValue |> .notes)
+      `assertEqual`
+      [
+        [ Block.value Heading [Span.normal "Weekly review"]
+        , Block.value Task [Span.normal "review finances"]
+        , Block.value Task [Span.normal "book flight to Toronto"]
+        ]
+      ]
+    -- , test "archives tasks"
+    ]
+
 suite = Suite "Integration tests"
   [ test1
   , test2
+  , test3
   ]

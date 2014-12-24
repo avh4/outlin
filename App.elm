@@ -17,7 +17,12 @@ import Color (..)
 import Text
 import Outline.Document.Model as Document
 import Outline.Document.Actions as Document
+import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
+import Outline.RichText.Span.Model as Span
+import Outline.RichText.Span.Actions as Span
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Actions as Block
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
 import Graphics.Collage (collage, toForm, rotate)
@@ -40,26 +45,22 @@ updateZipper action z = case action z of
   Action.EnterPrev -> z
   Action.NoChange -> z
 
-updateEntry : (Entry.Zipper -> Entry.Result) -> Document.Zipper -> Document.Zipper
-updateEntry action z = case Document.doEntry action z of
-  Action.Update z' -> z'
-  _ -> z
-
--- TODO: extract common code from update*
-updateText : (Core.String.Zipper -> Core.String.Result) -> Document.Zipper -> Document.Zipper
-updateText stringFn z = case Document.doText stringFn z of
-  Action.Update z' -> z'
-  _ -> z
+updateEntry action = updateZipper (Document.doEntry action)
+updateText action = updateZipper (Document.doText action)
+updateBlock action = updateZipper (Document.doBlock action)
+updateSpan action = updateZipper (Document.doSpan action)
 
 ---- INPUT
 
 type Command
   = Key Keys.KeyCombo
   | Paste String
-  | LoadedOutline String
-  | LoadedScratch String
+  | LoadedOutline (Result String Entry.Value)
+  | LoadedScratch (Result String (List Scratch.Value))
   | Tab String
   | Scratch Int
+  | ProcessScratch
+  | NewScratch
 
 -- TODO: refactor to keep trailing 'm' out of here
 step : Command -> Document.Zipper -> Document.Zipper
@@ -69,8 +70,6 @@ step c m = case c of
   Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
   Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
   Key (Keys.Single (Keys.Enter)) -> updateZipper Document.enter m
-  Key (Keys.Single (Keys.Backspace)) -> updateText Core.String.backspace m
-  Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
   Key (Keys.CommandCharacter "d") -> updateText Core.String.delete m
   Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m
@@ -82,24 +81,39 @@ step c m = case c of
   Key (Keys.CommandCharacter "5") -> updateEntry (Entry.moveInto 4) m
   Key (Keys.CommandCharacter "6") -> updateEntry (Entry.moveInto 5) m
   Key (Keys.CommandCharacter "7") -> updateEntry (Entry.moveInto 6) m
-  Key (Keys.Shift (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
-  Key (Keys.Shift (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
-  Key (Keys.Shift (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
-  Key (Keys.Shift (Keys.Left)) -> updateEntry EntryNav.goToParent m
+  Key (Keys.Alt (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
+  Key (Keys.Alt (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
+  Key (Keys.Alt (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
+  Key (Keys.Alt (Keys.Left)) -> updateEntry EntryNav.goToParent m
   Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
   Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
+  Key (Keys.Command (Keys.Right)) -> updateText Core.String.moveToEndOfLine m
+  Key (Keys.Command (Keys.Left)) -> updateText Core.String.moveToStartOfLine m
+
+  -- Text
+  Key (Keys.Single (Keys.Backspace)) -> updateZipper Document.backspace m
+  Key (Keys.Character s) -> updateText (Core.String.insert s) m
   Paste s -> updateText (Core.String.insert s) m
-  
+
+  -- Selection
+  Key (Keys.Shift (Keys.Left)) -> updateText Core.String.selectLeft m
+  Key (Keys.Shift (Keys.Right)) -> updateText Core.String.selectRight m
+  Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStartOfLine m
+  Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEndOfLine m
+
+  -- Formatting
+  Key (Keys.CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task) m
+
   Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
   Tab "Tasks" -> updateValue Document.outlineZipper m
-  
+  Tab "Notes" -> updateValue Document.notesZipper m
+
   Scratch i -> updateValue (Document.scratchZipper i) m
 
-  LoadedOutline s -> case Json.Decode.decodeString Entry.decoder s of
-    Ok doc -> Document.replaceOutline m doc
-    x -> fst (m, Debug.log "Load failed" x)
-  LoadedScratch s -> case Json.Decode.decodeString Scratch.listDecoder s of
-    Ok doc -> Document.replaceScratch m doc
-    x -> fst (m, Debug.log "Load failed" x)
+  LoadedOutline (Ok e) -> Document.replaceOutline e m
+  LoadedScratch (Ok s) -> Document.replaceScratch s m
+
+  ProcessScratch -> Document.processScratch m
+  NewScratch -> Document.newScratch m
 
   x -> fst (m, Debug.log "Unhandled command" x)

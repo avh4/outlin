@@ -1,74 +1,126 @@
-module Core.String (Value, Zipper, Result, insert, backspace, goLeft, goRight, delete, split, renderValue, renderZipper, toJson, startZipper, endZipper, toValue, split_, zipper, zipperAt, toTuple, decoder) where
+module Core.String
+  ( Value, Zipper, Result
+  , toValue, destructure
+  , startZipper, endZipper, allZipper, rangeZipper
+  , goLeft, goRight, moveToStartOfLine, moveToEndOfLine
+  , insert, backspace, delete, split
+  , selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight
+  , toJson, zipper, zipperAt, decoder
+  ) where
 
-import Core.Action as Action
+import Core.Action (..)
 import String
+import List
 import Regex (..)
 import Html (Html, node, text)
 import Html.Attributes (class)
 import Json.Decode
 
 type alias Value = String
-type alias Zipper = (String,Int)
-type alias Result = Action.Result Value Zipper
-
-startZipper : Value -> Zipper
-startZipper v = (v,0)
-
-endZipper : Value -> Zipper
-endZipper v = (v,String.length v)
-
-zipper : String -> String -> Zipper
-zipper left right = (left ++ right, String.length left)
-
-zipperAt : Int -> Value -> Zipper
-zipperAt i s = (s, i)
+type alias Zipper = (String,String,String)
+type alias Result = ActionResult Value Zipper
 
 toValue : Zipper -> Value
-toValue (v,_) = v
+toValue (left,sel,right) = left ++ sel ++ right
 
-toTuple : Zipper -> (String,String)
-toTuple (s,i) = (String.left i s, String.dropLeft i s)
+destructure : Zipper -> (String,String,String)
+destructure z = z
 
-split_ : Zipper -> (Value, Zipper)
-split_ (v,i) = (String.left i v, startZipper (String.dropLeft i v))
+startZipper : Value -> Zipper
+startZipper v = ("","",v)
 
-update char value cursor =
-  (String.left cursor value)
-  ++ char
-  ++ (String.dropLeft cursor value)
+endZipper : Value -> Zipper
+endZipper v = (v,"","")
 
-move char value cursor =
-  cursor + String.length char
+allZipper : Value -> Zipper
+allZipper v = ("",v,"")
+
+rangeZipper : (Int,Int) -> Value -> Zipper
+rangeZipper (start,length) s =
+  ( String.left start s
+  , String.dropLeft start s |> String.left length
+  , String.dropLeft start s |> String.dropLeft length
+  )
+
+zipper : String -> String -> Zipper
+zipper left right = (left,"",right)
+
+zipperAt : Int -> Value -> Zipper
+zipperAt i s = (String.left i s, "", String.dropLeft i s)
 
 insert : String -> Zipper -> Result
-insert s (v,c) = Action.Update ((update s v c),(move s v c))
+insert s (left,sel,right) = Update (left ++ s, "", right)
 
 backspace : Zipper -> Result
-backspace (v,c) = case (v,c) of
-  (_, 0) -> Action.NoChange
-  _ -> Action.Update ((String.left (c-1) v ++ String.dropLeft c v),(c-1))
+backspace z = case z of
+  ("", "", _) -> NoChange
+  (left, "", right) -> Update (String.dropRight 1 left, "", right)
+  (left, _, right) -> Update (left, "", right)
 
-goLeft = Action.nav (\_ c -> if c > 0 then c-1 else c)
-goRight = Action.nav (\v c -> min (String.length v) (c+1))
+goLeft z = case z of
+  ("", "", _) -> EnterPrev
+  (left, "", right) -> Update (String.dropRight 1 left, "", String.right 1 left ++ right)
+  (left, sel, right) -> Update (left, "", sel ++ right)
 
-delete = Action.always Action.Delete
+goRight z = case z of
+  (_, "", "") -> EnterNext
+  (left, "", right) -> Update (left ++ String.left 1 right, "", String.dropLeft 1 right)
+  (left, sel, right) -> Update (left ++ sel, "", right)
+
+moveToStartOfLine : Zipper -> Result
+moveToStartOfLine (left, sel, right) = case takeLast "\n" left of
+  (rest, a) -> Update (rest, "", a ++ sel ++ right)
+
+moveToEndOfLine : Zipper -> Result
+moveToEndOfLine (left, sel, right) = case takeFirst "\n" right of
+  (a, rest) -> Update (left ++ sel ++ a, "", rest)
+
+delete z = Delete
 
 split : Zipper -> Result
-split (s,n) = Action.Split [String.left n s] (String.dropLeft n s, 0) []
+split (left,_,right) = Split [left] (startZipper right) []
 
-renderValue : Value -> Html
-renderValue value = text value
+selectLeft : Zipper -> Result
+selectLeft z = case z of
+  ("", _, _) -> NoChange
+  (left,sel,right) -> Update (String.dropRight 1 left, String.right 1 left ++ sel, right)
 
-renderZipper : Zipper -> Html
-renderZipper (value,cursor) = node "span" [] [
-  text <| String.left cursor value,
-  node "span" [ class "cursor" ] [ text "^" ],
-  text <| String.dropLeft cursor value ]
+selectRight : Zipper -> Result
+selectRight z = case z of
+  (_, _, "") -> NoChange
+  (left,sel,right) -> Update (left, sel ++ String.left 1 right, String.dropLeft 1 right)
+
+selectToStart : Zipper -> Result
+selectToStart (left,sel,right) = Update ("", left ++ sel, right)
+
+selectToEnd : Zipper -> Result
+selectToEnd (left,sel,right) = Update (left, sel ++ right, "")
+
+takeFirst : String -> String -> (String, String)
+takeFirst needle s = if
+  | String.contains needle s ->
+    case String.split needle s of
+      [] -> ("", "")
+      (first::rest) -> (first, needle ++ String.join needle rest)
+  | True -> (s, "")
+
+takeLast : String -> String -> (String, String)
+takeLast needle s = if
+  | String.contains needle s ->
+    case String.split needle s of
+    [] -> ("", "")
+    tokens -> case List.reverse tokens of
+      (last::rest) -> (String.join needle (List.reverse rest) ++ needle, last)
+  | True -> ("", s)
+
+selectToStartOfLine : Zipper -> Result
+selectToStartOfLine (left,sel,right) = case takeLast "\n" left of
+  (rest, last) -> Update (rest, last ++ sel, right)
+
+selectToEndOfLine : Zipper -> Result
+selectToEndOfLine (left,sel,right) = Update (left, sel ++ right, "") -- TODO
 
 ---- JSON
-
-walk : (Value -> a) -> Value -> a
-walk fn = fn
 
 quoteQuote = replace All (regex "\"") (\_ -> "&quot;")
 quoteNewline = replace All (regex "\n") (\_ -> "\\n")
@@ -76,7 +128,7 @@ quoteNewline = replace All (regex "\n") (\_ -> "\\n")
 quote s = s |> quoteQuote |> quoteNewline
 
 toJson : String -> String
-toJson = walk (\s -> "\"" ++ quote s ++ "\"")
+toJson s = "\"" ++ quote s ++ "\""
 
 decoder : Json.Decode.Decoder Value
 decoder = Json.Decode.string

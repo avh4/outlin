@@ -1,11 +1,25 @@
-module Outline.Scratch.Actions (Result, do) where
+module Outline.Scratch.Actions
+  ( Result
+  , doBlock, doSpan, doText
+  ) where
 
 import Outline.Scratch.Model (..)
-import Core.Action
+import Outline.RichText.Actions as RichText
+import Outline.RichText.Span.Model as Span
+import Outline.RichText.Span.Actions as Span
+import Outline.RichText.Block.Model as Block
+import Outline.RichText.Block.Actions as Block
+import Core.Action (..)
 import Core.Array
 import Core.String
 
-type alias Result = Core.Action.Result Value Zipper
+type alias Result = ActionResult Value Zipper
 
-do : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
-do stringFn = stringFn
+doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
+doBlock = RichText.doBlock
+
+doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
+doSpan = RichText.doSpan
+
+doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
+doText fn = doSpan (Span.do fn)

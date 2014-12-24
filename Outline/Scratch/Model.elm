@@ -1,13 +1,26 @@
-module Outline.Scratch.Model where
+module Outline.Scratch.Model
+  ( Value, Zipper
+  , value
+  , toValue
+  , endZipper, allZipper
+  ) where
 
 import Core.Action
 import Core.Array
 import Core.String
+import Outline.RichText.Model as RichText
+import Outline.RichText.Span.Model as Span
+import Outline.RichText.Block.Model as Block
 
-type alias Value = Core.String.Value
-type alias Zipper = Core.String.Zipper
+type alias Value = RichText.Value
+type alias Zipper = RichText.Zipper
 
-toValue : Zipper -> Value
-toValue = Core.String.toValue
+value : String -> Value
+value s = s
+  |> Span.normal |> Core.Array.single
+  |> Block.value Block.Heading |> Core.Array.single
 
-endZipper = Core.String.endZipper
+toValue = RichText.toValue
+
+endZipper = RichText.endZipper
+allZipper = RichText.allZipper
