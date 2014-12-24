@@ -16,23 +16,24 @@ import List
 import Html
 
 import App.Styles (..)
+import App.Command (..)
 
 type Foo = Val Int Scratch.Value | Zip Int Scratch.Zipper
 
 item channel n = case n of
   Zip _ _ -> empty |> grey 80
   Val i v -> (v |> List.head |> Block.spanToHtml |> html margin) |> panel
-      |> clickable (Signal.send channel i)
+      |> clickable (Signal.send channel (Scratch i))
 
 newScratchButton channel = text dim margin "+ New Scratch..."
   |> grey 70
-  |> clickable (Signal.send channel ())
+  |> clickable (Signal.send channel NewScratch)
 
-navbar : Signal.Channel Int -> Signal.Channel () -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-navbar scratchChannel processChannel newScratchChannel z = z
+navbar : Signal.Channel Command -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+navbar channel z = z
   |> Core.Array.indexedMap (\i v -> Val i v) (\i z -> Zip i z)
-  |> list 60 2 (item scratchChannel)
-  |> top 40 2 (newScratchButton newScratchChannel)
+  |> list 60 2 (item channel)
+  |> top 40 2 (newScratchButton channel)
 
 task : Block.Value -> Element
 task b = b
@@ -40,18 +41,18 @@ task b = b
   |> html 0
   |> left 30 0 (text bold 0 ">>>" |> grey 20)
 
-content : Signal.Channel () -> Scratch.Zipper -> Element
-content processChannel z =
+content : Signal.Channel Command -> Scratch.Zipper -> Element
+content channel z =
   let tasks = (z |> RichText.toValue |> RichText.getTasks)
   in
     html margin (RichText.toHtml z)
     |> bottom (20*List.length tasks) margin (list 20 0 task tasks)
     |> bottom 50 margin
-      (debug "[PROCESS]" |> grey 60 |> clickable (Signal.send processChannel ()))
+      (debug "[PROCESS]" |> grey 60 |> clickable (Signal.send channel ProcessScratch))
     |> panel
 
-render : Signal.Channel Int -> Signal.Channel () -> Signal.Channel () -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
-render scratchChannel processChannel newScratchChannel z =
-  Core.Array.active z |> content processChannel
-  |> left 280 margin (navbar scratchChannel processChannel newScratchChannel z)
+render : Signal.Channel Command -> Core.Array.Zipper Scratch.Value Scratch.Zipper -> Element
+render channel z =
+  Core.Array.active z |> content channel
+  |> left 280 margin (navbar channel z)
   |> inset margin

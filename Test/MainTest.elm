@@ -4,7 +4,7 @@ import ElmTest.Assertion (..)
 import ElmTest.Test (..)
 
 import App
-import App (Command(..))
+import App.Command (..)
 import Keys (..)
 import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry

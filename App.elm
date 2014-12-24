@@ -30,6 +30,7 @@ import Text (plainText)
 import List
 import List (..)
 import Outline.Notes.Model as Notes
+import App.Command (..)
 
 ---- App
 
@@ -52,17 +53,6 @@ updateBlock action = updateZipper (Document.doBlock action)
 updateSpan action = updateZipper (Document.doSpan action)
 
 ---- INPUT
-
-type Command
-  = Key Keys.KeyCombo
-  | Paste String
-  | LoadedOutline (Result String Entry.Value)
-  | LoadedScratch (Result String (List Scratch.Value))
-  | LoadedNotes (Result String Notes.Value)
-  | Tab String
-  | Scratch Int
-  | ProcessScratch
-  | NewScratch
 
 -- TODO: refactor to keep trailing 'm' out of here
 step : Command -> Document.Zipper -> Document.Zipper

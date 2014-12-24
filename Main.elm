@@ -11,7 +11,7 @@ import SampleData
 import Window
 
 import App
-import App (Command(..))
+import App.Command (..)
 import App.Render.Main as App
 import Outline.Document.Model as Document
 import Outline.Document.Json as Document
@@ -27,10 +27,7 @@ import List
 
 dropbox = Dropbox.client "mjplyqeks6z3js8"
 
-tabsChannel = Signal.channel ""
-scratchChannel = Signal.channel 0
-processScratchChannel = Signal.channel ()
-newScratchChannel = Signal.channel ()
+channel = Signal.channel Init_
 
 decode : Json.Decode.Decoder x -> String -> Result String x
 decode decoder s = Json.Decode.decodeString decoder s
@@ -66,10 +63,7 @@ commands : Signal Command
 commands = Signal.mergeMany
   [ Signal.map Key Keys.lastPressed
   , Signal.map Paste Keys.pastes
-  , Signal.map Tab (Signal.subscribe tabsChannel)
-  , Signal.map Scratch (Signal.subscribe scratchChannel)
-  , Signal.map (\_ -> ProcessScratch) (Signal.subscribe processScratchChannel)
-  , Signal.map (\_ -> NewScratch) (Signal.subscribe newScratchChannel)
+  , Signal.subscribe channel
   , Signal.mergeMany <| List.map fromDropbox dropboxChannels
   ]
 
@@ -80,6 +74,6 @@ state = Signal.foldp App.step initialDocument commands
 
 ---- OUTPUT SIGNALS
 
-main = Signal.map2 (App.render tabsChannel scratchChannel processScratchChannel newScratchChannel) state Window.dimensions
+main = Signal.map2 (App.render channel) state Window.dimensions
 
 dropboxOutputs = List.map toDropbox dropboxChannels
