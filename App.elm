@@ -4,7 +4,7 @@ import Html (Html, text, node, toElement)
 import Html.Attributes (class)
 
 import String
-import Keys
+import Keys (..)
 import Char
 import Debug
 import Outline.Entry as Entry
@@ -54,59 +54,61 @@ updateSpan action = updateZipper (Document.doSpan action)
 
 ---- INPUT
 
--- TODO: refactor to keep trailing 'm' out of here
-step : Command -> Document.Zipper -> Document.Zipper
-step c m = case c of
-  Key (Keys.Single (Keys.Left)) -> updateText Core.String.goLeft m
-  Key (Keys.Single (Keys.Right)) -> updateText Core.String.goRight m
-  Key (Keys.Single (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild) m
-  Key (Keys.Single (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild) m
-  Key (Keys.Single (Keys.Enter)) -> updateZipper Document.enter m
-  Key (Keys.CommandCharacter "a") -> updateEntry Entry.addInboxItem m
-  Key (Keys.CommandCharacter "d") -> updateText Core.String.delete m
-  Key (Keys.CommandCharacter "m") -> updateEntry Entry.missort m
-  Key (Keys.CommandCharacter "p") -> updateEntry Entry.promote m
-  Key (Keys.CommandCharacter "1") -> updateEntry (Entry.moveInto 0) m
-  Key (Keys.CommandCharacter "2") -> updateEntry (Entry.moveInto 1) m
-  Key (Keys.CommandCharacter "3") -> updateEntry (Entry.moveInto 2) m
-  Key (Keys.CommandCharacter "4") -> updateEntry (Entry.moveInto 3) m
-  Key (Keys.CommandCharacter "5") -> updateEntry (Entry.moveInto 4) m
-  Key (Keys.CommandCharacter "6") -> updateEntry (Entry.moveInto 5) m
-  Key (Keys.CommandCharacter "7") -> updateEntry (Entry.moveInto 6) m
-  Key (Keys.Alt (Keys.Up)) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling) m
-  Key (Keys.Alt (Keys.Down)) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling) m
-  Key (Keys.Alt (Keys.Right)) -> updateEntry EntryNav.goToFirstChild m
-  Key (Keys.Alt (Keys.Left)) -> updateEntry EntryNav.goToParent m
-  Key (Keys.Command (Keys.Up)) -> updateEntry Entry.moveChildUp m
-  Key (Keys.Command (Keys.Down)) -> updateEntry Entry.moveChildDown m
-  Key (Keys.Command (Keys.Right)) -> updateText Core.String.moveToEndOfLine m
-  Key (Keys.Command (Keys.Left)) -> updateText Core.String.moveToStartOfLine m
+stepFn : Command -> (Document.Zipper -> Document.Zipper)
+stepFn c = case c of
+  Key (Single Left) -> updateText Core.String.goLeft
+  Key (Single Right) -> updateText Core.String.goRight
+  Key (Single Down) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild)
+  Key (Single Up) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild)
+  Key (Single Enter) -> updateZipper Document.enter
+  Key (CommandCharacter "a") -> updateEntry Entry.addInboxItem
+  Key (CommandCharacter "d") -> updateText Core.String.delete
+  Key (CommandCharacter "m") -> updateEntry Entry.missort
+  Key (CommandCharacter "p") -> updateEntry Entry.promote
+  Key (CommandCharacter "1") -> updateEntry (Entry.moveInto 0)
+  Key (CommandCharacter "2") -> updateEntry (Entry.moveInto 1)
+  Key (CommandCharacter "3") -> updateEntry (Entry.moveInto 2)
+  Key (CommandCharacter "4") -> updateEntry (Entry.moveInto 3)
+  Key (CommandCharacter "5") -> updateEntry (Entry.moveInto 4)
+  Key (CommandCharacter "6") -> updateEntry (Entry.moveInto 5)
+  Key (CommandCharacter "7") -> updateEntry (Entry.moveInto 6)
+  Key (Alt Up) -> updateEntry (Entry.doEntry EntryNav.goToPrevSibling)
+  Key (Alt Down) -> updateEntry (Entry.doEntry EntryNav.goToNextSibling)
+  Key (Alt Right) -> updateEntry EntryNav.goToFirstChild
+  Key (Alt Left) -> updateEntry EntryNav.goToParent
+  Key (Command Up) -> updateEntry Entry.moveChildUp
+  Key (Command Down) -> updateEntry Entry.moveChildDown
+  Key (Command Right) -> updateText Core.String.moveToEndOfLine
+  Key (Command Left) -> updateText Core.String.moveToStartOfLine
 
   -- Text
-  Key (Keys.Single (Keys.Backspace)) -> updateZipper Document.backspace m
-  Key (Keys.Character s) -> updateText (Core.String.insert s) m
-  Paste s -> updateText (Core.String.insert s) m
+  Key (Single Backspace) -> updateZipper Document.backspace
+  Key (Character s) -> updateText (Core.String.insert s)
+  Paste s -> updateText (Core.String.insert s)
 
   -- Selection
-  Key (Keys.Shift (Keys.Left)) -> updateText Core.String.selectLeft m
-  Key (Keys.Shift (Keys.Right)) -> updateText Core.String.selectRight m
-  Key (Keys.CommandShift (Keys.Left)) -> updateText Core.String.selectToStartOfLine m
-  Key (Keys.CommandShift (Keys.Right)) -> updateText Core.String.selectToEndOfLine m
+  Key (Shift Left) -> updateText Core.String.selectLeft
+  Key (Shift Right) -> updateText Core.String.selectRight
+  Key (CommandShift Left) -> updateText Core.String.selectToStartOfLine
+  Key (CommandShift Right) -> updateText Core.String.selectToEndOfLine
 
   -- Formatting
-  Key (Keys.CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task) m
+  Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task)
 
-  Tab "Scratch" -> updateValue (Document.scratchZipper 0) m
-  Tab "Tasks" -> updateValue Document.outlineZipper m
-  Tab "Notes" -> updateValue Document.notesZipper m
+  Tab "Scratch" -> updateValue (Document.scratchZipper 0)
+  Tab "Tasks" -> updateValue Document.outlineZipper
+  Tab "Notes" -> updateValue Document.notesZipper
 
-  Scratch i -> updateValue (Document.scratchZipper i) m
+  Scratch i -> updateValue (Document.scratchZipper i)
 
-  LoadedOutline (Ok e) -> Document.replaceOutline e m
-  LoadedScratch (Ok s) -> Document.replaceScratch s m
-  LoadedNotes (Ok n) -> Document.replaceNotes n m
+  LoadedOutline (Ok e) -> Document.replaceOutline e
+  LoadedScratch (Ok s) -> Document.replaceScratch s
+  LoadedNotes (Ok n) -> Document.replaceNotes n
 
-  ProcessScratch -> Document.processScratch m
-  NewScratch -> Document.newScratch m
+  ProcessScratch -> Document.processScratch
+  NewScratch -> Document.newScratch
 
-  x -> fst (m, Debug.log "Unhandled command" x)
+  x -> fst (identity, Debug.log "Unhandled command" x)
+
+step : Command -> Document.Zipper -> Document.Zipper
+step c m = stepFn c m
