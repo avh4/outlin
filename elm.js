@@ -16,13 +16,16 @@ Elm.App.make = function (_elm) {
    $Core$Action = Elm.Core.Action.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
    $Debug = Elm.Debug.make(_elm),
-   $Json$Decode = Elm.Json.Decode.make(_elm),
    $Keys = Elm.Keys.make(_elm),
    $Outline$Document$Actions = Elm.Outline.Document.Actions.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
-   $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm),
+   $Outline$RichText$Block$Actions = Elm.Outline.RichText.Block.Actions.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm),
    $Result = Elm.Result.make(_elm);
+   var NewScratch = {ctor: "NewScratch"};
+   var ProcessScratch = {ctor: "ProcessScratch"};
    var Scratch = function (a) {
       return {ctor: "Scratch"
              ,_0: a};
@@ -44,43 +47,33 @@ Elm.App.make = function (_elm) {
    var Key = function (a) {
       return {ctor: "Key",_0: a};
    };
-   var updateText = F2(function (stringFn,
-   z) {
-      return function () {
-         var _v0 = A2($Outline$Document$Actions.doText,
-         stringFn,
-         z);
-         switch (_v0.ctor)
-         {case "Update": return _v0._0;}
-         return z;
-      }();
-   });
-   var updateEntry = F2(function (action,
-   z) {
-      return function () {
-         var _v2 = A2($Outline$Document$Actions.doEntry,
-         action,
-         z);
-         switch (_v2.ctor)
-         {case "Update": return _v2._0;}
-         return z;
-      }();
-   });
    var updateZipper = F2(function (action,
    z) {
       return function () {
-         var _v4 = action(z);
-         switch (_v4.ctor)
+         var _v0 = action(z);
+         switch (_v0.ctor)
          {case "Delete": return z;
             case "EnterNext": return z;
             case "EnterPrev": return z;
             case "NoChange": return z;
             case "Split": return z;
-            case "Update": return _v4._0;}
+            case "Update": return _v0._0;}
          _U.badCase($moduleName,
-         "between lines 34 and 41");
+         "between lines 39 and 46");
       }();
    });
+   var updateEntry = function (action) {
+      return updateZipper($Outline$Document$Actions.doEntry(action));
+   };
+   var updateText = function (action) {
+      return updateZipper($Outline$Document$Actions.doText(action));
+   };
+   var updateBlock = function (action) {
+      return updateZipper($Outline$Document$Actions.doBlock(action));
+   };
+   var updateSpan = function (action) {
+      return updateZipper($Outline$Document$Actions.doSpan(action));
+   };
    var updateValue = F2(function (toZipper,
    z) {
       return toZipper($Outline$Document$Model.toValue(z));
@@ -89,7 +82,26 @@ Elm.App.make = function (_elm) {
       return function () {
          switch (c.ctor)
          {case "Key": switch (c._0.ctor)
-              {case "Character":
+              {case "Alt":
+                 switch (c._0._0.ctor)
+                   {case "Down":
+                      return A2(updateEntry,
+                        $Outline$Entry.doEntry($App$EntryNav.goToNextSibling),
+                        m);
+                      case "Left":
+                      return A2(updateEntry,
+                        $App$EntryNav.goToParent,
+                        m);
+                      case "Right":
+                      return A2(updateEntry,
+                        $App$EntryNav.goToFirstChild,
+                        m);
+                      case "Up":
+                      return A2(updateEntry,
+                        $Outline$Entry.doEntry($App$EntryNav.goToPrevSibling),
+                        m);}
+                   break;
+                 case "Character":
                  return A2(updateText,
                    $Core$String.insert(c._0._0),
                    m);
@@ -98,6 +110,14 @@ Elm.App.make = function (_elm) {
                    {case "Down":
                       return A2(updateEntry,
                         $Outline$Entry.moveChildDown,
+                        m);
+                      case "Left":
+                      return A2(updateText,
+                        $Core$String.moveToStartOfLine,
+                        m);
+                      case "Right":
+                      return A2(updateText,
+                        $Core$String.moveToEndOfLine,
                         m);
                       case "Up":
                       return A2(updateEntry,
@@ -131,6 +151,9 @@ Elm.App.make = function (_elm) {
                       case "a": return A2(updateEntry,
                         $Outline$Entry.addInboxItem,
                         m);
+                      case "b": return A2(updateBlock,
+                        $Outline$RichText$Block$Actions.toggleStyle($Outline$RichText$Block$Model.Task),
+                        m);
                       case "d": return A2(updateText,
                         $Core$String.$delete,
                         m);
@@ -141,30 +164,33 @@ Elm.App.make = function (_elm) {
                         $Outline$Entry.promote,
                         m);}
                    break;
-                 case "Shift":
+                 case "CommandShift":
                  switch (c._0._0.ctor)
-                   {case "Down":
-                      return A2(updateEntry,
-                        $Outline$Entry.doEntry($App$EntryNav.goToNextSibling),
-                        m);
-                      case "Left":
-                      return A2(updateEntry,
-                        $App$EntryNav.goToParent,
+                   {case "Left":
+                      return A2(updateText,
+                        $Core$String.selectToStartOfLine,
                         m);
                       case "Right":
-                      return A2(updateEntry,
-                        $App$EntryNav.goToFirstChild,
+                      return A2(updateText,
+                        $Core$String.selectToEndOfLine,
+                        m);}
+                   break;
+                 case "Shift":
+                 switch (c._0._0.ctor)
+                   {case "Left":
+                      return A2(updateText,
+                        $Core$String.selectLeft,
                         m);
-                      case "Up":
-                      return A2(updateEntry,
-                        $Outline$Entry.doEntry($App$EntryNav.goToPrevSibling),
+                      case "Right":
+                      return A2(updateText,
+                        $Core$String.selectRight,
                         m);}
                    break;
                  case "Single":
                  switch (c._0._0.ctor)
                    {case "Backspace":
-                      return A2(updateText,
-                        $Core$String.backspace,
+                      return A2(updateZipper,
+                        $Outline$Document$Actions.backspace,
                         m);
                       case "Down":
                       return A2(updateEntry,
@@ -189,47 +215,37 @@ Elm.App.make = function (_elm) {
                    break;}
               break;
             case "LoadedOutline":
-            return function () {
-                 var _v21 = A2($Json$Decode.decodeString,
-                 $Outline$Entry.decoder,
-                 c._0);
-                 switch (_v21.ctor)
-                 {case "Ok":
-                    return A2($Outline$Document$Model.replaceOutline,
-                      m,
-                      _v21._0);}
-                 return $Basics.fst({ctor: "_Tuple2"
-                                    ,_0: m
-                                    ,_1: A2($Debug.log,
-                                    "Load failed",
-                                    _v21)});
-              }();
+            switch (c._0.ctor)
+              {case "Ok":
+                 return A2($Outline$Document$Model.replaceOutline,
+                   c._0._0,
+                   m);}
+              break;
             case "LoadedScratch":
-            return function () {
-                 var _v23 = A2($Json$Decode.decodeString,
-                 $Outline$Scratch$Json.listDecoder,
-                 c._0);
-                 switch (_v23.ctor)
-                 {case "Ok":
-                    return A2($Outline$Document$Model.replaceScratch,
-                      m,
-                      _v23._0);}
-                 return $Basics.fst({ctor: "_Tuple2"
-                                    ,_0: m
-                                    ,_1: A2($Debug.log,
-                                    "Load failed",
-                                    _v23)});
-              }();
+            switch (c._0.ctor)
+              {case "Ok":
+                 return A2($Outline$Document$Model.replaceScratch,
+                   c._0._0,
+                   m);}
+              break;
+            case "NewScratch":
+            return $Outline$Document$Actions.newScratch(m);
             case "Paste":
             return A2(updateText,
               $Core$String.insert(c._0),
               m);
+            case "ProcessScratch":
+            return $Outline$Document$Actions.processScratch(m);
             case "Scratch":
             return A2(updateValue,
               $Outline$Document$Model.scratchZipper(c._0),
               m);
             case "Tab": switch (c._0)
-              {case "Scratch":
+              {case "Notes":
+                 return A2(updateValue,
+                   $Outline$Document$Model.notesZipper,
+                   m);
+                 case "Scratch":
                  return A2(updateValue,
                    $Outline$Document$Model.scratchZipper(0),
                    m);
@@ -250,12 +266,16 @@ Elm.App.make = function (_elm) {
                      ,updateZipper: updateZipper
                      ,updateEntry: updateEntry
                      ,updateText: updateText
+                     ,updateBlock: updateBlock
+                     ,updateSpan: updateSpan
                      ,Key: Key
                      ,Paste: Paste
                      ,LoadedOutline: LoadedOutline
                      ,LoadedScratch: LoadedScratch
                      ,Tab: Tab
                      ,Scratch: Scratch
+                     ,ProcessScratch: ProcessScratch
+                     ,NewScratch: NewScratch
                      ,step: step};
    return _elm.App.values;
 };
@@ -512,87 +532,141 @@ Elm.App.Render.Main.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "App.Render.Main",
+   $App$Render$Notes = Elm.App.Render.Notes.make(_elm),
    $App$Render$Outline = Elm.App.Render.Outline.make(_elm),
    $App$Render$Scratch = Elm.App.Render.Scratch.make(_elm),
+   $App$Styles = Elm.App.Styles.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
-   $Graphics$Input = Elm.Graphics.Input.make(_elm),
    $List = Elm.List.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Text = Elm.Text.make(_elm);
-   var tab = function (label) {
-      return $Graphics$Element.width(80)($Text.plainText(label));
-   };
-   var clickableTab = F2(function (channel,
-   label) {
-      return $Graphics$Input.clickable(A2($Signal.send,
-      channel,
-      label))(tab(label));
-   });
-   var selectedTab = function (label) {
-      return $Graphics$Element.color($Color.yellow)(tab(label));
-   };
-   var tabs = F4(function (channel,
-   l,
-   sel,
-   r) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      A2($Basics._op["++"],
-      A2($List.map,
-      clickableTab(channel),
-      l),
-      A2($Basics._op["++"],
-      _L.fromArray([selectedTab(sel)]),
-      A2($List.map,
-      clickableTab(channel),
-      r))));
-   });
-   var render = F4(function (tabChannel,
-   scratchChannel,
-   _v0,
+   $Rectified = Elm.Rectified.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var body = F4(function (scratchChannel,
+   processScratchChannel,
+   newScratchChannel,
    z) {
       return function () {
-         switch (_v0.ctor)
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return $App$Render$Notes.render(z._0.notes);
+            case "InOutline":
+            return $App$Render$Outline.render(z._0.outline);
+            case "InScratch":
+            return A4($App$Render$Scratch.render,
+              scratchChannel,
+              processScratchChannel,
+              newScratchChannel,
+              z._0.scratch);}
+         _U.badCase($moduleName,
+         "between lines 35 and 38");
+      }();
+   });
+   var tabName = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return "Notes";
+            case "InOutline":
+            return "Tasks";
+            case "InScratch":
+            return "Scratch";}
+         _U.badCase($moduleName,
+         "between lines 30 and 33");
+      }();
+   };
+   var tabNames = _L.fromArray(["Scratch"
+                               ,"Tasks"
+                               ,"Notes"]);
+   var selectTab = function (name) {
+      return A2($List.map,
+      function (t) {
+         return {ctor: "_Tuple2"
+                ,_0: _U.eq(name,t)
+                ,_1: t};
+      },
+      tabNames);
+   };
+   var tab = F2(function (channel,
+   _v8) {
+      return function () {
+         switch (_v8.ctor)
          {case "_Tuple2":
             return function () {
-                 switch (z.ctor)
-                 {case "InOutline":
-                    return A2($Graphics$Element.flow,
-                      $Graphics$Element.down,
-                      _L.fromArray([A4(tabs,
-                                   tabChannel,
-                                   _L.fromArray(["Scratch"]),
-                                   "Tasks",
-                                   _L.fromArray([]))
-                                   ,A2($App$Render$Outline.render,
-                                   {ctor: "_Tuple2"
-                                   ,_0: _v0._0
-                                   ,_1: _v0._1 - 50},
-                                   z._1)]));
-                    case "InScratch":
-                    return A2($Graphics$Element.flow,
-                      $Graphics$Element.down,
-                      _L.fromArray([A4(tabs,
-                                   tabChannel,
-                                   _L.fromArray([]),
-                                   "Scratch",
-                                   _L.fromArray(["Tasks"]))
-                                   ,A2($App$Render$Scratch.render,
-                                   scratchChannel,
-                                   z._0)]));}
+                 switch (_v8._0)
+                 {case false:
+                    return $Rectified.clickable(A2($Signal.send,
+                      channel,
+                      _v8._1))(A2($Rectified.centeredText,
+                      $App$Styles.plain,
+                      _v8._1));
+                    case true:
+                    return $App$Styles.highlight(A2($Rectified.centeredText,
+                      $App$Styles.bold,
+                      _v8._1));}
                  _U.badCase($moduleName,
-                 "between lines 35 and 43");
+                 "between lines 19 and 22");
               }();}
          _U.badCase($moduleName,
-         "between lines 35 and 43");
+         "between lines 19 and 22");
       }();
+   });
+   var tabbar = F2(function (channel,
+   vs) {
+      return $App$Styles.panel(A3($Rectified.row,
+      0,
+      tab(channel),
+      vs));
+   });
+   var render = F5(function (tabChannel,
+   scratchChannel,
+   processScratchChannel,
+   newScratchChannel,
+   z) {
+      return $App$Styles.background(A4($Rectified.top,
+      60,
+      0,
+      A2(tabbar,
+      tabChannel,
+      selectTab(tabName(z))),
+      A4(body,
+      scratchChannel,
+      processScratchChannel,
+      newScratchChannel,
+      z)));
    });
    _elm.App.Render.Main.values = {_op: _op
                                  ,render: render};
    return _elm.App.Render.Main.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.Notes = Elm.App.Render.Notes || {};
+Elm.App.Render.Notes.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.Notes = _elm.App.Render.Notes || {};
+   if (_elm.App.Render.Notes.values)
+   return _elm.App.Render.Notes.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.Notes",
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Rectified = Elm.Rectified.make(_elm);
+   var render = function (v) {
+      return A4($Rectified.list,
+      80,
+      2,
+      $Rectified.debug,
+      v);
+   };
+   _elm.App.Render.Notes.values = {_op: _op
+                                  ,render: render};
+   return _elm.App.Render.Notes.values;
 };
 Elm.App = Elm.App || {};
 Elm.App.Render = Elm.App.Render || {};
@@ -611,14 +685,18 @@ Elm.App.Render.Outline.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "App.Render.Outline",
    $App$Render$String = Elm.App.Render.String.make(_elm),
+   $App$Styles = Elm.App.Styles.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
    $Core$Array = Elm.Core.Array.make(_elm),
-   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $List = Elm.List.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
-   $Text = Elm.Text.make(_elm);
+   $Rectified = Elm.Rectified.make(_elm);
+   var header = function (z) {
+      return $Rectified.grey(70)(A3($Rectified.text,
+      $App$Styles.plain,
+      $App$Styles.margin,
+      $Outline$Entry.textValue(z)));
+   };
    var findFocus = F3(function (_v0,
    _v1,
    z) {
@@ -650,7 +728,7 @@ Elm.App.Render.Outline.make = function (_elm) {
                                            ,_2: _v0._1},
                                            _v10._1)};}
                                  _U.badCase($moduleName,
-                                 "between lines 108 and 110");
+                                 "between lines 101 and 103");
                               }();}
                          return {ctor: "_Tuple2"
                                 ,_0: {ctor: "_Tuple3"
@@ -660,363 +738,317 @@ Elm.App.Render.Outline.make = function (_elm) {
                                 ,_1: _L.fromArray([])};
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 107 and 110");
+                 "between lines 100 and 103");
               }();}
          _U.badCase($moduleName,
-         "between lines 107 and 110");
+         "between lines 100 and 103");
       }();
    });
-   var footer = function (_v13) {
+   var footer = $Rectified.grey(90)(A3($Rectified.row,
+   0,
+   A2($Rectified.text,
+   $App$Styles.dim,
+   $App$Styles.margin),
+   _L.fromArray(["⌘D: delete"
+                ,"⌘M: Missorted"
+                ,"⌘Up/Down: move up/down"
+                ,"Shift-Up/Down/Left/Right: navigate hierarchy"])));
+   var child = function (_v13) {
       return function () {
          switch (_v13.ctor)
          {case "_Tuple2":
-            return $Graphics$Element.color(A3($Color.hsl,
+            return A3($Rectified.left,
+              30,
               0,
+              A2($Rectified.text,
+              $App$Styles.hint,
+              0)(A2($Basics._op["++"],
+              "⌘",
+              $Basics.toString(_v13._0 + 1))))(A3($Rectified.text,
+              $App$Styles.plain,
               0,
-              0.8))(A3($Graphics$Element.container,
-              _v13._0,
-              40,
-              $Graphics$Element.midLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.right,
-              A2($List.map,
-              function (x) {
-                 return $Text.plainText(A2($Basics._op["++"],
-                 x,
-                 "    "));
-              },
-              _L.fromArray(["⌘D: delete"
-                           ,"⌘M: Missorted"
-                           ,"⌘Up/Down: move up/down"
-                           ,"Shift-Up/Down/Left/Right: navigate hierarchy"])))));}
+              _v13._1));}
          _U.badCase($moduleName,
-         "between lines 98 and 104");
+         "between lines 80 and 81");
       }();
    };
-   var title = F2(function (_v17,
-   s) {
+   var rightPanel = function (z) {
       return function () {
+         var _v17 = $Outline$Entry.toValue(z);
          switch (_v17.ctor)
-         {case "_Tuple2":
-            return $Graphics$Element.color($Color.red)($Graphics$Element.width(_v17._0)($Text.plainText(s)));}
+         {case "Entry":
+            return A3($Rectified.list,
+              30,
+              0,
+              child)($List.indexedMap(F2(function (v0,
+              v1) {
+                 return {ctor: "_Tuple2"
+                        ,_0: v0
+                        ,_1: v1};
+              }))($List.map(function (en) {
+                 return function () {
+                    switch (en.ctor)
+                    {case "Entry":
+                       return en._0.text;}
+                    _U.badCase($moduleName,
+                    "on line 87, column 25 to 59");
+                 }();
+              })(_v17._0.children)));}
          _U.badCase($moduleName,
-         "on line 96, column 17 to 55");
+         "between lines 84 and 89");
       }();
-   });
-   var siblingView = F2(function (w,
-   v) {
+   };
+   var siblingView = function (v) {
       return function () {
          switch (v.ctor)
          {case "Entry":
-            return $Graphics$Element.color($Color.orange)($Graphics$Element.width(w)($Text.plainText(v._0.text)));}
+            return $Rectified.grey(80)(A2($Rectified.text,
+              $App$Styles.plain,
+              0)(v._0.text));}
          _U.badCase($moduleName,
-         "between lines 44 and 45");
+         "between lines 45 and 46");
       }();
-   });
-   var rot = function (e) {
-      return A3($Graphics$Collage.collage,
-      $Graphics$Element.heightOf(e),
-      $Graphics$Element.widthOf(e),
-      _L.fromArray([$Graphics$Collage.rotate($Basics.degrees(90))($Graphics$Collage.toForm(e))]));
    };
-   var crumbView = F2(function (h,
-   _v23) {
+   var crumbView = function (_v23) {
       return function () {
          switch (_v23.ctor)
          {case "_Tuple3":
-            return function () {
-                 var n = _v23._0 + _v23._2 + 1;
-                 var e = $Graphics$Element.width($Basics.ceiling($Basics.toFloat(h) / n))($Text.plainText(_v23._1));
-                 var w = $Basics.min(80)($Graphics$Element.heightOf(e));
-                 return A2($Graphics$Element.flow,
-                 $Graphics$Element.down,
-                 _L.fromArray([$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
-                              w,
-                              $Basics.floor($Basics.toFloat(h) * _v23._0 / n)))
-                              ,$Graphics$Element.color($Color.purple)($Graphics$Element.width(w)(rot(e)))
-                              ,$Graphics$Element.color($Color.grey)(A2($Graphics$Element.spacer,
-                              w,
-                              $Basics.floor($Basics.toFloat(h) * _v23._2 / n)))]));
-              }();}
+            return $Rectified.rotateLeft(A3($Rectified.right,
+              20,
+              0,
+              $Rectified.empty)(A3($Rectified.left,
+              20,
+              0,
+              $Rectified.empty)($Rectified.grey(60)(A3($Rectified.text,
+              $App$Styles.plain,
+              0,
+              _v23._1)))));}
          _U.badCase($moduleName,
-         "between lines 31 and 38");
+         "between lines 28 and 31");
       }();
-   });
-   var crumbsPanel = F2(function (h,
-   crumbs) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      A2($List.map,
-      crumbView(h),
-      crumbs));
-   });
-   var inboxItemV = F2(function (w,
-   v) {
-      return function () {
-         switch (v.ctor)
-         {case "Entry":
-            return $Graphics$Element.width(w)($Text.plainText(v._0.text));}
-         _U.badCase($moduleName,
-         "on line 24, column 18 to 74");
-      }();
-   });
-   var inboxItem = F2(function (w,
-   z) {
+   };
+   var crumbsPanel = A2($Rectified.row,
+   0,
+   crumbView);
+   var inboxItem = function (z) {
       return function () {
          switch (z.ctor)
-         {case "InText":
-            return $Graphics$Element.width(w)($App$Render$String.render(z._0.text));}
-         return $Graphics$Element.width(w)($Text.plainText($Outline$Entry.textValue(z)));
+         {case "Val": switch (z._0.ctor)
+              {case "Entry":
+                 return A2($Rectified.text,
+                   $App$Styles.plain,
+                   0)(z._0._0.text);}
+              break;
+            case "Zip": switch (z._0.ctor)
+              {case "InText":
+                 return $Rectified.html(0)($App$Render$String.toHtml(z._0._0.text));}
+              return A2($Rectified.text,
+              $App$Styles.plain,
+              0)($Outline$Entry.textValue(z._0));}
+         _U.badCase($moduleName,
+         "between lines 18 and 21");
       }();
-   });
-   var hintText = function (s) {
-      return $Text.leftAligned($Text.color(A3($Color.hsl,
-      0,
-      0,
-      0.7))($Text.italic($Text.fromString(s))));
    };
-   var leftPanel$ = F6(function (_v32,
-   left,
-   right,
+   var leftPanel$ = F5(function (l,
+   r,
    textElement,
    descriptionElement,
-   inboxElements) {
-      return function () {
-         switch (_v32.ctor)
-         {case "_Tuple2":
-            return A3($Graphics$Element.container,
-              _v32._0,
-              _v32._1,
-              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.down,
-              A2($Basics._op["++"],
-              A2($List.map,
-              siblingView(_v32._0),
-              left),
-              A2($Basics._op["++"],
-              _L.fromArray([$Graphics$Element.color($Color.green)($Graphics$Element.width(_v32._0)(textElement))
-                           ,$Graphics$Element.color($Color.yellow)($Graphics$Element.width(_v32._0)(descriptionElement))
-                           ,hintText("⌘A: add to inbox")]),
-              A2($Basics._op["++"],
-              inboxElements,
-              A2($List.map,
-              siblingView(_v32._0),
-              right))))));}
-         _U.badCase($moduleName,
-         "between lines 48 and 54");
-      }();
+   inbox) {
+      return A3($Rectified.bottom,
+      20 * $List.length(r),
+      $App$Styles.margin,
+      A4($Rectified.list,
+      20,
+      0,
+      siblingView,
+      r))(A3($Rectified.top,
+      20 * $List.length(l),
+      $App$Styles.margin,
+      A4($Rectified.list,
+      20,
+      0,
+      siblingView,
+      l))(A3($Rectified.top,
+      50,
+      0,
+      textElement)(A3($Rectified.top,
+      60,
+      0,
+      descriptionElement)(A3($Rectified.top,
+      30,
+      0,
+      A3($Rectified.text,
+      $App$Styles.dim,
+      0,
+      "⌘A: add to inbox"))(A4($Rectified.list,
+      30,
+      0,
+      inboxItem,
+      inbox))))));
    });
-   var leftPanel = F4(function (_v36,
-   z,
+   var Zip = function (a) {
+      return {ctor: "Zip",_0: a};
+   };
+   var Val = function (a) {
+      return {ctor: "Val",_0: a};
+   };
+   var inboxItemV = function (v) {
+      return inboxItem(Val(v));
+   };
+   var leftPanel = F3(function (z,
    left,
    right) {
       return function () {
-         switch (_v36.ctor)
-         {case "_Tuple2":
-            return function () {
-                 switch (z.ctor)
-                 {case "InDescription":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v36._0
-                      ,_1: _v36._1},
-                      left,
-                      right,
-                      $Text.plainText(z._0.text),
-                      $App$Render$String.render(z._0.description),
-                      A2($List.map,
-                      inboxItemV(_v36._0),
-                      z._0.inbox));
-                    case "InInbox":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v36._0
-                      ,_1: _v36._1},
-                      left,
-                      right,
-                      $Text.plainText(z._0.text),
-                      $Text.plainText(z._0.description),
-                      A3($Core$Array.map,
-                      inboxItemV(_v36._0),
-                      inboxItem(_v36._0),
-                      z._0.inbox));
-                    case "InText":
-                    return A6(leftPanel$,
-                      {ctor: "_Tuple2"
-                      ,_0: _v36._0
-                      ,_1: _v36._1},
-                      left,
-                      right,
-                      $App$Render$String.render(z._0.text),
-                      $Text.plainText(z._0.description),
-                      A2($List.map,
-                      inboxItemV(_v36._0),
-                      z._0.inbox));}
-                 return function () {
-                    var _v44 = $Outline$Entry.toValue(z);
-                    switch (_v44.ctor)
-                    {case "Entry":
-                       return A6(leftPanel$,
-                         {ctor: "_Tuple2"
-                         ,_0: _v36._0
-                         ,_1: _v36._1},
-                         left,
-                         right,
-                         $Text.plainText(_v44._0.text),
-                         $Text.plainText(_v44._0.description),
-                         A2($List.map,
-                         inboxItemV(_v36._0),
-                         _v44._0.inbox));}
-                    _U.badCase($moduleName,
-                    "between lines 71 and 75");
-                 }();
-              }();}
-         _U.badCase($moduleName,
-         "between lines 57 and 75");
-      }();
-   });
-   var child = F2(function (i,e) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      _L.fromArray([hintText(A2($Basics._op["++"],
-                   "⌘",
-                   A2($Basics._op["++"],
-                   $Basics.toString(i + 1),
-                   " ")))
-                   ,e]));
-   });
-   var rightPanel$ = F2(function (_v46,
-   childElements) {
-      return function () {
-         switch (_v46.ctor)
-         {case "_Tuple2":
-            return A3($Graphics$Element.container,
-              _v46._0,
-              _v46._1,
-              $Graphics$Element.topLeft)(A2($Graphics$Element.flow,
-              $Graphics$Element.down,
-              A2($Basics._op["++"],
-              _L.fromArray([hintText("⌘P: promote from inbox")]),
-              A2($List.indexedMap,
-              child,
-              childElements))));}
-         _U.badCase($moduleName,
-         "between lines 84 and 87");
-      }();
-   });
-   var rightPanel = F2(function (size,
-   z) {
-      return function () {
+         switch (z.ctor)
+         {case "InDescription":
+            return A5(leftPanel$,
+              left,
+              right,
+              A2($Rectified.text,
+              $App$Styles.plain,
+              0)(z._0.text),
+              $Rectified.html(0)($App$Render$String.toHtml(z._0.description)),
+              $List.map(Val)(z._0.inbox));
+            case "InInbox":
+            return A5(leftPanel$,
+              left,
+              right,
+              A2($Rectified.text,
+              $App$Styles.plain,
+              0)(z._0.text),
+              A2($Rectified.text,
+              $App$Styles.plain,
+              0)(z._0.description),
+              A3($Core$Array.map,
+              Val,
+              Zip,
+              z._0.inbox));
+            case "InText":
+            return A5(leftPanel$,
+              left,
+              right,
+              $Rectified.html(0)($App$Render$String.toHtml(z._0.text)),
+              A2($Rectified.text,
+              $App$Styles.plain,
+              0)(z._0.description),
+              $List.map(Val)(z._0.inbox));}
          return function () {
-            var _v51 = $Outline$Entry.toValue(z);
-            switch (_v51.ctor)
+            var _v37 = $Outline$Entry.toValue(z);
+            switch (_v37.ctor)
             {case "Entry":
-               return A2(rightPanel$,
-                 size,
-                 $List.map($Text.plainText)($List.map(function (en) {
-                    return function () {
-                       switch (en.ctor)
-                       {case "Entry":
-                          return en._0.text;}
-                       _U.badCase($moduleName,
-                       "on line 93, column 39 to 73");
-                    }();
-                 })(_v51._0.children)));}
+               return A5(leftPanel$,
+                 left,
+                 right,
+                 A2($Rectified.text,
+                 $App$Styles.plain,
+                 0)(_v37._0.text),
+                 A2($Rectified.text,
+                 $App$Styles.plain,
+                 0)(_v37._0.description),
+                 $List.map(Val)(_v37._0.inbox));}
             _U.badCase($moduleName,
-            "between lines 91 and 93");
+            "between lines 72 and 76");
          }();
       }();
    });
-   var render = F2(function (_v55,
-   z) {
+   var render = function (z) {
       return function () {
-         switch (_v55.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var _ = A3(findFocus,
-                 {ctor: "_Tuple2",_0: 0,_1: 0},
-                 {ctor: "_Tuple2"
-                 ,_0: _L.fromArray([])
-                 ,_1: _L.fromArray([])},
-                 z);
-                 var crumbs = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3": return _._1;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 117, column 32 to 57");
-                 }();
-                 var focus = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._1;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 117, column 32 to 57");
-                 }();
-                 var ls = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._0;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 117, column 32 to 57");
-                 }();
-                 var rs = function () {
-                    switch (_.ctor)
-                    {case "_Tuple2":
-                       switch (_._0.ctor)
-                         {case "_Tuple3":
-                            return _._0._2;}
-                         break;}
-                    _U.badCase($moduleName,
-                    "on line 117, column 32 to 57");
-                 }();
-                 var header = A2(title,
-                 {ctor: "_Tuple2"
-                 ,_0: _v55._0
-                 ,_1: _v55._1},
-                 $Outline$Entry.textValue(z));
-                 var f = footer({ctor: "_Tuple2"
-                                ,_0: _v55._0
-                                ,_1: _v55._1});
-                 var mh = _v55._1 - $Graphics$Element.heightOf(f) - $Graphics$Element.heightOf(header);
-                 var crumbs$ = A2(crumbsPanel,
-                 mh,
-                 A2($List.drop,1,crumbs));
-                 var mw = _v55._0 - $Graphics$Element.widthOf(crumbs$);
-                 return A2($Graphics$Element.flow,
-                 $Graphics$Element.down,
-                 _L.fromArray([header
-                              ,A2($Graphics$Element.flow,
-                              $Graphics$Element.right,
-                              _L.fromArray([crumbs$
-                                           ,A4(leftPanel,
-                                           {ctor: "_Tuple2"
-                                           ,_0: $Basics.floor($Basics.toFloat(mw) / 2)
-                                           ,_1: mh},
-                                           focus,
-                                           ls,
-                                           rs)
-                                           ,A2(rightPanel,
-                                           {ctor: "_Tuple2"
-                                           ,_0: $Basics.ceiling($Basics.toFloat(mw) / 2)
-                                           ,_1: mh},
-                                           focus)]))
-                              ,f]));
-              }();}
-         _U.badCase($moduleName,
-         "between lines 114 and 128");
+         var _ = A3(findFocus,
+         {ctor: "_Tuple2",_0: 0,_1: 0},
+         {ctor: "_Tuple2"
+         ,_0: _L.fromArray([])
+         ,_1: _L.fromArray([])},
+         z);
+         var crumbs = function () {
+            switch (_.ctor)
+            {case "_Tuple2":
+               switch (_._0.ctor)
+                 {case "_Tuple3": return _._1;}
+                 break;}
+            _U.badCase($moduleName,
+            "on line 109, column 32 to 57");
+         }();
+         var focus = function () {
+            switch (_.ctor)
+            {case "_Tuple2":
+               switch (_._0.ctor)
+                 {case "_Tuple3":
+                    return _._0._1;}
+                 break;}
+            _U.badCase($moduleName,
+            "on line 109, column 32 to 57");
+         }();
+         var ls = function () {
+            switch (_.ctor)
+            {case "_Tuple2":
+               switch (_._0.ctor)
+                 {case "_Tuple3":
+                    return _._0._0;}
+                 break;}
+            _U.badCase($moduleName,
+            "on line 109, column 32 to 57");
+         }();
+         var rs = function () {
+            switch (_.ctor)
+            {case "_Tuple2":
+               switch (_._0.ctor)
+                 {case "_Tuple3":
+                    return _._0._2;}
+                 break;}
+            _U.badCase($moduleName,
+            "on line 109, column 32 to 57");
+         }();
+         return A3($Rectified.top,
+         40,
+         0,
+         header(z))(A3($Rectified.bottom,
+         40,
+         0,
+         footer)(A3($Rectified.left,
+         50 * $List.length(crumbs),
+         $App$Styles.margin,
+         crumbsPanel(crumbs))(A3($Rectified.left,
+         200,
+         0,
+         A3(leftPanel,
+         focus,
+         ls,
+         rs))(rightPanel(focus)))));
       }();
-   });
+   };
    _elm.App.Render.Outline.values = {_op: _op
                                     ,render: render};
    return _elm.App.Render.Outline.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Render = Elm.App.Render || {};
+Elm.App.Render.RichText = Elm.App.Render.RichText || {};
+Elm.App.Render.RichText.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Render = _elm.App.Render || {};
+   _elm.App.Render.RichText = _elm.App.Render.RichText || {};
+   if (_elm.App.Render.RichText.values)
+   return _elm.App.Render.RichText.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Render.RichText",
+   $Basics = Elm.Basics.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Outline$RichText$Render = Elm.Outline.RichText.Render.make(_elm);
+   var render = F2(function (w,z) {
+      return A2($Html.toElement,
+      w,
+      100)($Outline$RichText$Render.toHtml(z));
+   });
+   _elm.App.Render.RichText.values = {_op: _op
+                                     ,render: render};
+   return _elm.App.Render.RichText.values;
 };
 Elm.App = Elm.App || {};
 Elm.App.Render = Elm.App.Render || {};
@@ -1034,48 +1066,109 @@ Elm.App.Render.Scratch.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "App.Render.Scratch",
-   $App$Render$String = Elm.App.Render.String.make(_elm),
+   $App$Styles = Elm.App.Styles.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
    $Core$Array = Elm.Core.Array.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
-   $Graphics$Input = Elm.Graphics.Input.make(_elm),
    $List = Elm.List.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Block$Render = Elm.Outline.RichText.Block.Render.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Outline$RichText$Render = Elm.Outline.RichText.Render.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $String = Elm.String.make(_elm),
-   $Text = Elm.Text.make(_elm);
-   var renderZipper = function (z) {
-      return $App$Render$String.render(z);
+   $Rectified = Elm.Rectified.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var task = function (b) {
+      return A3($Rectified.left,
+      30,
+      0,
+      $Rectified.grey(20)(A3($Rectified.text,
+      $App$Styles.bold,
+      0,
+      ">>>")))($Rectified.html(0)($Outline$RichText$Block$Render.spanToHtml(b)));
    };
-   var navItem = F3(function (channel,
-   i,
-   v) {
-      return $Graphics$Input.clickable(A2($Signal.send,
+   var content = F2(function (processChannel,
+   z) {
+      return function () {
+         var tasks = $Outline$RichText$Model.getTasks($Outline$RichText$Model.toValue(z));
+         return $App$Styles.panel(A3($Rectified.bottom,
+         50,
+         $App$Styles.margin,
+         $Rectified.clickable(A2($Signal.send,
+         processChannel,
+         {ctor: "_Tuple0"}))($Rectified.grey(60)($Rectified.debug("[PROCESS]"))))(A3($Rectified.bottom,
+         20 * $List.length(tasks),
+         $App$Styles.margin,
+         A4($Rectified.list,
+         20,
+         0,
+         task,
+         tasks))(A2($Rectified.html,
+         $App$Styles.margin,
+         $Outline$RichText$Render.toHtml(z)))));
+      }();
+   });
+   var newScratchButton = function (channel) {
+      return $Rectified.clickable(A2($Signal.send,
       channel,
-      i))($Graphics$Element.height(40)($Graphics$Element.width(200)($Text.plainText($List.head($String.split("\n")(v))))));
+      {ctor: "_Tuple0"}))($Rectified.grey(70)(A3($Rectified.text,
+      $App$Styles.dim,
+      $App$Styles.margin,
+      "+ New Scratch...")));
+   };
+   var item = F2(function (channel,
+   n) {
+      return function () {
+         switch (n.ctor)
+         {case "Val":
+            return $Rectified.clickable(A2($Signal.send,
+              channel,
+              n._0))($App$Styles.panel($Rectified.html($App$Styles.margin)($Outline$RichText$Block$Render.spanToHtml($List.head(n._1)))));
+            case "Zip":
+            return $Rectified.grey(80)($Rectified.empty);}
+         _U.badCase($moduleName,
+         "between lines 22 and 25");
+      }();
    });
-   var selectedNavItem = F3(function (channel,
-   i,
-   z) {
-      return $Graphics$Element.color($Color.yellow)(A2(navItem,
-      channel,
-      i)($Outline$Scratch$Model.toValue(z)));
+   var Zip = F2(function (a,b) {
+      return {ctor: "Zip"
+             ,_0: a
+             ,_1: b};
    });
-   var list = F2(function (channel,
-   z) {
-      return $Graphics$Element.flow($Graphics$Element.down)(A2($Core$Array.indexedMap,
-      navItem(channel),
-      selectedNavItem(channel))(z));
+   var Val = F2(function (a,b) {
+      return {ctor: "Val"
+             ,_0: a
+             ,_1: b};
    });
-   var render = F2(function (scratchChannel,
+   var navbar = F4(function (scratchChannel,
+   processChannel,
+   newScratchChannel,
    z) {
-      return A2($Graphics$Element.flow,
-      $Graphics$Element.right,
-      _L.fromArray([A2(list,
-                   scratchChannel,
-                   z)
-                   ,renderZipper($Core$Array.active(z))]));
+      return A3($Rectified.top,
+      40,
+      2,
+      newScratchButton(newScratchChannel))(A3($Rectified.list,
+      60,
+      2,
+      item(scratchChannel))(A2($Core$Array.indexedMap,
+      F2(function (i,v) {
+         return A2(Val,i,v);
+      }),
+      F2(function (i,z) {
+         return A2(Zip,i,z);
+      }))(z)));
+   });
+   var render = F4(function (scratchChannel,
+   processChannel,
+   newScratchChannel,
+   z) {
+      return $Rectified.inset($App$Styles.margin)(A3($Rectified.left,
+      280,
+      $App$Styles.margin,
+      A4(navbar,
+      scratchChannel,
+      processChannel,
+      newScratchChannel,
+      z))(content(processChannel)($Core$Array.active(z))));
    });
    _elm.App.Render.Scratch.values = {_op: _op
                                     ,render: render};
@@ -1099,34 +1192,34 @@ Elm.App.Render.String.make = function (_elm) {
    $moduleName = "App.Render.String",
    $Basics = Elm.Basics.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $List = Elm.List.make(_elm),
    $String = Elm.String.make(_elm);
-   var render = function (_v0) {
+   var toHtml = function (_v0) {
       return function () {
          switch (_v0.ctor)
-         {case "_Tuple2":
-            return A2($Html.toElement,
-              100,
-              100)(A3($Html.node,
+         {case "_Tuple3":
+            return A3($Html.node,
               "span",
               _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
                                                                  ,_0: "white-space"
                                                                  ,_1: "pre-wrap"}]))]),
-              _L.fromArray([$Html.text(A2($String.left,
-                           _v0._1,
-                           _v0._0))
+              _L.fromArray([$Html.text(_v0._0)
                            ,A3($Html.node,
                            "span",
                            _L.fromArray([$Html$Attributes.$class("cursor")]),
                            _L.fromArray([$Html.text("^")]))
-                           ,$Html.text(A2($String.dropLeft,
-                           _v0._1,
-                           _v0._0))])));}
+                           ,A3($Html.node,
+                           "span",
+                           _L.fromArray([$Html$Attributes.$class("selection")
+                                        ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                              ,_0: "background"
+                                                                              ,_1: "lightblue"}]))]),
+                           _L.fromArray([$Html.text(_v0._1)]))
+                           ,$Html.text(_v0._2)]));}
          _U.badCase($moduleName,
-         "between lines 19 and 26");
+         "between lines 19 and 30");
       }();
    };
    var line = function (string) {
@@ -1139,8 +1232,52 @@ Elm.App.Render.String.make = function (_elm) {
       return $List.map(line)($String.split("\n")(stringWithNewlines));
    };
    _elm.App.Render.String.values = {_op: _op
-                                   ,render: render};
+                                   ,toHtml: toHtml};
    return _elm.App.Render.String.values;
+};
+Elm.App = Elm.App || {};
+Elm.App.Styles = Elm.App.Styles || {};
+Elm.App.Styles.make = function (_elm) {
+   "use strict";
+   _elm.App = _elm.App || {};
+   _elm.App.Styles = _elm.App.Styles || {};
+   if (_elm.App.Styles.values)
+   return _elm.App.Styles.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "App.Styles",
+   $Color = Elm.Color.make(_elm),
+   $Rectified = Elm.Rectified.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var plain = $Text.defaultStyle;
+   var bold = _U.replace([["bold"
+                          ,true]],
+   plain);
+   var dim = _U.replace([["color"
+                         ,A3($Color.hsl,0,0,0.8)]],
+   plain);
+   var hint = _U.replace([["italic"
+                          ,true]
+                         ,["color"
+                          ,A3($Color.hsl,0,0,0.7)]],
+   plain);
+   var panel = $Rectified.grey(98);
+   var background = $Rectified.grey(85);
+   var highlight = $Rectified.grey(70);
+   var margin = 8;
+   _elm.App.Styles.values = {_op: _op
+                            ,margin: margin
+                            ,highlight: highlight
+                            ,background: background
+                            ,panel: panel
+                            ,plain: plain
+                            ,bold: bold
+                            ,dim: dim
+                            ,hint: hint};
+   return _elm.App.Styles.values;
 };
 Elm.Array = Elm.Array || {};
 Elm.Array.make = function (_elm) {
@@ -1255,7 +1392,7 @@ Elm.Basics.make = function (_elm) {
               _v0._0,
               _v0._1);}
          _U.badCase($moduleName,
-         "on line 461, column 19 to 24");
+         "on line 460, column 19 to 24");
       }();
    });
    var curry = F3(function (f,
@@ -1273,7 +1410,7 @@ Elm.Basics.make = function (_elm) {
          switch (_v4.ctor)
          {case "_Tuple2": return _v4._1;}
          _U.badCase($moduleName,
-         "on line 445, column 13 to 14");
+         "on line 444, column 13 to 14");
       }();
    };
    var fst = function (_v8) {
@@ -1281,7 +1418,7 @@ Elm.Basics.make = function (_elm) {
          switch (_v8.ctor)
          {case "_Tuple2": return _v8._0;}
          _U.badCase($moduleName,
-         "on line 441, column 13 to 14");
+         "on line 440, column 13 to 14");
       }();
    };
    var always = F2(function (a,
@@ -1944,32 +2081,7 @@ Elm.Core.Action.make = function (_elm) {
       return {ctor: "Update"
              ,_0: a};
    };
-   var nav = F2(function (fn,_v2) {
-      return function () {
-         switch (_v2.ctor)
-         {case "_Tuple2":
-            return Update({ctor: "_Tuple2"
-                          ,_0: _v2._0
-                          ,_1: A2(fn,_v2._0,_v2._1)});}
-         _U.badCase($moduleName,
-         "on line 11, column 20 to 39");
-      }();
-   });
-   var change = F2(function (fn,
-   _v6) {
-      return function () {
-         switch (_v6.ctor)
-         {case "_Tuple2":
-            return Update({ctor: "_Tuple2"
-                          ,_0: A2(fn,_v6._0,_v6._1)
-                          ,_1: _v6._1});}
-         _U.badCase($moduleName,
-         "on line 14, column 23 to 42");
-      }();
-   });
    _elm.Core.Action.values = {_op: _op
-                             ,nav: nav
-                             ,change: change
                              ,always: always
                              ,Update: Update
                              ,Split: Split
@@ -1995,9 +2107,13 @@ Elm.Core.Array.make = function (_elm) {
    $moduleName = "Core.Array",
    $Basics = Elm.Basics.make(_elm),
    $Core$Action = Elm.Core.Action.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $String = Elm.String.make(_elm);
+   var decoder = function (d) {
+      return $Json$Decode.list(d);
+   };
    var walk = F3(function (wrapFn,
    child,
    list) {
@@ -2034,10 +2150,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 160 and 162");
+                 "between lines 201 and 203");
               }();}
          _U.badCase($moduleName,
-         "between lines 160 and 162");
+         "between lines 201 and 203");
       }();
    });
    var goPrev = F3(function (toVal,
@@ -2058,10 +2174,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 155 and 157");
+                 "between lines 196 and 198");
               }();}
          _U.badCase($moduleName,
-         "between lines 155 and 157");
+         "between lines 196 and 198");
       }();
    });
    var indexedMap = F3(function (valueFn,
@@ -2089,7 +2205,7 @@ Elm.Core.Array.make = function (_elm) {
                  _v16._2)));
               }();}
          _U.badCase($moduleName,
-         "between lines 148 and 152");
+         "between lines 189 and 193");
       }();
    });
    var map = F3(function (valueFn,
@@ -2108,7 +2224,7 @@ Elm.Core.Array.make = function (_elm) {
               valueFn,
               _v21._2)));}
          _U.badCase($moduleName,
-         "between lines 142 and 144");
+         "between lines 183 and 185");
       }();
    });
    var update = F2(function ($new,
@@ -2121,7 +2237,7 @@ Elm.Core.Array.make = function (_elm) {
                    ,_1: $new
                    ,_2: _v26._2};}
          _U.badCase($moduleName,
-         "on line 138, column 30 to 44");
+         "on line 179, column 30 to 44");
       }();
    });
    var moveDown = function (_v31) {
@@ -2140,10 +2256,10 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 133 and 135");
+                 "between lines 174 and 176");
               }();}
          _U.badCase($moduleName,
-         "between lines 133 and 135");
+         "between lines 174 and 176");
       }();
    };
    var moveUp = function (_v39) {
@@ -2162,152 +2278,144 @@ Elm.Core.Array.make = function (_elm) {
                     case "[]":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 128 and 130");
+                 "between lines 169 and 171");
               }();}
          _U.badCase($moduleName,
-         "between lines 128 and 130");
+         "between lines 169 and 171");
       }();
    };
-   var split_ = F2(function (fn,
-   z) {
-      return function () {
-         var _v47 = fn(z);
-         switch (_v47.ctor)
-         {case "_Tuple2":
-            return A3($Core$Action.Split,
-              _L.fromArray([_v47._0]),
-              _v47._1,
-              _L.fromArray([]));}
-         _U.badCase($moduleName,
-         "between lines 121 and 122");
-      }();
-   });
-   var $do = F5(function (toVal,
+   var doPropagatingSplits = F5(function (toVal,
    nextFn,
    prevFn,
    action,
-   _v50) {
+   _v47) {
       return function () {
-         switch (_v50.ctor)
+         switch (_v47.ctor)
          {case "_Tuple3":
             return function () {
-                 var _v55 = action(_v50._1);
-                 switch (_v55.ctor)
+                 var _v52 = action(_v47._1);
+                 switch (_v52.ctor)
                  {case "Delete":
                     return function () {
-                         switch (_v50._2.ctor)
+                         switch (_v47._2.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
-                                                       ,_0: _v50._0
-                                                       ,_1: nextFn(_v50._2._0)
-                                                       ,_2: _v50._2._1});
+                                                       ,_0: _v47._0
+                                                       ,_1: nextFn(_v47._2._0)
+                                                       ,_2: _v47._2._1});
                             case "[]": return function () {
-                                 switch (_v50._0.ctor)
+                                 switch (_v47._0.ctor)
                                  {case "::":
                                     return $Core$Action.Update({ctor: "_Tuple3"
-                                                               ,_0: _v50._0._1
-                                                               ,_1: prevFn(_v50._0._0)
-                                                               ,_2: _v50._2});
+                                                               ,_0: _v47._0._1
+                                                               ,_1: prevFn(_v47._0._0)
+                                                               ,_2: _v47._2});
                                     case "[]":
                                     return $Core$Action.Delete;}
                                  _U.badCase($moduleName,
-                                 "between lines 109 and 112");
+                                 "between lines 157 and 160");
                               }();}
                          _U.badCase($moduleName,
-                         "between lines 107 and 112");
+                         "between lines 155 and 160");
                       }();
                     case "EnterNext":
                     return function () {
-                         switch (_v50._2.ctor)
+                         switch (_v47._2.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
                                                        ,_0: A2($List._op["::"],
-                                                       toVal(_v50._1),
-                                                       _v50._0)
-                                                       ,_1: nextFn(_v50._2._0)
-                                                       ,_2: _v50._2._1});
+                                                       toVal(_v47._1),
+                                                       _v47._0)
+                                                       ,_1: nextFn(_v47._2._0)
+                                                       ,_2: _v47._2._1});
                             case "[]":
                             return $Core$Action.EnterNext;}
                          _U.badCase($moduleName,
-                         "between lines 112 and 115");
+                         "between lines 160 and 163");
                       }();
                     case "EnterPrev":
                     return function () {
-                         switch (_v50._0.ctor)
+                         switch (_v47._0.ctor)
                          {case "::":
                             return $Core$Action.Update({ctor: "_Tuple3"
-                                                       ,_0: _v50._0._1
-                                                       ,_1: prevFn(_v50._0._0)
+                                                       ,_0: _v47._0._1
+                                                       ,_1: prevFn(_v47._0._0)
                                                        ,_2: A2($List._op["::"],
-                                                       toVal(_v50._1),
-                                                       _v50._2)});
+                                                       toVal(_v47._1),
+                                                       _v47._2)});
                             case "[]":
                             return $Core$Action.EnterPrev;}
                          _U.badCase($moduleName,
-                         "between lines 115 and 118");
+                         "between lines 163 and 166");
                       }();
                     case "NoChange":
                     return $Core$Action.NoChange;
                     case "Split":
-                    return $Core$Action.Update({ctor: "_Tuple3"
-                                               ,_0: A2($Basics._op["++"],
-                                               $List.reverse(_v55._0),
-                                               _v50._0)
-                                               ,_1: _v55._1
-                                               ,_2: A2($Basics._op["++"],
-                                               _v55._2,
-                                               _v50._2)});
+                    return A3($Core$Action.Split,
+                      _L.fromArray([A2($Basics._op["++"],
+                      $List.reverse(_v47._0),
+                      _v52._0)]),
+                      {ctor: "_Tuple3"
+                      ,_0: _L.fromArray([])
+                      ,_1: _v52._1
+                      ,_2: A2($Basics._op["++"],
+                      _v52._2,
+                      _v47._2)},
+                      _L.fromArray([]));
                     case "Update":
                     return $Core$Action.Update({ctor: "_Tuple3"
-                                               ,_0: _v50._0
-                                               ,_1: _v55._0
-                                               ,_2: _v50._2});}
+                                               ,_0: _v47._0
+                                               ,_1: _v52._0
+                                               ,_2: _v47._2});}
                  _U.badCase($moduleName,
-                 "between lines 104 and 118");
+                 "between lines 151 and 166");
               }();}
          _U.badCase($moduleName,
-         "between lines 104 and 118");
+         "between lines 151 and 166");
       }();
    });
-   var split = F4(function (toVal,
-   nextCursor,
-   prevCursor,
-   fn) {
-      return A4($do,
-      toVal,
-      nextCursor,
-      prevCursor,
-      split_(fn));
-   });
    var remove = F2(function (fn,
-   _v72) {
+   _v69) {
       return function () {
-         switch (_v72.ctor)
+         switch (_v69.ctor)
          {case "_Tuple3":
             return function () {
-                 switch (_v72._2.ctor)
+                 switch (_v69._2.ctor)
                  {case "::":
                     return $Maybe.Just({ctor: "_Tuple3"
-                                       ,_0: _v72._0
-                                       ,_1: fn(_v72._2._0)
-                                       ,_2: _v72._2._1});
+                                       ,_0: _v69._0
+                                       ,_1: fn(_v69._2._0)
+                                       ,_2: _v69._2._1});
                     case "[]": return function () {
-                         switch (_v72._0.ctor)
+                         switch (_v69._0.ctor)
                          {case "::":
                             return $Maybe.Just({ctor: "_Tuple3"
-                                               ,_0: _v72._0._1
-                                               ,_1: fn(_v72._0._0)
-                                               ,_2: _v72._2});
+                                               ,_0: _v69._0._1
+                                               ,_1: fn(_v69._0._0)
+                                               ,_2: _v69._2});
                             case "[]":
                             return $Maybe.Nothing;}
                          _U.badCase($moduleName,
-                         "between lines 98 and 100");
+                         "between lines 127 and 129");
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 96 and 100");
+                 "between lines 125 and 129");
               }();}
          _U.badCase($moduleName,
-         "between lines 96 and 100");
+         "between lines 125 and 129");
+      }();
+   });
+   var lastZipperM = F2(function (fn,
+   list) {
+      return function () {
+         var _v80 = $List.reverse(list);
+         switch (_v80.ctor)
+         {case "::":
+            return $Maybe.Just({ctor: "_Tuple3"
+                               ,_0: _v80._1
+                               ,_1: fn(_v80._0)
+                               ,_2: _L.fromArray([])});}
+         return $Maybe.Nothing;
       }();
    });
    var lastZipper = F2(function (fn,
@@ -2315,7 +2423,7 @@ Elm.Core.Array.make = function (_elm) {
       return function () {
          var _raw = $List.reverse(list),
          $ = _raw.ctor === "::" ? _raw : _U.badCase($moduleName,
-         "on line 87, column 42 to 54"),
+         "on line 111, column 42 to 54"),
          cur = $._0,
          tail = $._1;
          return {ctor: "_Tuple3"
@@ -2355,15 +2463,15 @@ Elm.Core.Array.make = function (_elm) {
                             case "Nothing":
                             return $Maybe.Nothing;}
                          _U.badCase($moduleName,
-                         "between lines 79 and 82");
+                         "between lines 103 and 106");
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 77 and 82");
+                 "between lines 101 and 106");
               }();
             case "[]":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 76 and 82");
+         "between lines 100 and 106");
       }();
    });
    var lastZipperThat = F2(function (fn,
@@ -2384,7 +2492,7 @@ Elm.Core.Array.make = function (_elm) {
             case "Nothing":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 90 and 92");
+         "between lines 119 and 121");
       }();
    });
    var firstZipperM = F2(function (fn,
@@ -2399,7 +2507,7 @@ Elm.Core.Array.make = function (_elm) {
             case "[]":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 71 and 73");
+         "between lines 95 and 97");
       }();
    });
    var firstZipper = F2(function (fn,
@@ -2412,7 +2520,7 @@ Elm.Core.Array.make = function (_elm) {
                    ,_1: fn(_v101._0)
                    ,_2: _v101._1};}
          _U.badCase($moduleName,
-         "on line 68, column 33 to 47");
+         "on line 92, column 33 to 47");
       }();
    });
    var zipperAtM = F3(function (i,
@@ -2429,7 +2537,7 @@ Elm.Core.Array.make = function (_elm) {
             case true:
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 58 and 64");
+         "between lines 82 and 88");
       }();
    });
    var zipperAt = F3(function (i,
@@ -2454,7 +2562,7 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return _v106._1;}
          _U.badCase($moduleName,
-         "on line 44, column 18 to 19");
+         "on line 68, column 18 to 19");
       }();
    };
    var prepend = F2(function (v,
@@ -2485,7 +2593,7 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return _v111._2;}
          _U.badCase($moduleName,
-         "on line 32, column 22 to 27");
+         "on line 56, column 22 to 27");
       }();
    };
    var lefts = function (_v116) {
@@ -2494,7 +2602,7 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return $List.reverse(_v116._0);}
          _U.badCase($moduleName,
-         "on line 29, column 20 to 37");
+         "on line 53, column 20 to 37");
       }();
    };
    var countRight = function (_v121) {
@@ -2503,7 +2611,7 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return $List.length(_v121._2);}
          _U.badCase($moduleName,
-         "on line 26, column 26 to 43");
+         "on line 50, column 26 to 43");
       }();
    };
    var countLeft = function (_v126) {
@@ -2512,21 +2620,166 @@ Elm.Core.Array.make = function (_elm) {
          {case "_Tuple3":
             return $List.length(_v126._0);}
          _U.badCase($moduleName,
-         "on line 23, column 24 to 40");
+         "on line 47, column 24 to 40");
       }();
    };
-   var toValue = F2(function (fn,
+   var joinActive = F3(function (mergeFn,
+   active$,
    _v131) {
       return function () {
          switch (_v131.ctor)
          {case "_Tuple3":
-            return A2($Basics._op["++"],
-              $List.reverse(_v131._0),
-              A2($Basics._op["++"],
-              _L.fromArray([fn(_v131._1)]),
-              _v131._2));}
+            return function () {
+                 switch (_v131._0.ctor)
+                 {case "::":
+                    return $Maybe.Just({ctor: "_Tuple3"
+                                       ,_0: _v131._0._1
+                                       ,_1: A2(mergeFn,
+                                       _v131._0._0,
+                                       active$)
+                                       ,_2: _v131._2});
+                    case "[]":
+                    return $Maybe.Nothing;}
+                 _U.badCase($moduleName,
+                 "between lines 42 and 44");
+              }();}
          _U.badCase($moduleName,
-         "on line 20, column 31 to 69");
+         "between lines 42 and 44");
+      }();
+   });
+   var mergeActive = F4(function (left$,
+   active$,
+   right$,
+   _v139) {
+      return function () {
+         switch (_v139.ctor)
+         {case "_Tuple3":
+            return {ctor: "_Tuple3"
+                   ,_0: A2($Basics._op["++"],
+                   $List.reverse(left$),
+                   _v139._0)
+                   ,_1: active$
+                   ,_2: A2($Basics._op["++"],
+                   right$,
+                   _v139._2)};}
+         _U.badCase($moduleName,
+         "on line 39, column 4 to 49");
+      }();
+   });
+   var replaceActive = F2(function (active$,
+   _v144) {
+      return function () {
+         switch (_v144.ctor)
+         {case "_Tuple3":
+            return {ctor: "_Tuple3"
+                   ,_0: _v144._0
+                   ,_1: active$
+                   ,_2: _v144._2};}
+         _U.badCase($moduleName,
+         "on line 35, column 46 to 66");
+      }();
+   });
+   var $do = F5(function (toVal,
+   nextFn,
+   prevFn,
+   action,
+   _v149) {
+      return function () {
+         switch (_v149.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var _v154 = action(_v149._1);
+                 switch (_v154.ctor)
+                 {case "Delete":
+                    return function () {
+                         switch (_v149._2.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: _v149._0
+                                                       ,_1: nextFn(_v149._2._0)
+                                                       ,_2: _v149._2._1});
+                            case "[]": return function () {
+                                 switch (_v149._0.ctor)
+                                 {case "::":
+                                    return $Core$Action.Update({ctor: "_Tuple3"
+                                                               ,_0: _v149._0._1
+                                                               ,_1: prevFn(_v149._0._0)
+                                                               ,_2: _v149._2});
+                                    case "[]":
+                                    return $Core$Action.Delete;}
+                                 _U.badCase($moduleName,
+                                 "between lines 139 and 142");
+                              }();}
+                         _U.badCase($moduleName,
+                         "between lines 137 and 142");
+                      }();
+                    case "EnterNext":
+                    return function () {
+                         switch (_v149._2.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: A2($List._op["::"],
+                                                       toVal(_v149._1),
+                                                       _v149._0)
+                                                       ,_1: nextFn(_v149._2._0)
+                                                       ,_2: _v149._2._1});
+                            case "[]":
+                            return $Core$Action.EnterNext;}
+                         _U.badCase($moduleName,
+                         "between lines 142 and 145");
+                      }();
+                    case "EnterPrev":
+                    return function () {
+                         switch (_v149._0.ctor)
+                         {case "::":
+                            return $Core$Action.Update({ctor: "_Tuple3"
+                                                       ,_0: _v149._0._1
+                                                       ,_1: prevFn(_v149._0._0)
+                                                       ,_2: A2($List._op["::"],
+                                                       toVal(_v149._1),
+                                                       _v149._2)});
+                            case "[]":
+                            return $Core$Action.EnterPrev;}
+                         _U.badCase($moduleName,
+                         "between lines 145 and 148");
+                      }();
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return $Core$Action.Update(A4(mergeActive,
+                      _v154._0,
+                      _v154._1,
+                      _v154._2,
+                      {ctor: "_Tuple3"
+                      ,_0: _v149._0
+                      ,_1: _v149._1
+                      ,_2: _v149._2}));
+                    case "Update":
+                    return $Core$Action.Update(A2(replaceActive,
+                      _v154._0,
+                      {ctor: "_Tuple3"
+                      ,_0: _v149._0
+                      ,_1: _v149._1
+                      ,_2: _v149._2}));}
+                 _U.badCase($moduleName,
+                 "between lines 133 and 148");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 133 and 148");
+      }();
+   });
+   var toValue = F2(function (fn,
+   _v171) {
+      return function () {
+         switch (_v171.ctor)
+         {case "_Tuple3":
+            return A2($Basics._op["++"],
+              $List.reverse(_v171._0),
+              A2($Basics._op["++"],
+              _L.fromArray([fn(_v171._1)]),
+              _v171._2));}
+         _U.badCase($moduleName,
+         "on line 32, column 31 to 69");
       }();
    });
    var at = F2(function (i,list) {
@@ -2542,13 +2795,23 @@ Elm.Core.Array.make = function (_elm) {
       }),
       list);
    });
+   var single = function (a) {
+      return _L.fromArray([a]);
+   };
+   var value = $Basics.identity;
    _elm.Core.Array.values = {_op: _op
+                            ,value: value
                             ,toValue: toValue
+                            ,single: single
+                            ,replaceActive: replaceActive
+                            ,mergeActive: mergeActive
+                            ,joinActive: joinActive
                             ,$do: $do
-                            ,split: split
+                            ,doPropagatingSplits: doPropagatingSplits
                             ,toJson: toJson
                             ,firstZipper: firstZipper
                             ,lastZipper: lastZipper
+                            ,lastZipperM: lastZipperM
                             ,remove: remove
                             ,map: map
                             ,indexedMap: indexedMap
@@ -2570,7 +2833,8 @@ Elm.Core.Array.make = function (_elm) {
                             ,rights: rights
                             ,firstZipperM: firstZipperM
                             ,goPrev: goPrev
-                            ,goNext: goNext};
+                            ,goNext: goNext
+                            ,decoder: decoder};
    return _elm.Core.Array.values;
 };
 Elm.Core = Elm.Core || {};
@@ -2589,9 +2853,8 @@ Elm.Core.String.make = function (_elm) {
    $moduleName = "Core.String",
    $Basics = Elm.Basics.make(_elm),
    $Core$Action = Elm.Core.Action.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
+   $List = Elm.List.make(_elm),
    $Regex = Elm.Regex.make(_elm),
    $String = Elm.String.make(_elm);
    var decoder = $Json$Decode.string;
@@ -2614,216 +2877,471 @@ Elm.Core.String.make = function (_elm) {
    var quote = function (s) {
       return quoteNewline(quoteQuote(s));
    };
-   var walk = function (fn) {
-      return fn;
-   };
-   var toJson = walk(function (s) {
+   var toJson = function (s) {
       return A2($Basics._op["++"],
       "\"",
       A2($Basics._op["++"],
       quote(s),
       "\""));
-   });
-   var renderZipper = function (_v4) {
+   };
+   var selectToEndOfLine = function (_v4) {
       return function () {
          switch (_v4.ctor)
-         {case "_Tuple2":
-            return A3($Html.node,
-              "span",
-              _L.fromArray([]),
-              _L.fromArray([$Html.text(A2($String.left,
-                           _v4._1,
-                           _v4._0))
-                           ,A3($Html.node,
-                           "span",
-                           _L.fromArray([$Html$Attributes.$class("cursor")]),
-                           _L.fromArray([$Html.text("^")]))
-                           ,$Html.text(A2($String.dropLeft,
-                           _v4._1,
-                           _v4._0))]));}
+         {case "_Tuple3":
+            return $Core$Action.Update({ctor: "_Tuple3"
+                                       ,_0: _v4._0
+                                       ,_1: A2($Basics._op["++"],
+                                       _v4._1,
+                                       _v4._2)
+                                       ,_2: ""});}
          _U.badCase($moduleName,
-         "between lines 63 and 66");
+         "on line 121, column 38 to 68");
       }();
    };
-   var renderValue = function (value) {
-      return $Html.text(value);
-   };
-   var split = function (_v8) {
+   var takeLast = F2(function (needle,
+   s) {
+      return A2($String.contains,
+      needle,
+      s) ? function () {
+         var _v9 = A2($String.split,
+         needle,
+         s);
+         switch (_v9.ctor)
+         {case "[]":
+            return {ctor: "_Tuple2"
+                   ,_0: ""
+                   ,_1: ""};}
+         return function () {
+            var _v10 = $List.reverse(_v9);
+            switch (_v10.ctor)
+            {case "::":
+               return {ctor: "_Tuple2"
+                      ,_0: A2($Basics._op["++"],
+                      A2($String.join,
+                      needle,
+                      $List.reverse(_v10._1)),
+                      needle)
+                      ,_1: _v10._0};}
+            _U.badCase($moduleName,
+            "between lines 112 and 114");
+         }();
+      }() : {ctor: "_Tuple2"
+            ,_0: ""
+            ,_1: s};
+   });
+   var selectToStartOfLine = function (_v13) {
       return function () {
-         switch (_v8.ctor)
-         {case "_Tuple2":
-            return A3($Core$Action.Split,
-              _L.fromArray([A2($String.left,
-              _v8._1,
-              _v8._0)]),
-              {ctor: "_Tuple2"
-              ,_0: A2($String.dropLeft,
-              _v8._1,
-              _v8._0)
-              ,_1: 0},
-              _L.fromArray([]));}
-         _U.badCase($moduleName,
-         "on line 57, column 15 to 73");
-      }();
-   };
-   var $delete = $Core$Action.always($Core$Action.Delete);
-   var goRight = $Core$Action.nav(F2(function (v,
-   c) {
-      return A2($Basics.min,
-      $String.length(v),
-      c + 1);
-   }));
-   var goLeft = $Core$Action.nav(F2(function (_v12,
-   c) {
-      return function () {
-         return _U.cmp(c,
-         0) > 0 ? c - 1 : c;
-      }();
-   }));
-   var backspace = function (_v14) {
-      return function () {
-         switch (_v14.ctor)
-         {case "_Tuple2":
+         switch (_v13.ctor)
+         {case "_Tuple3":
             return function () {
-                 var _v18 = {ctor: "_Tuple2"
-                            ,_0: _v14._0
-                            ,_1: _v14._1};
+                 var _v18 = A2(takeLast,
+                 "\n",
+                 _v13._0);
                  switch (_v18.ctor)
                  {case "_Tuple2":
-                    switch (_v18._1)
-                      {case 0:
-                         return $Core$Action.NoChange;}
-                      break;}
-                 return $Core$Action.Update({ctor: "_Tuple2"
-                                            ,_0: A2($Basics._op["++"],
-                                            A2($String.left,
-                                            _v14._1 - 1,
-                                            _v14._0),
-                                            A2($String.dropLeft,
-                                            _v14._1,
-                                            _v14._0))
-                                            ,_1: _v14._1 - 1});
+                    return $Core$Action.Update({ctor: "_Tuple3"
+                                               ,_0: _v18._0
+                                               ,_1: A2($Basics._op["++"],
+                                               _v18._1,
+                                               _v13._1)
+                                               ,_2: _v13._2});}
+                 _U.badCase($moduleName,
+                 "between lines 117 and 118");
               }();}
          _U.badCase($moduleName,
-         "between lines 47 and 49");
+         "between lines 117 and 118");
       }();
    };
-   var move = F3(function ($char,
-   value,
-   cursor) {
-      return cursor + $String.length($char);
-   });
-   var update = F3(function ($char,
-   value,
-   cursor) {
-      return A2($Basics._op["++"],
-      A2($String.left,cursor,value),
-      A2($Basics._op["++"],
-      $char,
-      A2($String.dropLeft,
-      cursor,
-      value)));
-   });
-   var insert = F2(function (s,
-   _v21) {
-      return function () {
+   var takeFirst = F2(function (needle,
+   s) {
+      return A2($String.contains,
+      needle,
+      s) ? function () {
+         var _v21 = A2($String.split,
+         needle,
+         s);
          switch (_v21.ctor)
-         {case "_Tuple2":
-            return $Core$Action.Update({ctor: "_Tuple2"
-                                       ,_0: A3(update,
-                                       s,
-                                       _v21._0,
-                                       _v21._1)
-                                       ,_1: A3(move,
-                                       s,
-                                       _v21._0,
-                                       _v21._1)});}
-         _U.badCase($moduleName,
-         "on line 44, column 18 to 60");
-      }();
-   });
-   var toTuple = function (_v25) {
-      return function () {
-         switch (_v25.ctor)
-         {case "_Tuple2":
+         {case "::":
             return {ctor: "_Tuple2"
-                   ,_0: A2($String.left,
-                   _v25._1,
-                   _v25._0)
-                   ,_1: A2($String.dropLeft,
-                   _v25._1,
-                   _v25._0)};}
+                   ,_0: _v21._0
+                   ,_1: A2($Basics._op["++"],
+                   needle,
+                   A2($String.join,
+                   needle,
+                   _v21._1))};
+            case "[]":
+            return {ctor: "_Tuple2"
+                   ,_0: ""
+                   ,_1: ""};}
          _U.badCase($moduleName,
-         "on line 30, column 18 to 54");
+         "between lines 102 and 105");
+      }() : {ctor: "_Tuple2"
+            ,_0: s
+            ,_1: ""};
+   });
+   var selectToEnd = function (_v24) {
+      return function () {
+         switch (_v24.ctor)
+         {case "_Tuple3":
+            return $Core$Action.Update({ctor: "_Tuple3"
+                                       ,_0: _v24._0
+                                       ,_1: A2($Basics._op["++"],
+                                       _v24._1,
+                                       _v24._2)
+                                       ,_2: ""});}
+         _U.badCase($moduleName,
+         "on line 97, column 32 to 62");
       }();
    };
-   var toValue = function (_v29) {
+   var selectToStart = function (_v29) {
       return function () {
          switch (_v29.ctor)
-         {case "_Tuple2":
-            return _v29._0;}
+         {case "_Tuple3":
+            return $Core$Action.Update({ctor: "_Tuple3"
+                                       ,_0: ""
+                                       ,_1: A2($Basics._op["++"],
+                                       _v29._0,
+                                       _v29._1)
+                                       ,_2: _v29._2});}
          _U.badCase($moduleName,
-         "on line 27, column 17 to 18");
+         "on line 94, column 34 to 64");
       }();
    };
+   var selectRight = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "_Tuple3": switch (z._2)
+              {case "":
+                 return $Core$Action.NoChange;}
+              return $Core$Action.Update({ctor: "_Tuple3"
+                                         ,_0: z._0
+                                         ,_1: A2($Basics._op["++"],
+                                         z._1,
+                                         A2($String.left,1,z._2))
+                                         ,_2: A2($String.dropLeft,
+                                         1,
+                                         z._2)});}
+         _U.badCase($moduleName,
+         "between lines 89 and 91");
+      }();
+   };
+   var selectLeft = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "_Tuple3": switch (z._0)
+              {case "":
+                 return $Core$Action.NoChange;}
+              return $Core$Action.Update({ctor: "_Tuple3"
+                                         ,_0: A2($String.dropRight,
+                                         1,
+                                         z._0)
+                                         ,_1: A2($Basics._op["++"],
+                                         A2($String.right,1,z._0),
+                                         z._1)
+                                         ,_2: z._2});}
+         _U.badCase($moduleName,
+         "between lines 84 and 86");
+      }();
+   };
+   var $delete = function (z) {
+      return $Core$Action.Delete;
+   };
+   var moveToEndOfLine = function (_v42) {
+      return function () {
+         switch (_v42.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var _v47 = A2(takeFirst,
+                 "\n",
+                 _v42._2);
+                 switch (_v47.ctor)
+                 {case "_Tuple2":
+                    return $Core$Action.Update({ctor: "_Tuple3"
+                                               ,_0: A2($Basics._op["++"],
+                                               _v42._0,
+                                               A2($Basics._op["++"],
+                                               _v42._1,
+                                               _v47._0))
+                                               ,_1: ""
+                                               ,_2: _v47._1});}
+                 _U.badCase($moduleName,
+                 "between lines 75 and 76");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 75 and 76");
+      }();
+   };
+   var moveToStartOfLine = function (_v50) {
+      return function () {
+         switch (_v50.ctor)
+         {case "_Tuple3":
+            return function () {
+                 var _v55 = A2(takeLast,
+                 "\n",
+                 _v50._0);
+                 switch (_v55.ctor)
+                 {case "_Tuple2":
+                    return $Core$Action.Update({ctor: "_Tuple3"
+                                               ,_0: _v55._0
+                                               ,_1: ""
+                                               ,_2: A2($Basics._op["++"],
+                                               _v55._1,
+                                               A2($Basics._op["++"],
+                                               _v50._1,
+                                               _v50._2))});}
+                 _U.badCase($moduleName,
+                 "between lines 71 and 72");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 71 and 72");
+      }();
+   };
+   var goRight = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "_Tuple3": switch (z._1)
+              {case "": switch (z._2)
+                   {case "":
+                      return $Core$Action.EnterNext;}
+                   return $Core$Action.Update({ctor: "_Tuple3"
+                                              ,_0: A2($Basics._op["++"],
+                                              z._0,
+                                              A2($String.left,1,z._2))
+                                              ,_1: ""
+                                              ,_2: A2($String.dropLeft,
+                                              1,
+                                              z._2)});}
+              return $Core$Action.Update({ctor: "_Tuple3"
+                                         ,_0: A2($Basics._op["++"],
+                                         z._0,
+                                         z._1)
+                                         ,_1: ""
+                                         ,_2: z._2});}
+         _U.badCase($moduleName,
+         "between lines 65 and 68");
+      }();
+   };
+   var goLeft = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "_Tuple3": switch (z._0)
+              {case "": switch (z._1)
+                   {case "":
+                      return $Core$Action.EnterPrev;}
+                   break;}
+              switch (z._1)
+              {case "":
+                 return $Core$Action.Update({ctor: "_Tuple3"
+                                            ,_0: A2($String.dropRight,
+                                            1,
+                                            z._0)
+                                            ,_1: ""
+                                            ,_2: A2($Basics._op["++"],
+                                            A2($String.right,1,z._0),
+                                            z._2)});}
+              return $Core$Action.Update({ctor: "_Tuple3"
+                                         ,_0: z._0
+                                         ,_1: ""
+                                         ,_2: A2($Basics._op["++"],
+                                         z._1,
+                                         z._2)});}
+         _U.badCase($moduleName,
+         "between lines 60 and 63");
+      }();
+   };
+   var backspace = function (z) {
+      return function () {
+         switch (z.ctor)
+         {case "_Tuple3": switch (z._0)
+              {case "": switch (z._1)
+                   {case "":
+                      return $Core$Action.NoChange;}
+                   break;}
+              switch (z._1)
+              {case "":
+                 return $Core$Action.Update({ctor: "_Tuple3"
+                                            ,_0: A2($String.dropRight,
+                                            1,
+                                            z._0)
+                                            ,_1: ""
+                                            ,_2: z._2});}
+              return $Core$Action.Update({ctor: "_Tuple3"
+                                         ,_0: z._0
+                                         ,_1: ""
+                                         ,_2: z._2});}
+         _U.badCase($moduleName,
+         "between lines 55 and 58");
+      }();
+   };
+   var insert = F2(function (s,
+   _v70) {
+      return function () {
+         switch (_v70.ctor)
+         {case "_Tuple3":
+            return $Core$Action.Update({ctor: "_Tuple3"
+                                       ,_0: A2($Basics._op["++"],
+                                       _v70._0,
+                                       s)
+                                       ,_1: ""
+                                       ,_2: _v70._2});}
+         _U.badCase($moduleName,
+         "on line 52, column 29 to 57");
+      }();
+   });
    var zipperAt = F2(function (i,
    s) {
-      return {ctor: "_Tuple2"
-             ,_0: s
-             ,_1: i};
+      return {ctor: "_Tuple3"
+             ,_0: A2($String.left,i,s)
+             ,_1: ""
+             ,_2: A2($String.dropLeft,i,s)};
    });
    var zipper = F2(function (left,
    right) {
-      return {ctor: "_Tuple2"
-             ,_0: A2($Basics._op["++"],
-             left,
-             right)
-             ,_1: $String.length(left)};
+      return {ctor: "_Tuple3"
+             ,_0: left
+             ,_1: ""
+             ,_2: right};
    });
+   var rangeZipper = F2(function (_v75,
+   s) {
+      return function () {
+         switch (_v75.ctor)
+         {case "_Tuple2":
+            return {ctor: "_Tuple3"
+                   ,_0: A2($String.left,_v75._0,s)
+                   ,_1: $String.left(_v75._1)(A2($String.dropLeft,
+                   _v75._0,
+                   s))
+                   ,_2: $String.dropLeft(_v75._1)(A2($String.dropLeft,
+                   _v75._0,
+                   s))};}
+         _U.badCase($moduleName,
+         "between lines 40 and 42");
+      }();
+   });
+   var allZipper = function (v) {
+      return {ctor: "_Tuple3"
+             ,_0: ""
+             ,_1: v
+             ,_2: ""};
+   };
    var endZipper = function (v) {
-      return {ctor: "_Tuple2"
+      return {ctor: "_Tuple3"
              ,_0: v
-             ,_1: $String.length(v)};
+             ,_1: ""
+             ,_2: ""};
    };
    var startZipper = function (v) {
-      return {ctor: "_Tuple2"
-             ,_0: v
-             ,_1: 0};
+      return {ctor: "_Tuple3"
+             ,_0: ""
+             ,_1: ""
+             ,_2: v};
    };
-   var split_ = function (_v33) {
+   var split = function (_v79) {
       return function () {
-         switch (_v33.ctor)
-         {case "_Tuple2":
-            return {ctor: "_Tuple2"
-                   ,_0: A2($String.left,
-                   _v33._1,
-                   _v33._0)
-                   ,_1: startZipper(A2($String.dropLeft,
-                   _v33._1,
-                   _v33._0))};}
+         switch (_v79.ctor)
+         {case "_Tuple3":
+            return A3($Core$Action.Split,
+              _L.fromArray([_v79._0]),
+              startZipper(_v79._2),
+              _L.fromArray([]));}
          _U.badCase($moduleName,
-         "on line 33, column 17 to 67");
+         "on line 81, column 24 to 59");
+      }();
+   };
+   var destructure = function (z) {
+      return z;
+   };
+   var toValue = function (_v84) {
+      return function () {
+         switch (_v84.ctor)
+         {case "_Tuple3":
+            return A2($Basics._op["++"],
+              _v84._0,
+              A2($Basics._op["++"],
+              _v84._1,
+              _v84._2));}
+         _U.badCase($moduleName,
+         "on line 24, column 28 to 48");
       }();
    };
    _elm.Core.String.values = {_op: _op
-                             ,insert: insert
-                             ,backspace: backspace
-                             ,goLeft: goLeft
-                             ,goRight: goRight
-                             ,$delete: $delete
-                             ,split: split
-                             ,renderValue: renderValue
-                             ,renderZipper: renderZipper
-                             ,toJson: toJson
+                             ,toValue: toValue
+                             ,destructure: destructure
                              ,startZipper: startZipper
                              ,endZipper: endZipper
-                             ,toValue: toValue
-                             ,split_: split_
+                             ,allZipper: allZipper
+                             ,rangeZipper: rangeZipper
+                             ,goLeft: goLeft
+                             ,goRight: goRight
+                             ,moveToStartOfLine: moveToStartOfLine
+                             ,moveToEndOfLine: moveToEndOfLine
+                             ,insert: insert
+                             ,backspace: backspace
+                             ,$delete: $delete
+                             ,split: split
+                             ,selectToStart: selectToStart
+                             ,selectToEnd: selectToEnd
+                             ,selectToStartOfLine: selectToStartOfLine
+                             ,selectToEndOfLine: selectToEndOfLine
+                             ,selectLeft: selectLeft
+                             ,selectRight: selectRight
+                             ,toJson: toJson
                              ,zipper: zipper
                              ,zipperAt: zipperAt
-                             ,toTuple: toTuple
                              ,decoder: decoder};
    return _elm.Core.String.values;
+};
+Elm.Core = Elm.Core || {};
+Elm.Core.Tagged = Elm.Core.Tagged || {};
+Elm.Core.Tagged.Model = Elm.Core.Tagged.Model || {};
+Elm.Core.Tagged.Model.make = function (_elm) {
+   "use strict";
+   _elm.Core = _elm.Core || {};
+   _elm.Core.Tagged = _elm.Core.Tagged || {};
+   _elm.Core.Tagged.Model = _elm.Core.Tagged.Model || {};
+   if (_elm.Core.Tagged.Model.values)
+   return _elm.Core.Tagged.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Core.Tagged.Model";
+   var toZipper = F2(function (fn,
+   _v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return {ctor: "_Tuple2"
+                   ,_0: _v0._0
+                   ,_1: fn(_v0._1)};}
+         _U.badCase($moduleName,
+         "on line 17, column 22 to 29");
+      }();
+   });
+   var toValue = F2(function (fn,
+   _v4) {
+      return function () {
+         switch (_v4.ctor)
+         {case "_Tuple2":
+            return {ctor: "_Tuple2"
+                   ,_0: _v4._0
+                   ,_1: fn(_v4._1)};}
+         _U.badCase($moduleName,
+         "on line 14, column 21 to 28");
+      }();
+   });
+   var value = F2(function (t,v) {
+      return {ctor: "_Tuple2"
+             ,_0: t
+             ,_1: v};
+   });
+   _elm.Core.Tagged.Model.values = {_op: _op
+                                   ,value: value
+                                   ,toValue: toValue
+                                   ,toZipper: toZipper};
+   return _elm.Core.Tagged.Model.values;
 };
 Elm.Debug = Elm.Debug || {};
 Elm.Debug.make = function (_elm) {
@@ -4383,6 +4901,10 @@ Elm.Graphics.Element.make = function (_elm) {
              ,_0: a
              ,_1: b};
    });
+   var ScrollContainer = function (a) {
+      return {ctor: "ScrollContainer"
+             ,_0: a};
+   };
    var Container = F2(function (a,
    b) {
       return {ctor: "Container"
@@ -4586,6 +5108,14 @@ Elm.Graphics.Element.make = function (_elm) {
       h,
       A2(Container,pos,e));
    });
+   var scrollContainer = F3(function (w,
+   h,
+   e) {
+      return A3(newElement,
+      w,
+      h,
+      ScrollContainer(e));
+   });
    var spacer = F2(function (w,h) {
       return A3(newElement,
       w,
@@ -4633,7 +5163,7 @@ Elm.Graphics.Element.make = function (_elm) {
                  $List.maximum(ws),
                  $List.sum(hs));}
             _U.badCase($moduleName,
-            "between lines 280 and 291");
+            "between lines 288 and 299");
          }();
       }();
    });
@@ -4701,6 +5231,7 @@ Elm.Graphics.Element.make = function (_elm) {
                                   ,newElement: newElement
                                   ,Image: Image
                                   ,Container: Container
+                                  ,ScrollContainer: ScrollContainer
                                   ,Flow: Flow
                                   ,Spacer: Spacer
                                   ,RawHtml: RawHtml
@@ -4720,6 +5251,7 @@ Elm.Graphics.Element.make = function (_elm) {
                                   ,Relative: Relative
                                   ,Position: Position
                                   ,container: container
+                                  ,scrollContainer: scrollContainer
                                   ,spacer: spacer
                                   ,DUp: DUp
                                   ,DDown: DDown
@@ -5125,12 +5657,12 @@ Elm.Html.Attributes.make = function (_elm) {
    var height = function (value) {
       return A2(stringProperty,
       "height",
-      value);
+      $Basics.toString(value));
    };
    var width = function (value) {
       return A2(stringProperty,
       "width",
-      value);
+      $Basics.toString(value));
    };
    var alt = function (value) {
       return A2(stringProperty,
@@ -5818,6 +6350,8 @@ Elm.Keys.make = function (_elm) {
             return $Maybe.Just("7");
             case 65:
             return $Maybe.Just("a");
+            case 66:
+            return $Maybe.Just("b");
             case 68:
             return $Maybe.Just("d");
             case 77:
@@ -5829,6 +6363,39 @@ Elm.Keys.make = function (_elm) {
    };
    var Unrecognized = function (a) {
       return {ctor: "Unrecognized"
+             ,_0: a};
+   };
+   var SmashShift = function (a) {
+      return {ctor: "SmashShift"
+             ,_0: a};
+   };
+   var Smash = function (a) {
+      return {ctor: "Smash",_0: a};
+   };
+   var CommandControlShift = function (a) {
+      return {ctor: "CommandControlShift"
+             ,_0: a};
+   };
+   var CommandControl = function (a) {
+      return {ctor: "CommandControl"
+             ,_0: a};
+   };
+   var MagicShift = function (a) {
+      return {ctor: "MagicShift"
+             ,_0: a};
+   };
+   var Magic = function (a) {
+      return {ctor: "Magic",_0: a};
+   };
+   var AltShift = function (a) {
+      return {ctor: "AltShift"
+             ,_0: a};
+   };
+   var Alt = function (a) {
+      return {ctor: "Alt",_0: a};
+   };
+   var CommandShift = function (a) {
+      return {ctor: "CommandShift"
              ,_0: a};
    };
    var Shift = function (a) {
@@ -5854,10 +6421,24 @@ Elm.Keys.make = function (_elm) {
    var Up = {ctor: "Up"};
    var Right = {ctor: "Right"};
    var Left = {ctor: "Left"};
+   var Backspace = {ctor: "Backspace"};
+   var Enter = {ctor: "Enter"};
+   var fromPresses = function (string) {
+      return function () {
+         switch (string)
+         {case "\r":
+            return Single(Enter);}
+         return Character(string);
+      }();
+   };
    var keyFromCode = function (code) {
       return function () {
          switch (code)
-         {case 37:
+         {case 8:
+            return $Maybe.Just(Backspace);
+            case 13:
+            return $Maybe.Just(Enter);
+            case 37:
             return $Maybe.Just(Left);
             case 38: return $Maybe.Just(Up);
             case 39:
@@ -5869,89 +6450,147 @@ Elm.Keys.make = function (_elm) {
    };
    var fromMeta = function (code) {
       return function () {
-         var _v2 = charFromCode(code);
-         switch (_v2.ctor)
+         var _v3 = charFromCode(code);
+         switch (_v3.ctor)
          {case "Just":
-            return CommandCharacter(_v2._0);
+            return CommandCharacter(_v3._0);
             case "Nothing":
             return function () {
-                 var _v4 = keyFromCode(code);
-                 switch (_v4.ctor)
+                 var _v5 = keyFromCode(code);
+                 switch (_v5.ctor)
                  {case "Just":
-                    return Command(_v4._0);
+                    return Command(_v5._0);
                     case "Nothing":
                     return Unrecognized(A2($Basics._op["++"],
                       "Meta-",
                       $Basics.toString(code)));}
                  _U.badCase($moduleName,
-                 "between lines 60 and 62");
+                 "between lines 62 and 64");
               }();}
          _U.badCase($moduleName,
-         "between lines 58 and 62");
+         "between lines 60 and 64");
       }();
    };
-   var fromShift = function (code) {
+   var fromCombo = function (_v7) {
       return function () {
-         var _v6 = keyFromCode(code);
-         switch (_v6.ctor)
-         {case "Just":
-            return Shift(_v6._0);
-            case "Nothing":
+         switch (_v7.ctor)
+         {case "_Tuple4":
             return function () {
-                 var _v8 = charFromCode(code);
-                 switch (_v8.ctor)
+                 var _v13 = keyFromCode(_v7._3);
+                 switch (_v13.ctor)
                  {case "Just":
-                    return Unrecognized(A2($Basics._op["++"],
-                      "Shift-",
-                      A2($Basics._op["++"],
-                      $Basics.toString(code),
-                      " shft-down event for a normal key?!")));
+                    return function () {
+                         var _v15 = {ctor: "_Tuple3"
+                                    ,_0: _v7._0
+                                    ,_1: _v7._1
+                                    ,_2: _v7._2};
+                         switch (_v15.ctor)
+                         {case "_Tuple3":
+                            switch (_v15._0)
+                              {case false: switch (_v15._1)
+                                   {case false: switch (_v15._2)
+                                        {case false:
+                                           return Single(_v13._0);
+                                           case true: return Alt(_v13._0);}
+                                        break;
+                                      case true: switch (_v15._2)
+                                        {case false:
+                                           return Shift(_v13._0);
+                                           case true:
+                                           return AltShift(_v13._0);}
+                                        break;}
+                                   break;
+                                 case true: switch (_v15._1)
+                                   {case false: switch (_v15._2)
+                                        {case false:
+                                           return Command(_v13._0);
+                                           case true:
+                                           return Magic(_v13._0);}
+                                        break;
+                                      case true: switch (_v15._2)
+                                        {case false:
+                                           return CommandShift(_v13._0);
+                                           case true:
+                                           return MagicShift(_v13._0);}
+                                        break;}
+                                   break;}
+                              break;}
+                         _U.badCase($moduleName,
+                         "between lines 68 and 77");
+                      }();
                     case "Nothing":
-                    return Unrecognized(A2($Basics._op["++"],
-                      "Shift-",
-                      $Basics.toString(code)));}
+                    return function () {
+                         var _v19 = {ctor: "_Tuple3"
+                                    ,_0: _v7._0
+                                    ,_1: _v7._1
+                                    ,_2: _v7._2};
+                         switch (_v19.ctor)
+                         {case "_Tuple3":
+                            switch (_v19._0)
+                              {case false: switch (_v19._1)
+                                   {case false: switch (_v19._2)
+                                        {case false:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "",
+                                             $Basics.toString(_v7._3)));
+                                           case true:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Alt-",
+                                             $Basics.toString(_v7._3)));}
+                                        break;
+                                      case true: switch (_v19._2)
+                                        {case false:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Shift-",
+                                             $Basics.toString(_v7._3)));
+                                           case true:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Alt-Shift-",
+                                             $Basics.toString(_v7._3)));}
+                                        break;}
+                                   break;
+                                 case true: switch (_v19._1)
+                                   {case false: switch (_v19._2)
+                                        {case false:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Meta-",
+                                             $Basics.toString(_v7._3)));
+                                           case true:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Meta-Alt-",
+                                             $Basics.toString(_v7._3)));}
+                                        break;
+                                      case true: switch (_v19._2)
+                                        {case false:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Meta-Shift-",
+                                             $Basics.toString(_v7._3)));
+                                           case true:
+                                           return Unrecognized(A2($Basics._op["++"],
+                                             "Meta-Alt-Shift-",
+                                             $Basics.toString(_v7._3)));}
+                                        break;}
+                                   break;}
+                              break;}
+                         _U.badCase($moduleName,
+                         "between lines 77 and 85");
+                      }();}
                  _U.badCase($moduleName,
-                 "between lines 67 and 69");
+                 "between lines 67 and 85");
               }();}
          _U.badCase($moduleName,
-         "between lines 65 and 69");
-      }();
-   };
-   var Backspace = {ctor: "Backspace"};
-   var Enter = {ctor: "Enter"};
-   var fromPresses = function (string) {
-      return function () {
-         switch (string)
-         {case "\r":
-            return Single(Enter);}
-         return Character(string);
-      }();
-   };
-   var fromDowns = function (code) {
-      return function () {
-         switch (code)
-         {case 8:
-            return Single(Backspace);
-            case 13: return Single(Enter);
-            case 37: return Single(Left);
-            case 38: return Single(Up);
-            case 39: return Single(Right);
-            case 40: return Single(Down);}
-         return Unrecognized($Basics.toString(code));
+         "between lines 67 and 85");
       }();
    };
    var lastPressed = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
                                                     fromPresses,
                                                     $Native$Keys.pressesIn)
                                                     ,A2($Signal.map,
-                                                    fromDowns,
-                                                    $Native$Keys.downsIn)
+                                                    fromCombo,
+                                                    $Native$Keys.comboIn)
                                                     ,A2($Signal.map,
                                                     fromMeta,
-                                                    $Native$Keys.metaIn)
-                                                    ,A2($Signal.map,
-                                                    fromShift,
-                                                    $Native$Keys.shiftIn)]));
+                                                    $Native$Keys.metaIn)]));
    _elm.Keys.values = {_op: _op
                       ,lastPressed: lastPressed
                       ,pastes: pastes
@@ -5966,6 +6605,15 @@ Elm.Keys.make = function (_elm) {
                       ,Command: Command
                       ,CommandCharacter: CommandCharacter
                       ,Shift: Shift
+                      ,CommandShift: CommandShift
+                      ,Alt: Alt
+                      ,AltShift: AltShift
+                      ,Magic: Magic
+                      ,MagicShift: MagicShift
+                      ,CommandControl: CommandControl
+                      ,CommandControlShift: CommandControlShift
+                      ,Smash: Smash
+                      ,SmashShift: SmashShift
                       ,Unrecognized: Unrecognized};
    return _elm.Keys.values;
 };
@@ -6214,19 +6862,31 @@ Elm.Main.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Core$Array = Elm.Core.Array.make(_elm),
    $Dropbox = Elm.Dropbox.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
    $Keys = Elm.Keys.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
    $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm),
-   $SampleData = Elm.SampleData.make(_elm),
+   $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Window = Elm.Window.make(_elm);
-   var initialDocument = A2($Outline$Document$Model.scratchZipper,
-   0,
-   $SampleData.template);
+   var initialDocument = $Outline$Document$Model.scratchZipper(0)($Outline$Document$Model.emptyValue);
+   var decode = F2(function (decoder,
+   s) {
+      return A2($Json$Decode.decodeString,
+      decoder,
+      s);
+   });
+   var newScratchChannel = $Signal.channel({ctor: "_Tuple0"});
+   var processScratchChannel = $Signal.channel({ctor: "_Tuple0"});
    var scratchChannel = $Signal.channel(0);
    var tabsChannel = $Signal.channel("");
    var dropbox = $Dropbox.client("sy8pzlg66rwnv7n");
+   var fromDropbox = F3(function (filename,
+   decoder,
+   fn) {
+      return $Signal.map(fn)($Signal.map(decode(decoder))(dropbox.read(filename)));
+   });
    var commands = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
                                                  $App.Key,
                                                  $Keys.lastPressed)
@@ -6239,26 +6899,52 @@ Elm.Main.make = function (_elm) {
                                                  ,A2($Signal.map,
                                                  $App.Scratch,
                                                  $Signal.subscribe(scratchChannel))
-                                                 ,$Signal.map($App.LoadedOutline)(dropbox.read("outlin.json"))
-                                                 ,$Signal.map($App.LoadedScratch)(dropbox.read("scratch.json"))]));
+                                                 ,A2($Signal.map,
+                                                 function (_v0) {
+                                                    return function () {
+                                                       return $App.ProcessScratch;
+                                                    }();
+                                                 },
+                                                 $Signal.subscribe(processScratchChannel))
+                                                 ,A2($Signal.map,
+                                                 function (_v2) {
+                                                    return function () {
+                                                       return $App.NewScratch;
+                                                    }();
+                                                 },
+                                                 $Signal.subscribe(newScratchChannel))
+                                                 ,A3(fromDropbox,
+                                                 "outlin.json",
+                                                 $Outline$Entry.decoder,
+                                                 $App.LoadedOutline)
+                                                 ,A3(fromDropbox,
+                                                 "scratch.json",
+                                                 $Outline$Scratch$Json.listDecoder,
+                                                 $App.LoadedScratch)]));
    var state = A3($Signal.foldp,
    $App.step,
    initialDocument,
    commands);
    var main = A3($Signal.map2,
-   A2($App$Render$Main.render,
+   A4($App$Render$Main.render,
    tabsChannel,
-   scratchChannel),
-   $Window.dimensions,
-   state);
+   scratchChannel,
+   processScratchChannel,
+   newScratchChannel),
+   state,
+   $Window.dimensions);
    var outlineOutput = $Signal.dropRepeats(A2($Signal.map,
    function (x) {
-      return $Outline$Entry.toJson($Outline$Document$Model.outlineValue(x));
+      return $Outline$Entry.toJson(function (_) {
+         return _.outline;
+      }($Outline$Document$Model.toValue(x)));
    },
    state));
    var scratchOutput = $Signal.dropRepeats(A2($Signal.map,
    function (x) {
-      return $Core$Array.toJson($Outline$Scratch$Json.toJson)($Outline$Document$Model.scratchValue(x));
+      return $Core$Array.toJson($Outline$Scratch$Json.toJson)(function (_) {
+         return _.scratch;
+      }($Outline$Document$Model.toValue(x)));
    },
    state));
    var outlineToDropbox = A2(dropbox.write,
@@ -6271,6 +6957,10 @@ Elm.Main.make = function (_elm) {
                       ,dropbox: dropbox
                       ,tabsChannel: tabsChannel
                       ,scratchChannel: scratchChannel
+                      ,processScratchChannel: processScratchChannel
+                      ,newScratchChannel: newScratchChannel
+                      ,decode: decode
+                      ,fromDropbox: fromDropbox
                       ,commands: commands
                       ,initialDocument: initialDocument
                       ,state: state
@@ -6293,15 +6983,15 @@ Elm.Maybe.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "Maybe";
-   _op["?"] = F2(function (maybe,
-   $default) {
+   var withDefault = F2(function ($default,
+   maybe) {
       return function () {
          switch (maybe.ctor)
          {case "Just": return maybe._0;
             case "Nothing":
             return $default;}
          _U.badCase($moduleName,
-         "between lines 53 and 55");
+         "between lines 45 and 56");
       }();
    });
    var Nothing = {ctor: "Nothing"};
@@ -6314,11 +7004,11 @@ Elm.Maybe.make = function (_elm) {
                     case "Nothing":
                     return oneOf(maybes._1);}
                  _U.badCase($moduleName,
-                 "between lines 74 and 83");
+                 "between lines 64 and 73");
               }();
             case "[]": return Nothing;}
          _U.badCase($moduleName,
-         "between lines 69 and 83");
+         "between lines 59 and 73");
       }();
    };
    var andThen = F2(function (maybeValue,
@@ -6329,7 +7019,7 @@ Elm.Maybe.make = function (_elm) {
             return callback(maybeValue._0);
             case "Nothing": return Nothing;}
          _U.badCase($moduleName,
-         "between lines 120 and 122");
+         "between lines 110 and 112");
       }();
    });
    var Just = function (a) {
@@ -6343,12 +7033,13 @@ Elm.Maybe.make = function (_elm) {
             return Just(f(maybe._0));
             case "Nothing": return Nothing;}
          _U.badCase($moduleName,
-         "between lines 86 and 117");
+         "between lines 76 and 107");
       }();
    });
    _elm.Maybe.values = {_op: _op
                        ,andThen: andThen
                        ,map: map
+                       ,withDefault: withDefault
                        ,oneOf: oneOf
                        ,Just: Just
                        ,Nothing: Nothing};
@@ -8056,6 +8747,15 @@ Elm.Native.Graphics.Element.make = function(localRuntime) {
         return div;
     }
 
+    function scrollContainer(elem) {
+        var e = render(elem);
+        var div = createNode('div');
+        div.style.position = 'relative';
+        div.style.overflow = 'auto';
+        div.appendChild(e);
+        return div;
+    }
+
     function rawHtml(elem) {
         var html = elem.html;
         var guid = elem.guid;
@@ -8081,6 +8781,7 @@ Elm.Native.Graphics.Element.make = function(localRuntime) {
         case 'Image':     return image(e.props, elem);
         case 'Flow':      return flow(elem._0.ctor, elem._1);
         case 'Container': return container(elem._0, elem._1);
+        case 'ScrollContainer': return scrollContainer(elem._0);
         case 'Spacer':    return createNode('div');
         case 'RawHtml':   return rawHtml(elem);
         case 'Custom':    return elem.render(elem.model);
@@ -8171,6 +8872,12 @@ Elm.Native.Graphics.Element.make = function(localRuntime) {
             var subNode = node.firstChild;
             var newSubNode = updateAndReplace(subNode, currE._1, nextE._1);
             setPos(nextE._0, nextE._1, newSubNode);
+            updateProps(node, curr, next);
+            return rootNode;
+
+        case "ScrollContainer":
+            var subNode = node.firstChild;
+            var newSubNode = updateAndReplace(subNode, currE._0, nextE._0);
             updateProps(node, curr, next);
             return rootNode;
 
@@ -8343,6 +9050,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
         drop.style.display = 'block';
 
         drop.elm_values = List.toArray(model.values);
+        drop.elm_handler = model.handler;
         var values = drop.elm_values;
 
         for (var i = 0; i < values.length; ++i) {
@@ -8353,7 +9061,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
             drop.appendChild(option);
         }
         drop.addEventListener('change', function() {
-            drop.elm_values[drop.selectedIndex]._1();
+            drop.elm_handler(drop.elm_values[drop.selectedIndex]._1)();
         });
 
         return drop;
@@ -8361,6 +9069,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
 
     function updateDropDown(node, oldModel, newModel) {
         node.elm_values = List.toArray(newModel.values);
+        node.elm_handler = newModel.handler;
 
         var values = node.elm_values;
         var kids = node.childNodes;
@@ -8386,14 +9095,15 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
         return node;
     }
 
-    function dropDown(values) {
+    function dropDown(handler, values) {
         return A3(Element.newElement, 100, 24, {
             ctor: 'Custom',
             type: 'DropDown',
             render: renderDropDown,
             update: updateDropDown,
             model: {
-                values: values
+                values: values,
+                handler: handler
             }
         });
     }
@@ -8716,7 +9426,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
         button: F2(button),
         customButton: F4(customButton),
         checkbox: F2(checkbox),
-        dropDown: dropDown,
+        dropDown: F2(dropDown),
         field: mkField('text'),
         email: mkField('email'),
         password: mkField('password'),
@@ -9106,13 +9816,14 @@ Elm.Native.Json.make = function(localRuntime) {
     function oneOf(decoders) {
         return function(value) {
             var errors = [];
-            while (decoders.ctor !== '[]') {
+            var temp = decoders;
+            while (temp.ctor !== '[]') {
                 try {
-                    return decoders._0(value);
+                    return temp._0(value);
                 } catch(e) {
                     errors.push(e.message);
                 }
-                decoders = decoders._1;
+                temp = temp._1;
             }
             throw new Error('expecting one of the following:\n    ' + errors.join('\n    '));
         }
@@ -9221,10 +9932,9 @@ Elm.Native.Keys.make = function(elm) {
   var Signal = Elm.Native.Signal.make(elm);
 
   var pressesIn = Signal.constant("");
-  var downsIn = Signal.constant(0);
   var metaIn = Signal.constant(0);
-  var shiftIn = Signal.constant(0);
   var pasteIn = Signal.constant("");
+  var comboIn = Signal.constant({ ctor: "_Tuple4", _0: false, _1: false, _2: false, _3: 0});
 
   var specialKeys = {
     '8': 'backspace',
@@ -9273,17 +9983,12 @@ Elm.Native.Keys.make = function(elm) {
     } else if (mod = modKeys[e.keyCode.toString()]) {
       downMods[mod] = true;
       e.preventDefault();
+    } else if (specialKeys[e.keyCode.toString()]) {
+      elm.notify(comboIn.id, { ctor:"_Tuple4", _0: !!downMods.meta, _1: !!downMods.shift, _2: !!downMods.alt, _3: e.keyCode });
+      e.preventDefault();
     } else if (downMods.meta) {
       elm.notify(metaIn.id, e.keyCode);
       e.preventDefault();
-    } else if (specialKeys[e.keyCode.toString()]) {
-      if (downMods.shift) {
-        elm.notify(shiftIn.id, e.keyCode);
-        e.preventDefault();
-      } else {
-        elm.notify(downsIn.id, e.keyCode)
-        e.preventDefault();
-      }
     }
   }
 
@@ -9309,10 +10014,9 @@ Elm.Native.Keys.make = function(elm) {
 
   return elm.Native.Keys.values = {
     pressesIn: pressesIn,
-    downsIn: downsIn,
     metaIn: metaIn,
-    shiftIn: shiftIn,
-    pasteIn: pasteIn
+    pasteIn: pasteIn,
+    comboIn: comboIn
   };
 };
 
@@ -9858,8 +10562,6 @@ if (!Elm.fullscreen) {
             var tag = container.tagName;
             if (tag !== 'DIV') {
                 throw new Error('Elm.node must be given a DIV, not a ' + tag + '.');
-            } else if (container.hasChildNodes()) {
-                throw new Error('Elm.node must be given an empty DIV. No children allowed!');
             }
             return init(Display.COMPONENT, container, module, ports || {});
         };
@@ -9965,22 +10667,14 @@ if (!Elm.fullscreen) {
             try {
                 Module = module.make(elm);
                 checkPorts(elm);
-            } catch(e) {
-                var code = document.createElement('code');
-
-                var lines = e.message.split('\n');
-                code.appendChild(document.createTextNode(lines[0]));
-                code.appendChild(document.createElement('br'));
-                code.appendChild(document.createElement('br'));
-                for (var i = 1; i < lines.length; ++i) {
-                    code.appendChild(document.createTextNode('\u00A0 \u00A0 ' + lines[i]));
-                    code.appendChild(document.createElement('br'));
+            }
+            catch (error) {
+                if (typeof document === 'undefined') {
+                    console.log(e.message);
+                    throw error;
                 }
-                code.appendChild(document.createElement('br'));
-                code.appendChild(document.createTextNode("Open the developer console for more details."));
-
-                container.appendChild(code);
-                throw e;
+                container.appendChild(errorNode(error.message));
+                throw error;
             }
             inputs = filterDeadInputs(inputs);
             filterListeners(inputs, listeners);
@@ -10020,6 +10714,22 @@ if (!Elm.fullscreen) {
                         "Remove declarations until there is exactly one.");
                 }
             }
+        }
+
+        function errorNode(message) {
+            var code = document.createElement('code');
+
+            var lines = message.split('\n');
+            code.appendChild(document.createTextNode(lines[0]));
+            code.appendChild(document.createElement('br'));
+            code.appendChild(document.createElement('br'));
+            for (var i = 1; i < lines.length; ++i) {
+                code.appendChild(document.createTextNode('\u00A0 \u00A0 ' + lines[i]));
+                code.appendChild(document.createElement('br'));
+            }
+            code.appendChild(document.createElement('br'));
+            code.appendChild(document.createTextNode("Open the developer console for more details."));
+            return code;
         }
 
 
@@ -10138,9 +10848,26 @@ if (!Elm.fullscreen) {
             }
             var initialScene = signalGraph.value;
 
+            // Figure out what the render functions should be
+            var render;
+            var update;
+            if (initialScene.props) {
+                var Element = Elm.Native.Graphics.Element.make(elm);
+                render = Element.render;
+                update = Element.updateAndReplace;
+            } else {
+                var VirtualDom = Elm.Native.VirtualDom.make(elm);
+                render = VirtualDom.render;
+                update = VirtualDom.updateAndReplace;
+            }
+
             // Add the initialScene to the DOM
-            var Element = Elm.Native.Graphics.Element.make(elm);
-            elm.node.appendChild(Element.render(initialScene));
+            var container = elm.node;
+            var node = render(initialScene);
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            container.appendChild(node);
 
             var _requestAnimationFrame =
                 typeof requestAnimationFrame !== 'undefined'
@@ -10220,7 +10947,7 @@ if (!Elm.fullscreen) {
             }
 
             function draw() {
-                Element.updateAndReplace(elm.node.firstChild, savedScene, scheduledScene);
+                update(elm.node.firstChild, savedScene, scheduledScene);
                 if (elm.Native.Window) {
                     elm.Native.Window.values.resizeIfNeeded();
                 }
@@ -10456,7 +11183,7 @@ Elm.Native.Show.make = function(elm) {
             }
             else if (v.ctor === "_Array") {
                 if (!_Array) {
-                    _Array = Elm.Dict.make(elm);
+                    _Array = Elm.Array.make(elm);
                 }
                 var list = _Array.toList(v);
                 return "Array.fromList " + toString(list);
@@ -13634,67 +14361,137 @@ Elm.Outline.Document.Actions.make = function (_elm) {
    $Core$Action = Elm.Core.Action.make(_elm),
    $Core$Array = Elm.Core.Array.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
+   $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$RichText$Block$Actions = Elm.Outline.RichText.Block.Actions.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Outline$RichText$Span$Actions = Elm.Outline.RichText.Span.Actions.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm),
    $Outline$Scratch$Actions = Elm.Outline.Scratch.Actions.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
+   var addScratch = function (r) {
+      return function () {
+         var _v0 = A2($Basics._op["++"],
+         "Scratch ",
+         $Basics.toString(1 + $List.length(r.scratch)));
+         return _U.replace([["scratch"
+                            ,A2($List._op["::"],
+                            $Outline$RichText$Model.heading(_v0),
+                            r.scratch)]],
+         r);
+      }();
+   };
+   var newScratch = function (z) {
+      return function () {
+         var _v1 = $Outline$Document$Model.toValue(z);
+         return $Outline$Document$Model.scratchZipper(0)(addScratch(_v1));
+      }();
+   };
+   var addNote = F2(function (note,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return $Outline$Document$Model.InNotesArchive(_U.replace([["notes"
+                                                                      ,A2($List._op["::"],
+                                                                      note,
+                                                                      z._0.notes)]],
+              z._0));
+            case "InOutline":
+            return $Outline$Document$Model.InOutline(_U.replace([["notes"
+                                                                 ,A2($List._op["::"],
+                                                                 note,
+                                                                 z._0.notes)]],
+              z._0));
+            case "InScratch":
+            return $Outline$Document$Model.InScratch(_U.replace([["notes"
+                                                                 ,A2($List._op["::"],
+                                                                 note,
+                                                                 z._0.notes)]],
+              z._0));}
+         _U.badCase($moduleName,
+         "between lines 83 and 86");
+      }();
+   });
+   var replaceOutline = F2(function (outline$,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return $Outline$Document$Model.InNotesArchive(_U.replace([["outline"
+                                                                      ,outline$]],
+              z._0));
+            case "InOutline":
+            return $Outline$Document$Model.InOutline(_U.replace([["outline"
+                                                                 ,$Outline$Entry.textZipper(outline$)]],
+              z._0));
+            case "InScratch":
+            return $Outline$Document$Model.InScratch(_U.replace([["outline"
+                                                                 ,outline$]],
+              z._0));}
+         _U.badCase($moduleName,
+         "between lines 77 and 80");
+      }();
+   });
    var $do = F3(function (scratchFn,
    entryFn,
    zipper) {
       return function () {
          switch (zipper.ctor)
-         {case "InOutline":
+         {case "InNotesArchive":
+            return $Core$Action.NoChange;
+            case "InOutline":
             return function () {
-                 var _v5 = entryFn(zipper._1);
-                 switch (_v5.ctor)
+                 var _v14 = entryFn(zipper._0.outline);
+                 switch (_v14.ctor)
                  {case "Delete":
                     return $Core$Action.NoChange;
                     case "EnterNext":
                     return $Core$Action.NoChange;
                     case "EnterPrev":
                     return function () {
-                         var _v10 = A2($Core$Array.firstZipperM,
+                         var _v19 = A2($Core$Array.firstZipperM,
                          $Outline$Scratch$Model.endZipper,
-                         zipper._0);
-                         switch (_v10.ctor)
+                         zipper._0.scratch);
+                         switch (_v19.ctor)
                          {case "Just":
-                            return $Core$Action.Update(A2($Outline$Document$Model.InScratch,
-                              _v10._0,
-                              $Outline$Entry.toValue(zipper._1)));
+                            return $Core$Action.Update($Outline$Document$Model.InScratch(_U.replace([["scratch"
+                                                                                                     ,_v19._0]
+                                                                                                    ,["outline"
+                                                                                                     ,$Outline$Entry.toValue(zipper._0.outline)]],
+                              zipper._0)));
                             case "Nothing":
                             return $Core$Action.NoChange;}
                          _U.badCase($moduleName,
-                         "between lines 27 and 30");
+                         "between lines 37 and 43");
                       }();
                     case "NoChange":
                     return $Core$Action.NoChange;
                     case "Split":
                     return $Core$Action.NoChange;
                     case "Update":
-                    return $Core$Action.Update(A2($Outline$Document$Model.InOutline,
-                      zipper._0,
-                      _v5._0));}
+                    return $Core$Action.Update($Outline$Document$Model.InOutline(_U.replace([["outline"
+                                                                                             ,_v14._0]],
+                      zipper._0)));}
                  _U.badCase($moduleName,
-                 "between lines 23 and 31");
+                 "between lines 33 and 45");
               }();
             case "InScratch":
             return function () {
-                 var _v12 = A5($Core$Array.$do,
+                 var _v21 = A5($Core$Array.$do,
                  $Outline$Scratch$Model.toValue,
                  $Outline$Scratch$Model.endZipper,
                  $Outline$Scratch$Model.endZipper,
                  scratchFn,
-                 zipper._0);
-                 switch (_v12.ctor)
+                 zipper._0.scratch);
+                 switch (_v21.ctor)
                  {case "Delete":
                     return $Core$Action.NoChange;
                     case "EnterNext":
-                    return $Core$Action.Update(A2($Outline$Document$Model.InOutline,
-                      A2($Core$Array.toValue,
-                      $Outline$Scratch$Model.toValue,
-                      zipper._0),
-                      $Outline$Entry.textZipper(zipper._1)));
+                    return $Core$Action.Update($Outline$Document$Model.outlineZipper($Outline$Document$Model.toValue(zipper)));
                     case "EnterPrev":
                     return $Core$Action.NoChange;
                     case "NoChange":
@@ -13702,38 +14499,102 @@ Elm.Outline.Document.Actions.make = function (_elm) {
                     case "Split":
                     return $Core$Action.NoChange;
                     case "Update":
-                    return $Core$Action.Update(A2($Outline$Document$Model.InScratch,
-                      _v12._0,
-                      zipper._1));}
+                    return $Core$Action.Update($Outline$Document$Model.InScratch(_U.replace([["scratch"
+                                                                                             ,_v21._0]],
+                      zipper._0)));}
                  _U.badCase($moduleName,
-                 "between lines 16 and 23");
+                 "between lines 26 and 33");
               }();}
          _U.badCase($moduleName,
-         "between lines 15 and 31");
+         "between lines 25 and 45");
       }();
    });
+   var doScratch = function (scratchFn) {
+      return A2($do,
+      scratchFn,
+      function (_v26) {
+         return function () {
+            return $Core$Action.NoChange;
+         }();
+      });
+   };
+   var processScratch = function (m) {
+      return function () {
+         switch (m.ctor)
+         {case "InScratch":
+            return function () {
+                 var currentScratch = $Core$Array.active(m._0.scratch);
+                 var scratchValue = $Outline$Scratch$Model.toValue(currentScratch);
+                 var newTasks = $List.map($Outline$RichText$Block$Model.toString)($Outline$RichText$Model.getTasks(scratchValue));
+                 return function () {
+                    var _v30 = doScratch(function (_v32) {
+                       return function () {
+                          return $Core$Action.Delete;
+                       }();
+                    })(m);
+                    switch (_v30.ctor)
+                    {case "Update":
+                       return addNote(scratchValue)(replaceOutline(A2($Outline$Entry.addToInbox,
+                         newTasks,
+                         m._0.outline))(_v30._0));}
+                    return addNote(scratchValue)($Outline$Document$Model.InOutline(_U.replace([["scratch"
+                                                                                               ,_L.fromArray([])]
+                                                                                              ,["outline"
+                                                                                               ,$Outline$Entry.textZipper(A2($Outline$Entry.addToInbox,
+                                                                                               newTasks,
+                                                                                               m._0.outline))]],
+                    m._0)));
+                 }();
+              }();}
+         return m;
+      }();
+   };
    var doEntry = function (entryFn) {
       return A2($do,
-      function (_v17) {
+      function (_v34) {
          return function () {
             return $Core$Action.NoChange;
          }();
       },
       entryFn);
    };
+   var doBlock = function (blockFn) {
+      return A2($do,
+      $Outline$Scratch$Actions.doBlock(blockFn),
+      function (_v36) {
+         return function () {
+            return $Core$Action.NoChange;
+         }();
+      });
+   };
+   var doSpan = function (spanFn) {
+      return A2($do,
+      $Outline$Scratch$Actions.doSpan(spanFn),
+      function (_v38) {
+         return function () {
+            return $Core$Action.NoChange;
+         }();
+      });
+   };
    var doText = function (stringFn) {
       return A2($do,
-      $Outline$Scratch$Actions.$do(stringFn),
+      $Outline$Scratch$Actions.doText(stringFn),
       $Outline$Entry.$do(stringFn));
    };
-   var enter = A2($do,
-   $Outline$Scratch$Actions.$do($Core$String.insert("\n")),
-   $Outline$Entry.$do($Core$String.split));
+   var enter = doText($Core$String.split);
+   var backspace = A2($do,
+   $Outline$Scratch$Actions.doBlock($Outline$RichText$Block$Actions.backspace),
+   $Outline$Entry.$do($Core$String.backspace));
    _elm.Outline.Document.Actions.values = {_op: _op
                                           ,$do: $do
                                           ,doEntry: doEntry
+                                          ,doBlock: doBlock
+                                          ,doSpan: doSpan
                                           ,doText: doText
-                                          ,enter: enter};
+                                          ,enter: enter
+                                          ,backspace: backspace
+                                          ,processScratch: processScratch
+                                          ,newScratch: newScratch};
    return _elm.Outline.Document.Actions.values;
 };
 Elm.Outline = Elm.Outline || {};
@@ -13794,127 +14655,139 @@ Elm.Outline.Document.Model.make = function (_elm) {
    $Core$Array = Elm.Core.Array.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
    var toValue = function (z) {
       return function () {
          switch (z.ctor)
-         {case "InOutline": return {_: {}
-                                   ,outline: $Outline$Entry.toValue(z._1)
-                                   ,scratch: z._0};
-            case "InScratch": return {_: {}
-                                     ,outline: z._1
-                                     ,scratch: A2($Core$Array.toValue,
-                                     $Outline$Scratch$Model.toValue,
-                                     z._0)};}
-         _U.badCase($moduleName,
-         "between lines 18 and 20");
-      }();
-   };
-   var outlineValue = function (z) {
-      return function (_) {
-         return _.outline;
-      }(toValue(z));
-   };
-   var scratchValue = function (z) {
-      return function (_) {
-         return _.scratch;
-      }(toValue(z));
-   };
-   var InOutline = F2(function (a,
-   b) {
-      return {ctor: "InOutline"
-             ,_0: a
-             ,_1: b};
-   });
-   var outlineZipper = function (_v5) {
-      return function () {
-         return A2(InOutline,
-         _v5.scratch,
-         $Outline$Entry.textZipper(_v5.outline));
-      }();
-   };
-   var InScratch = F2(function (a,
-   b) {
-      return {ctor: "InScratch"
-             ,_0: a
-             ,_1: b};
-   });
-   var scratchZipper = F2(function (i,
-   _v7) {
-      return function () {
-         return function () {
-            var _v9 = A3($Core$Array.zipperAtM,
-            i,
-            $Outline$Scratch$Model.endZipper,
-            _v7.scratch);
-            switch (_v9.ctor)
-            {case "Just":
-               return A2(InScratch,
-                 _v9._0,
-                 _v7.outline);}
-            _U.badCase($moduleName,
-            "between lines 29 and 31");
-         }();
-      }();
-   });
-   var replaceOutline = F2(function (z,
-   outline) {
-      return function () {
-         switch (z.ctor)
-         {case "InOutline":
-            return A2(InOutline,
-              z._0,
-              $Outline$Entry.textZipper(outline));
+         {case "InNotesArchive":
+            return z._0;
+            case "InOutline":
+            return _U.replace([["outline"
+                               ,$Outline$Entry.toValue(z._0.outline)]],
+              z._0);
             case "InScratch":
-            return A2(InScratch,
-              z._0,
-              outline);}
+            return _U.replace([["scratch"
+                               ,$Core$Array.toValue($Outline$Scratch$Model.toValue)(z._0.scratch)]],
+              z._0);}
          _U.badCase($moduleName,
-         "between lines 37 and 39");
+         "between lines 48 and 51");
+      }();
+   };
+   var emptyValue = {_: {}
+                    ,notes: _L.fromArray([])
+                    ,outline: $Outline$Entry.emptyEntry
+                    ,scratch: _L.fromArray([])};
+   var InNotesArchive = function (a) {
+      return {ctor: "InNotesArchive"
+             ,_0: a};
+   };
+   var notesZipper = function (r) {
+      return InNotesArchive(r);
+   };
+   var InOutline = function (a) {
+      return {ctor: "InOutline"
+             ,_0: a};
+   };
+   var outlineZipper = function (r) {
+      return InOutline(_U.replace([["outline"
+                                   ,$Outline$Entry.textZipper(r.outline)]],
+      r));
+   };
+   var InScratch = function (a) {
+      return {ctor: "InScratch"
+             ,_0: a};
+   };
+   var scratchZipper = F2(function (i,
+   r) {
+      return function () {
+         var _v4 = A3($Core$Array.zipperAtM,
+         i,
+         $Outline$Scratch$Model.endZipper,
+         r.scratch);
+         switch (_v4.ctor)
+         {case "Just":
+            return InScratch(_U.replace([["scratch"
+                                         ,_v4._0]],
+              r));
+            case "Nothing":
+            return InScratch(_U.replace([["scratch"
+                                         ,$Core$Array.firstZipper($Outline$Scratch$Model.allZipper)(_L.fromArray([$Outline$Scratch$Model.value("Scratch 1")]))]],
+              r));}
+         _U.badCase($moduleName,
+         "between lines 54 and 56");
       }();
    });
-   var replaceScratch = F2(function (z,
-   scratch) {
+   var replaceOutline = F2(function (outline$,
+   z) {
       return function () {
          switch (z.ctor)
-         {case "InOutline":
-            return A2(InOutline,
-              scratch,
-              z._1);
+         {case "InNotesArchive":
+            return InNotesArchive(_U.replace([["outline"
+                                              ,outline$]],
+              z._0));
+            case "InOutline":
+            return InOutline(_U.replace([["outline"
+                                         ,$Outline$Entry.textZipper(outline$)]],
+              z._0));
+            case "InScratch":
+            return InScratch(_U.replace([["outline"
+                                         ,outline$]],
+              z._0));}
+         _U.badCase($moduleName,
+         "between lines 65 and 68");
+      }();
+   });
+   var replaceScratch = F2(function (scratch$,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return InNotesArchive(_U.replace([["scratch"
+                                              ,scratch$]],
+              z._0));
+            case "InOutline":
+            return InOutline(_U.replace([["scratch"
+                                         ,scratch$]],
+              z._0));
             case "InScratch":
             return function () {
-                 var _v21 = A2($Core$Array.firstZipperM,
+                 var _v14 = A2($Core$Array.firstZipperM,
                  $Outline$Scratch$Model.endZipper,
-                 scratch);
-                 switch (_v21.ctor)
+                 scratch$);
+                 switch (_v14.ctor)
                  {case "Just":
-                    return A2(InScratch,
-                      _v21._0,
-                      z._1);
+                    return InScratch(_U.replace([["scratch"
+                                                 ,_v14._0]],
+                      z._0));
                     case "Nothing": return z;}
                  _U.badCase($moduleName,
-                 "between lines 43 and 46");
+                 "between lines 72 and 75");
               }();}
          _U.badCase($moduleName,
-         "between lines 42 and 46");
+         "between lines 71 and 76");
       }();
    });
-   var Value = F2(function (a,b) {
+   var Value = F3(function (a,
+   b,
+   c) {
       return {_: {}
+             ,notes: c
              ,outline: b
              ,scratch: a};
    });
    _elm.Outline.Document.Model.values = {_op: _op
+                                        ,emptyValue: emptyValue
                                         ,toValue: toValue
-                                        ,scratchValue: scratchValue
-                                        ,outlineValue: outlineValue
                                         ,scratchZipper: scratchZipper
                                         ,outlineZipper: outlineZipper
+                                        ,notesZipper: notesZipper
                                         ,replaceOutline: replaceOutline
                                         ,replaceScratch: replaceScratch
                                         ,Value: Value
                                         ,InScratch: InScratch
-                                        ,InOutline: InOutline};
+                                        ,InOutline: InOutline
+                                        ,InNotesArchive: InNotesArchive};
    return _elm.Outline.Document.Model.values;
 };
 Elm.Outline = Elm.Outline || {};
@@ -13973,7 +14846,7 @@ Elm.Outline.Entry.make = function (_elm) {
               entry._0.children),
               "}"))))))));}
          _U.badCase($moduleName,
-         "between lines 306 and 311");
+         "between lines 313 and 318");
       }();
    };
    var swap = F5(function (ai,
@@ -14003,11 +14876,11 @@ Elm.Outline.Entry.make = function (_elm) {
                       list._1,
                       $default);}
                  _U.badCase($moduleName,
-                 "between lines 152 and 155");
+                 "between lines 159 and 162");
               }();
             case "[]": return $default;}
          _U.badCase($moduleName,
-         "between lines 151 and 155");
+         "between lines 158 and 162");
       }();
    });
    var tryMap = F3(function (fn,
@@ -14025,11 +14898,11 @@ Elm.Outline.Entry.make = function (_elm) {
                       list._1,
                       $default);}
                  _U.badCase($moduleName,
-                 "between lines 145 and 148");
+                 "between lines 152 and 155");
               }();
             case "[]": return $default;}
          _U.badCase($moduleName,
-         "between lines 144 and 148");
+         "between lines 151 and 155");
       }();
    });
    var $try = tryMap($Basics.identity);
@@ -14038,7 +14911,7 @@ Elm.Outline.Entry.make = function (_elm) {
          switch (en.ctor)
          {case "Entry": return en._0;}
          _U.badCase($moduleName,
-         "on line 113, column 13 to 36");
+         "on line 120, column 13 to 36");
       }();
    };
    var getInbox = function (en) {
@@ -14080,7 +14953,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                        ,fn(v._0.children)]],
               v._0));}
          _U.badCase($moduleName,
-         "on line 59, column 20 to 82");
+         "on line 66, column 20 to 82");
       }();
    });
    var childZipperAt = F3(function (i,
@@ -14096,7 +14969,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                        v._0.children)]],
               v._0));}
          _U.badCase($moduleName,
-         "on line 62, column 24 to 108");
+         "on line 69, column 24 to 108");
       }();
    });
    var swapChildren = F2(function (fn,
@@ -14121,7 +14994,7 @@ Elm.Outline.Entry.make = function (_elm) {
                        case "Nothing":
                        return $Core$Action.Update(InChild(z._0));}
                     _U.badCase($moduleName,
-                    "between lines 211 and 214");
+                    "between lines 218 and 221");
                  }();
               }();}
          return $Core$Action.NoChange;
@@ -14140,7 +15013,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                        ,fn(v._0.inbox)]],
               v._0));}
          _U.badCase($moduleName,
-         "on line 65, column 20 to 76");
+         "on line 72, column 20 to 76");
       }();
    });
    var inboxZipperAt = F3(function (i,
@@ -14156,7 +15029,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                        v._0.inbox)]],
               v._0));}
          _U.badCase($moduleName,
-         "on line 68, column 24 to 102");
+         "on line 75, column 24 to 102");
       }();
    });
    var InDescription = function (a) {
@@ -14177,7 +15050,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  v._0)));
               }();}
          _U.badCase($moduleName,
-         "between lines 53 and 56");
+         "between lines 60 and 63");
       }();
    };
    var InText = function (a) {
@@ -14192,7 +15065,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                       ,$Core$String.endZipper(en._0.text)]],
               en._0));}
          _U.badCase($moduleName,
-         "on line 47, column 17 to 90");
+         "on line 54, column 17 to 90");
       }();
    };
    var firstInboxZipper = function (v) {
@@ -14211,7 +15084,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Maybe.Nothing;
               }();}
          _U.badCase($moduleName,
-         "between lines 117 and 120");
+         "between lines 124 and 127");
       }();
    };
    var firstChildInboxZipper = function (v) {
@@ -14226,20 +15099,18 @@ Elm.Outline.Entry.make = function (_elm) {
               firstInboxZipper,
               v._0.children));}
          _U.badCase($moduleName,
-         "between lines 139 and 141");
+         "between lines 146 and 148");
       }();
    };
    var moveToInboxOfFirstChildOrNext = function (en) {
       return function () {
          switch (en.ctor)
          {case "Entry":
-            return A2($Maybe._op["?"],
-              A2($Maybe.map,
+            return $Maybe.withDefault($Core$Action.EnterNext)(A2($Maybe.map,
               $Core$Action.Update,
-              firstChildInboxZipper(en)),
-              $Core$Action.EnterNext);}
+              firstChildInboxZipper(en)));}
          _U.badCase($moduleName,
-         "between lines 161 and 162");
+         "between lines 168 and 169");
       }();
    };
    var lastInboxZipper = function (v) {
@@ -14258,7 +15129,7 @@ Elm.Outline.Entry.make = function (_elm) {
                  return $Maybe.Nothing;
               }();}
          _U.badCase($moduleName,
-         "between lines 123 and 126");
+         "between lines 130 and 133");
       }();
    };
    var firstChildZipper = function (v) {
@@ -14275,7 +15146,7 @@ Elm.Outline.Entry.make = function (_elm) {
               },
               v._0.children));}
          _U.badCase($moduleName,
-         "between lines 129 and 131");
+         "between lines 136 and 138");
       }();
    };
    var lastChildZipper = function (v) {
@@ -14292,7 +15163,7 @@ Elm.Outline.Entry.make = function (_elm) {
               },
               v._0.children));}
          _U.badCase($moduleName,
-         "between lines 134 and 136");
+         "between lines 141 and 143");
       }();
    };
    var textZipperAt = F2(function (i,
@@ -14306,7 +15177,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                       en._0.text)]],
               en._0));}
          _U.badCase($moduleName,
-         "on line 50, column 21 to 95");
+         "on line 57, column 21 to 95");
       }();
    });
    var findLastCursor = function (en) {
@@ -14327,7 +15198,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                            ,$Core$String.endZipper(en._0.text)]],
               en._0));}
          _U.badCase($moduleName,
-         "between lines 71 and 75");
+         "between lines 78 and 82");
       }();
    };
    var Entry = function (a) {
@@ -14379,7 +15250,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                      ,$Core$String.toValue(z._0.text)]],
               z._0));}
          _U.badCase($moduleName,
-         "between lines 36 and 40");
+         "between lines 39 and 43");
       }();
    };
    var textValue = function (z) {
@@ -14389,7 +15260,7 @@ Elm.Outline.Entry.make = function (_elm) {
          {case "Entry":
             return _v61._0.text;}
          _U.badCase($moduleName,
-         "between lines 43 and 44");
+         "between lines 50 and 51");
       }();
    };
    var addInboxItem_ = F2(function (newEntry,
@@ -14448,7 +15319,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                       z._0.children)]],
                          z._0)));}
                     _U.badCase($moduleName,
-                    "between lines 100 and 109");
+                    "between lines 107 and 116");
                  }();
               }();}
          return $Core$Action.NoChange;
@@ -14478,7 +15349,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                            ,_v73._0]],
                               z._0)));}
                          _U.badCase($moduleName,
-                         "between lines 223 and 226");
+                         "between lines 230 and 233");
                       }();}
                  return _v72;
               }();}
@@ -14521,7 +15392,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                    ,_v80._0]],
                       z._0)));}
                  _U.badCase($moduleName,
-                 "between lines 255 and 262");
+                 "between lines 262 and 269");
               }();
             case "InDescription":
             return function () {
@@ -14536,7 +15407,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                          ,_v82._0]],
                       z._0)));}
                  _U.badCase($moduleName,
-                 "between lines 243 and 247");
+                 "between lines 250 and 254");
               }();
             case "InInbox":
             return function () {
@@ -14566,7 +15437,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                    ,_v84._0]],
                       z._0)));}
                  _U.badCase($moduleName,
-                 "between lines 247 and 255");
+                 "between lines 254 and 262");
               }();
             case "InText":
             return function () {
@@ -14597,10 +15468,24 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                   ,_v86._0]],
                       z._0)));}
                  _U.badCase($moduleName,
-                 "between lines 233 and 243");
+                 "between lines 240 and 250");
               }();}
          _U.badCase($moduleName,
-         "between lines 232 and 262");
+         "between lines 239 and 269");
+      }();
+   });
+   var addToInbox = F2(function (list,
+   v) {
+      return function () {
+         switch (v.ctor)
+         {case "Entry":
+            return Entry(_U.replace([["inbox"
+                                     ,A2($Basics._op["++"],
+                                     A2($List.map,textEntry,list),
+                                     v._0.inbox)]],
+              v._0));}
+         _U.badCase($moduleName,
+         "between lines 46 and 47");
       }();
    });
    var addInboxItem__ = F2(function (s,
@@ -14614,7 +15499,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                      en._0.inbox)]],
               en._0));}
          _U.badCase($moduleName,
-         "on line 78, column 23 to 80");
+         "on line 85, column 23 to 80");
       }();
    });
    var appendToInboxOfChild = F3(function (n,
@@ -14622,17 +15507,17 @@ Elm.Outline.Entry.make = function (_elm) {
    children) {
       return A3($Core$Array.mapAt,
       n,
-      function (_v93) {
+      function (_v95) {
          return function () {
-            switch (_v93.ctor)
+            switch (_v95.ctor)
             {case "Entry":
                return Entry(_U.replace([["inbox"
                                         ,A2($Core$Array.prepend,
                                         v,
-                                        _v93._0.inbox)]],
-                 _v93._0));}
+                                        _v95._0.inbox)]],
+                 _v95._0));}
             _U.badCase($moduleName,
-            "on line 165, column 71 to 120");
+            "on line 172, column 71 to 120");
          }();
       },
       children);
@@ -14644,13 +15529,13 @@ Elm.Outline.Entry.make = function (_elm) {
          {case "InInbox":
             return _U.cmp(n,
               $List.length(z._0.children)) > -1 ? $Core$Action.NoChange : function () {
-                 var _v98 = A2($Core$Array.remove,
+                 var _v100 = A2($Core$Array.remove,
                  textZipper,
                  z._0.inbox);
-                 switch (_v98.ctor)
+                 switch (_v100.ctor)
                  {case "Just":
                     return $Core$Action.Update(InInbox(_U.replace([["inbox"
-                                                                   ,_v98._0]
+                                                                   ,_v100._0]
                                                                   ,["children"
                                                                    ,A3(appendToInboxOfChild,
                                                                    n,
@@ -14667,7 +15552,7 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                            z._0.children)]],
                       z._0)));}
                  _U.badCase($moduleName,
-                 "between lines 171 and 174");
+                 "between lines 178 and 181");
               }();}
          return $Core$Action.NoChange;
       }();
@@ -14680,34 +15565,34 @@ Elm.Outline.Entry.make = function (_elm) {
          switch (z.ctor)
          {case "InChild":
             return function () {
-                 var _v102 = $Core$Array.active(z._0.children);
-                 switch (_v102.ctor)
+                 var _v104 = $Core$Array.active(z._0.children);
+                 switch (_v104.ctor)
                  {case "InChild":
                     return function () {
-                         var _v105 = $Core$Array.active(_v102._0.children);
-                         switch (_v105.ctor)
+                         var _v107 = $Core$Array.active(_v104._0.children);
+                         switch (_v107.ctor)
                          {case "InChild":
                             return $Core$Action.NoChange;
                             case "InInbox":
                             return $Core$Action.NoChange;}
                          return function () {
-                            var item = toValue($Core$Array.active(_v102._0.children));
+                            var item = toValue($Core$Array.active(_v104._0.children));
                             var withNewInbox = _U.replace([["inbox"
                                                            ,A2($Core$Array.prepend,
                                                            item,
                                                            z._0.inbox)]],
                             z._0);
                             return function () {
-                               var _v108 = A2($Core$Array.remove,
+                               var _v110 = A2($Core$Array.remove,
                                textZipper,
-                               _v102._0.children);
-                               switch (_v108.ctor)
+                               _v104._0.children);
+                               switch (_v110.ctor)
                                {case "Just":
                                   return $Core$Action.Update(InChild(_U.replace([["children"
                                                                                  ,A2($Core$Array.update,
                                                                                  InChild(_U.replace([["children"
-                                                                                                     ,_v108._0]],
-                                                                                 _v102._0)),
+                                                                                                     ,_v110._0]],
+                                                                                 _v104._0)),
                                                                                  z._0.children)]],
                                     withNewInbox)));
                                   case "Nothing":
@@ -14723,35 +15608,35 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                                         ,_L.fromArray([])]],
                                                                  z._0));}
                                                             _U.badCase($moduleName,
-                                                            "on line 193, column 149 to 204");
+                                                            "on line 200, column 142 to 197");
                                                          }();
                                                       },
                                                       z._0.children)]],
                                     withNewInbox))));}
                                _U.badCase($moduleName,
-                               "between lines 191 and 194");
+                               "between lines 198 and 201");
                             }();
                          }();
                       }();
                     case "InInbox":
                     return function () {
-                         var item = toValue($Core$Array.active(_v102._0.inbox));
+                         var item = toValue($Core$Array.active(_v104._0.inbox));
                          var withNewInbox = _U.replace([["inbox"
                                                         ,A2($Core$Array.prepend,
                                                         item,
                                                         z._0.inbox)]],
                          z._0);
                          return function () {
-                            var _v112 = A2($Core$Array.remove,
+                            var _v114 = A2($Core$Array.remove,
                             textZipper,
-                            _v102._0.inbox);
-                            switch (_v112.ctor)
+                            _v104._0.inbox);
+                            switch (_v114.ctor)
                             {case "Just":
                                return $Core$Action.Update(InChild(_U.replace([["children"
                                                                               ,A2($Core$Array.update,
                                                                               InInbox(_U.replace([["inbox"
-                                                                                                  ,_v112._0]],
-                                                                              _v102._0)),
+                                                                                                  ,_v114._0]],
+                                                                              _v104._0)),
                                                                               z._0.children)]],
                                  withNewInbox)));
                                case "Nothing":
@@ -14767,13 +15652,13 @@ Elm.Outline.Entry.make = function (_elm) {
                                                                                      ,_L.fromArray([])]],
                                                               z._0));}
                                                          _U.badCase($moduleName,
-                                                         "on line 185, column 147 to 199");
+                                                         "on line 192, column 140 to 192");
                                                       }();
                                                    },
                                                    z._0.children)]],
                                  withNewInbox))));}
                             _U.badCase($moduleName,
-                            "between lines 183 and 186");
+                            "between lines 190 and 193");
                          }();
                       }();}
                  return $Core$Action.NoChange;
@@ -14800,19 +15685,20 @@ Elm.Outline.Entry.make = function (_elm) {
    $Json$Decode.string),
    A2($Json$Decode._op[":="],
    "inbox",
-   $Json$Decode.list(lazy(function (_v116) {
+   $Json$Decode.list(lazy(function (_v118) {
       return function () {
          return decoder;
       }();
    }))),
    A2($Json$Decode._op[":="],
    "children",
-   $Json$Decode.list(lazy(function (_v118) {
+   $Json$Decode.list(lazy(function (_v120) {
       return function () {
          return decoder;
       }();
    })))));
    _elm.Outline.Entry.values = {_op: _op
+                               ,addToInbox: addToInbox
                                ,addInboxItem: addInboxItem
                                ,promote: promote
                                ,moveInto: moveInto
@@ -14843,6 +15729,1039 @@ Elm.Outline.Entry.make = function (_elm) {
    return _elm.Outline.Entry.values;
 };
 Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Actions = Elm.Outline.RichText.Actions || {};
+Elm.Outline.RichText.Actions.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Actions = _elm.Outline.RichText.Actions || {};
+   if (_elm.Outline.RichText.Actions.values)
+   return _elm.Outline.RichText.Actions.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Actions",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Outline$RichText$Block$Actions = Elm.Outline.RichText.Block.Actions.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Outline$RichText$Span$Actions = Elm.Outline.RichText.Span.Actions.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var doArrayMaybe = F2(function (fn,
+   z) {
+      return function () {
+         var _v0 = fn(z);
+         switch (_v0.ctor)
+         {case "Just":
+            return $Core$Action.Update(_v0._0);
+            case "Nothing":
+            return $Core$Action.NoChange;}
+         _U.badCase($moduleName,
+         "between lines 16 and 18");
+      }();
+   });
+   var doBlock = F2(function (fn,
+   z) {
+      return function () {
+         var _v2 = fn($Core$Array.active(z));
+         switch (_v2.ctor)
+         {case "EnterNext":
+            return A2(doArrayMaybe,
+              A2($Core$Array.goNext,
+              $Outline$RichText$Block$Model.toValue,
+              $Outline$RichText$Block$Model.startZipper),
+              z);
+            case "EnterPrev":
+            return A2(doArrayMaybe,
+              A2($Core$Array.goPrev,
+              $Outline$RichText$Block$Model.toValue,
+              $Outline$RichText$Block$Model.endZipper),
+              z);
+            case "Join":
+            return A2(doArrayMaybe,
+              A2($Core$Array.joinActive,
+              $Outline$RichText$Block$Model.mergeZipper,
+              _v2._0),
+              z);
+            case "NoChange":
+            return $Core$Action.NoChange;
+            case "Split":
+            return $Core$Action.Update(A4($Core$Array.mergeActive,
+              _v2._0,
+              _v2._1,
+              _v2._2,
+              z));
+            case "Update":
+            return $Core$Action.Update(A2($Core$Array.replaceActive,
+              _v2._0,
+              z));}
+         _U.badCase($moduleName,
+         "between lines 21 and 27");
+      }();
+   });
+   var doSpan = function (fn) {
+      return doBlock($Outline$RichText$Block$Actions.doSpan(fn));
+   };
+   _elm.Outline.RichText.Actions.values = {_op: _op
+                                          ,doBlock: doBlock
+                                          ,doSpan: doSpan};
+   return _elm.Outline.RichText.Actions.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Block = Elm.Outline.RichText.Block || {};
+Elm.Outline.RichText.Block.Actions = Elm.Outline.RichText.Block.Actions || {};
+Elm.Outline.RichText.Block.Actions.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Block = _elm.Outline.RichText.Block || {};
+   _elm.Outline.RichText.Block.Actions = _elm.Outline.RichText.Block.Actions || {};
+   if (_elm.Outline.RichText.Block.Actions.values)
+   return _elm.Outline.RichText.Block.Actions.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Block.Actions",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Actions = Elm.Outline.RichText.Span.Actions.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var toggle = F2(function (current,
+   t) {
+      return _U.eq(current,
+      t) ? $Outline$RichText$Block$Model.Paragraph : t;
+   });
+   var NoChange = {ctor: "NoChange"};
+   var EnterNext = {ctor: "EnterNext"};
+   var EnterPrev = {ctor: "EnterPrev"};
+   var Delete = {ctor: "Delete"};
+   var Join = function (a) {
+      return {ctor: "Join",_0: a};
+   };
+   var Split = F3(function (a,
+   b,
+   c) {
+      return {ctor: "Split"
+             ,_0: a
+             ,_1: b
+             ,_2: c};
+   });
+   var Update = function (a) {
+      return {ctor: "Update"
+             ,_0: a};
+   };
+   var doSpan = F2(function (spanFn,
+   _v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _v4 = A5($Core$Array.doPropagatingSplits,
+                 $Outline$RichText$Span$Model.toValue,
+                 $Outline$RichText$Span$Model.startZipper,
+                 $Outline$RichText$Span$Model.endZipper,
+                 spanFn,
+                 _v0._1);
+                 switch (_v4.ctor)
+                 {case "Delete": return Delete;
+                    case "EnterNext":
+                    return EnterNext;
+                    case "EnterPrev":
+                    return EnterPrev;
+                    case "NoChange":
+                    return NoChange;
+                    case "Split": return A3(Split,
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: _v0._0
+                                ,_1: s};
+                      },
+                      _v4._0),
+                      {ctor: "_Tuple2"
+                      ,_0: $Outline$RichText$Block$Model.Paragraph
+                      ,_1: _v4._1},
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: $Outline$RichText$Block$Model.Paragraph
+                                ,_1: s};
+                      },
+                      _v4._2));
+                    case "Update":
+                    return Update({ctor: "_Tuple2"
+                                  ,_0: _v0._0
+                                  ,_1: _v4._0});}
+                 _U.badCase($moduleName,
+                 "between lines 24 and 30");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 24 and 30");
+      }();
+   });
+   var toggleStyle = F2(function (t$,
+   _v9) {
+      return function () {
+         switch (_v9.ctor)
+         {case "_Tuple2":
+            return Update({ctor: "_Tuple2"
+                          ,_0: A2(toggle,_v9._0,t$)
+                          ,_1: _v9._1});}
+         _U.badCase($moduleName,
+         "on line 36, column 25 to 47");
+      }();
+   });
+   var split = function (_v13) {
+      return function () {
+         switch (_v13.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _v17 = A5($Core$Array.doPropagatingSplits,
+                 $Outline$RichText$Span$Model.toValue,
+                 $Outline$RichText$Span$Model.startZipper,
+                 $Outline$RichText$Span$Model.endZipper,
+                 $Outline$RichText$Span$Actions.$do($Core$String.split),
+                 _v13._1);
+                 switch (_v17.ctor)
+                 {case "Delete": return Delete;
+                    case "EnterNext":
+                    return EnterNext;
+                    case "EnterPrev":
+                    return EnterPrev;
+                    case "NoChange":
+                    return NoChange;
+                    case "Split": return A3(Split,
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: _v13._0
+                                ,_1: s};
+                      },
+                      _v17._0),
+                      {ctor: "_Tuple2"
+                      ,_0: $Outline$RichText$Block$Model.Paragraph
+                      ,_1: _v17._1},
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: $Outline$RichText$Block$Model.Paragraph
+                                ,_1: s};
+                      },
+                      _v17._2));
+                    case "Update":
+                    return Update({ctor: "_Tuple2"
+                                  ,_0: _v13._0
+                                  ,_1: _v17._0});}
+                 _U.badCase($moduleName,
+                 "between lines 39 and 45");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 39 and 45");
+      }();
+   };
+   var backspace = function (_v22) {
+      return function () {
+         switch (_v22.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _v26 = A5($Core$Array.doPropagatingSplits,
+                 $Outline$RichText$Span$Model.toValue,
+                 $Outline$RichText$Span$Model.startZipper,
+                 $Outline$RichText$Span$Model.endZipper,
+                 $Outline$RichText$Span$Actions.$do($Core$String.backspace),
+                 _v22._1);
+                 switch (_v26.ctor)
+                 {case "NoChange":
+                    return Join({ctor: "_Tuple2"
+                                ,_0: _v22._0
+                                ,_1: $Core$Array.toValue($Outline$RichText$Span$Model.toValue)(_v22._1)});
+                    case "Update":
+                    return Update({ctor: "_Tuple2"
+                                  ,_0: _v22._0
+                                  ,_1: _v26._0});}
+                 return NoChange;
+              }();}
+         _U.badCase($moduleName,
+         "between lines 48 and 51");
+      }();
+   };
+   _elm.Outline.RichText.Block.Actions.values = {_op: _op
+                                                ,doSpan: doSpan
+                                                ,toggleStyle: toggleStyle
+                                                ,split: split
+                                                ,backspace: backspace
+                                                ,Update: Update
+                                                ,Split: Split
+                                                ,Join: Join
+                                                ,Delete: Delete
+                                                ,EnterPrev: EnterPrev
+                                                ,EnterNext: EnterNext
+                                                ,NoChange: NoChange};
+   return _elm.Outline.RichText.Block.Actions.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Block = Elm.Outline.RichText.Block || {};
+Elm.Outline.RichText.Block.Json = Elm.Outline.RichText.Block.Json || {};
+Elm.Outline.RichText.Block.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Block = _elm.Outline.RichText.Block || {};
+   _elm.Outline.RichText.Block.Json = _elm.Outline.RichText.Block.Json || {};
+   if (_elm.Outline.RichText.Block.Json.values)
+   return _elm.Outline.RichText.Block.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Block.Json",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Json = Elm.Outline.RichText.Span.Json.make(_elm);
+   var typeDecoder = $Json$Decode.map(function (s) {
+      return function () {
+         switch (s)
+         {case "Heading":
+            return $Outline$RichText$Block$Model.Heading;
+            case "Paragraph":
+            return $Outline$RichText$Block$Model.Paragraph;
+            case "Quote":
+            return $Outline$RichText$Block$Model.Quote;
+            case "Task":
+            return $Outline$RichText$Block$Model.Task;}
+         _U.badCase($moduleName,
+         "between lines 24 and 29");
+      }();
+   })($Json$Decode.string);
+   var decoder = A3($Json$Decode.object2,
+   F2(function (v0,v1) {
+      return {ctor: "_Tuple2"
+             ,_0: v0
+             ,_1: v1};
+   }),
+   A2($Json$Decode._op[":="],
+   "type",
+   typeDecoder),
+   A2($Json$Decode._op[":="],
+   "value",
+   $Core$Array.decoder($Outline$RichText$Span$Json.decoder)));
+   var typeString = function (t) {
+      return function () {
+         switch (t.ctor)
+         {case "Heading":
+            return "Heading";
+            case "Paragraph":
+            return "Paragraph";
+            case "Quote": return "Quote";
+            case "Task": return "Task";}
+         _U.badCase($moduleName,
+         "between lines 12 and 16");
+      }();
+   };
+   var toJson = function (_v2) {
+      return function () {
+         switch (_v2.ctor)
+         {case "_Tuple2":
+            return A2($Basics._op["++"],
+              "{\"type\":\"",
+              A2($Basics._op["++"],
+              typeString(_v2._0),
+              A2($Basics._op["++"],
+              "\",\"value\":",
+              A2($Basics._op["++"],
+              A2($Core$Array.toJson,
+              $Outline$RichText$Span$Json.toJson,
+              _v2._1),
+              "}"))));}
+         _U.badCase($moduleName,
+         "between lines 19 and 21");
+      }();
+   };
+   _elm.Outline.RichText.Block.Json.values = {_op: _op
+                                             ,toJson: toJson
+                                             ,decoder: decoder};
+   return _elm.Outline.RichText.Block.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Block = Elm.Outline.RichText.Block || {};
+Elm.Outline.RichText.Block.Model = Elm.Outline.RichText.Block.Model || {};
+Elm.Outline.RichText.Block.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Block = _elm.Outline.RichText.Block || {};
+   _elm.Outline.RichText.Block.Model = _elm.Outline.RichText.Block.Model || {};
+   if (_elm.Outline.RichText.Block.Model.values)
+   return _elm.Outline.RichText.Block.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Block.Model",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Core$Tagged$Model = Elm.Core.Tagged.Model.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm),
+   $String = Elm.String.make(_elm);
+   var withDefault = F2(function ($default,
+   maybe) {
+      return function () {
+         switch (maybe.ctor)
+         {case "Just": return maybe._0;
+            case "Nothing":
+            return $default;}
+         _U.badCase($moduleName,
+         "between lines 50 and 52");
+      }();
+   });
+   var j = F3(function (f1,f2,v) {
+      return f2(f1(v));
+   });
+   var firstZipperOr = F2(function (fn,
+   $default) {
+      return A2(j,
+      $Core$Array.firstZipperM(fn),
+      withDefault(A3($Core$Array.zipper,
+      _L.fromArray([]),
+      $default,
+      _L.fromArray([]))));
+   });
+   var startZipper = $Core$Tagged$Model.toZipper(A2(firstZipperOr,
+   $Outline$RichText$Span$Model.startZipper,
+   $Outline$RichText$Span$Model.startZipper($Outline$RichText$Span$Model.empty)));
+   var lastZipperOr = F2(function (fn,
+   $default) {
+      return A2(j,
+      $Core$Array.lastZipperM(fn),
+      withDefault(A3($Core$Array.zipper,
+      _L.fromArray([]),
+      $default,
+      _L.fromArray([]))));
+   });
+   var endZipper = $Core$Tagged$Model.toZipper(A2(lastZipperOr,
+   $Outline$RichText$Span$Model.endZipper,
+   $Outline$RichText$Span$Model.startZipper($Outline$RichText$Span$Model.empty)));
+   var allZipper = $Core$Tagged$Model.toZipper(A2(lastZipperOr,
+   $Outline$RichText$Span$Model.allZipper,
+   $Outline$RichText$Span$Model.allZipper($Outline$RichText$Span$Model.empty)));
+   var mergeZipper = F2(function (_v2,
+   _v3) {
+      return function () {
+         switch (_v3.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v2.ctor)
+                 {case "_Tuple2":
+                    return function () {
+                         switch (_v3._1.ctor)
+                         {case "::":
+                            return {ctor: "_Tuple2"
+                                   ,_0: _v2._0
+                                   ,_1: A3($Core$Array.zipper,
+                                   _v2._1,
+                                   $Outline$RichText$Span$Model.startZipper(_v3._1._0),
+                                   _v3._1._1)};
+                            case "[]":
+                            return endZipper({ctor: "_Tuple2"
+                                             ,_0: _v2._0
+                                             ,_1: _v2._1});}
+                         _U.badCase($moduleName,
+                         "between lines 41 and 43");
+                      }();}
+                 _U.badCase($moduleName,
+                 "between lines 41 and 43");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 41 and 43");
+      }();
+   });
+   var toString = function (_v13) {
+      return function () {
+         switch (_v13.ctor)
+         {case "_Tuple2":
+            return A2($String.join,
+              "",
+              A2($List.map,
+              $Outline$RichText$Span$Model.toString,
+              _v13._1));}
+         _U.badCase($moduleName,
+         "on line 38, column 18 to 58");
+      }();
+   };
+   var toValue = $Core$Tagged$Model.toValue($Core$Array.toValue($Outline$RichText$Span$Model.toValue));
+   var value = $Core$Tagged$Model.value;
+   var Task = {ctor: "Task"};
+   var Quote = {ctor: "Quote"};
+   var Paragraph = {ctor: "Paragraph"};
+   var paragraph = function (span) {
+      return A2($Core$Tagged$Model.value,
+      Paragraph,
+      _L.fromArray([span]));
+   };
+   var empty = paragraph($Outline$RichText$Span$Model.empty);
+   var Heading = {ctor: "Heading"};
+   _elm.Outline.RichText.Block.Model.values = {_op: _op
+                                              ,toValue: toValue
+                                              ,toString: toString
+                                              ,paragraph: paragraph
+                                              ,value: value
+                                              ,empty: empty
+                                              ,mergeZipper: mergeZipper
+                                              ,startZipper: startZipper
+                                              ,endZipper: endZipper
+                                              ,allZipper: allZipper
+                                              ,Heading: Heading
+                                              ,Paragraph: Paragraph
+                                              ,Quote: Quote
+                                              ,Task: Task};
+   return _elm.Outline.RichText.Block.Model.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Block = Elm.Outline.RichText.Block || {};
+Elm.Outline.RichText.Block.Render = Elm.Outline.RichText.Block.Render || {};
+Elm.Outline.RichText.Block.Render.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Block = _elm.Outline.RichText.Block || {};
+   _elm.Outline.RichText.Block.Render = _elm.Outline.RichText.Block.Render || {};
+   if (_elm.Outline.RichText.Block.Render.values)
+   return _elm.Outline.RichText.Block.Render.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Block.Render",
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Render = Elm.Outline.RichText.Span.Render.make(_elm);
+   var spanToHtml = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return A3($Html.node,
+              "span",
+              _L.fromArray([]),
+              A2($List.map,
+              $Outline$RichText$Span$Render.valueToHtml,
+              _v0._1));}
+         _U.badCase($moduleName,
+         "on line 22, column 29 to 81");
+      }();
+   };
+   var wrap = F2(function (t,
+   children) {
+      return function () {
+         switch (t.ctor)
+         {case "Heading":
+            return A3($Html.node,
+              "h2",
+              _L.fromArray([]),
+              children);
+            case "Paragraph":
+            return A3($Html.node,
+              "p",
+              _L.fromArray([]),
+              children);
+            case "Quote":
+            return A3($Html.node,
+              "blockquote",
+              _L.fromArray([]),
+              children);
+            case "Task":
+            return A3($Html.node,
+              "p",
+              _L.fromArray([$Html$Attributes.$class("task")]),
+              children);}
+         _U.badCase($moduleName,
+         "between lines 12 and 16");
+      }();
+   });
+   var valueToHtml = function (_v5) {
+      return function () {
+         switch (_v5.ctor)
+         {case "_Tuple2": return A2(wrap,
+              _v5._0,
+              A2($List.map,
+              $Outline$RichText$Span$Render.valueToHtml,
+              _v5._1));}
+         _U.badCase($moduleName,
+         "on line 19, column 30 to 74");
+      }();
+   };
+   var zipperToHtml = function (_v9) {
+      return function () {
+         switch (_v9.ctor)
+         {case "_Tuple2": return A2(wrap,
+              _v9._0,
+              A3($Core$Array.map,
+              $Outline$RichText$Span$Render.valueToHtml,
+              $Outline$RichText$Span$Render.zipperToHtml,
+              _v9._1));}
+         _U.badCase($moduleName,
+         "on line 25, column 32 to 101");
+      }();
+   };
+   _elm.Outline.RichText.Block.Render.values = {_op: _op
+                                               ,valueToHtml: valueToHtml
+                                               ,spanToHtml: spanToHtml
+                                               ,zipperToHtml: zipperToHtml};
+   return _elm.Outline.RichText.Block.Render.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Json = Elm.Outline.RichText.Json || {};
+Elm.Outline.RichText.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Json = _elm.Outline.RichText.Json || {};
+   if (_elm.Outline.RichText.Json.values)
+   return _elm.Outline.RichText.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Json",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$RichText$Block$Json = Elm.Outline.RichText.Block.Json.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm);
+   var stringDecoder = $Json$Decode.map($Outline$RichText$Model.value)($Json$Decode.string);
+   var decoder = $Core$Array.decoder($Outline$RichText$Block$Json.decoder);
+   var toJson = $Core$Array.toJson($Outline$RichText$Block$Json.toJson);
+   _elm.Outline.RichText.Json.values = {_op: _op
+                                       ,toJson: toJson
+                                       ,decoder: decoder
+                                       ,stringDecoder: stringDecoder};
+   return _elm.Outline.RichText.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Model = Elm.Outline.RichText.Model || {};
+Elm.Outline.RichText.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Model = _elm.Outline.RichText.Model || {};
+   if (_elm.Outline.RichText.Model.values)
+   return _elm.Outline.RichText.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Model",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm),
+   $String = Elm.String.make(_elm);
+   var getTasks = function (v) {
+      return $List.filter(function (_v0) {
+         return function () {
+            switch (_v0.ctor)
+            {case "_Tuple2":
+               return _U.eq(_v0._0,
+                 $Outline$RichText$Block$Model.Task);}
+            _U.badCase($moduleName,
+            "on line 46, column 29 to 44");
+         }();
+      })(v);
+   };
+   var emptyZipper = A3($Core$Array.zipper,
+   _L.fromArray([]),
+   $Outline$RichText$Block$Model.endZipper($Outline$RichText$Block$Model.paragraph($Outline$RichText$Span$Model.normal(""))),
+   _L.fromArray([]));
+   var endZipper = function (v) {
+      return $Maybe.withDefault(emptyZipper)(A2($Core$Array.lastZipperM,
+      $Outline$RichText$Block$Model.endZipper,
+      v));
+   };
+   var allZipper = function (v) {
+      return $Maybe.withDefault(emptyZipper)(A2($Core$Array.lastZipperM,
+      $Outline$RichText$Block$Model.allZipper,
+      v));
+   };
+   var toValue = $Core$Array.toValue($Outline$RichText$Block$Model.toValue);
+   var heading = function (s) {
+      return $List.map(function (s) {
+         return A2($Outline$RichText$Block$Model.value,
+         $Outline$RichText$Block$Model.Heading,
+         _L.fromArray([$Outline$RichText$Span$Model.normal(s)]));
+      })($String.split("\n")(s));
+   };
+   var value = function (s) {
+      return $List.map(function (s) {
+         return $Outline$RichText$Block$Model.paragraph($Outline$RichText$Span$Model.normal(s));
+      })($String.split("\n")(s));
+   };
+   _elm.Outline.RichText.Model.values = {_op: _op
+                                        ,value: value
+                                        ,heading: heading
+                                        ,toValue: toValue
+                                        ,endZipper: endZipper
+                                        ,allZipper: allZipper
+                                        ,getTasks: getTasks};
+   return _elm.Outline.RichText.Model.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Render = Elm.Outline.RichText.Render || {};
+Elm.Outline.RichText.Render.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Render = _elm.Outline.RichText.Render || {};
+   if (_elm.Outline.RichText.Render.values)
+   return _elm.Outline.RichText.Render.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Render",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Outline$RichText$Block$Render = Elm.Outline.RichText.Block.Render.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm);
+   var toHtml = function (z) {
+      return A2($Html.node,
+      "div",
+      _L.fromArray([]))(A2($Core$Array.map,
+      $Outline$RichText$Block$Render.valueToHtml,
+      $Outline$RichText$Block$Render.zipperToHtml)(z));
+   };
+   _elm.Outline.RichText.Render.values = {_op: _op
+                                         ,toHtml: toHtml};
+   return _elm.Outline.RichText.Render.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Span = Elm.Outline.RichText.Span || {};
+Elm.Outline.RichText.Span.Actions = Elm.Outline.RichText.Span.Actions || {};
+Elm.Outline.RichText.Span.Actions.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Span = _elm.Outline.RichText.Span || {};
+   _elm.Outline.RichText.Span.Actions = _elm.Outline.RichText.Span.Actions || {};
+   if (_elm.Outline.RichText.Span.Actions.values)
+   return _elm.Outline.RichText.Span.Actions.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Span.Actions",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Action = Elm.Core.Action.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var applyStyle = F2(function (t$,
+   _v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _v4 = $Core$String.destructure(_v0._1);
+                 switch (_v4.ctor)
+                 {case "_Tuple3": switch (_v4._1)
+                      {case "":
+                         return $Core$Action.NoChange;}
+                      switch (_v4._0)
+                      {case "": switch (_v4._2)
+                           {case "":
+                              return $Core$Action.Update({ctor: "_Tuple2"
+                                                         ,_0: t$
+                                                         ,_1: _v0._1});}
+                           break;}
+                      return A3($Core$Action.Split,
+                      _U.eq(_v4._0,
+                      "") ? _L.fromArray([]) : _L.fromArray([{ctor: "_Tuple2"
+                                                             ,_0: _v0._0
+                                                             ,_1: _v4._0}]),
+                      {ctor: "_Tuple2"
+                      ,_0: t$
+                      ,_1: $Core$String.allZipper(_v4._1)},
+                      _U.eq(_v4._2,
+                      "") ? _L.fromArray([]) : _L.fromArray([{ctor: "_Tuple2"
+                                                             ,_0: _v0._0
+                                                             ,_1: _v4._2}]));}
+                 _U.badCase($moduleName,
+                 "between lines 20 and 26");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 20 and 26");
+      }();
+   });
+   var $do = F2(function (fn,_v8) {
+      return function () {
+         switch (_v8.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var _v12 = fn(_v8._1);
+                 switch (_v12.ctor)
+                 {case "Delete":
+                    return $Core$Action.Delete;
+                    case "EnterNext":
+                    return $Core$Action.EnterNext;
+                    case "EnterPrev":
+                    return $Core$Action.EnterPrev;
+                    case "NoChange":
+                    return $Core$Action.NoChange;
+                    case "Split":
+                    return A3($Core$Action.Split,
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: _v8._0
+                                ,_1: s};
+                      },
+                      _v12._0),
+                      {ctor: "_Tuple2"
+                      ,_0: _v8._0
+                      ,_1: _v12._1},
+                      A2($List.map,
+                      function (s) {
+                         return {ctor: "_Tuple2"
+                                ,_0: _v8._0
+                                ,_1: s};
+                      },
+                      _v12._2));
+                    case "Update":
+                    return $Core$Action.Update({ctor: "_Tuple2"
+                                               ,_0: _v8._0
+                                               ,_1: _v12._0});}
+                 _U.badCase($moduleName,
+                 "between lines 11 and 17");
+              }();}
+         _U.badCase($moduleName,
+         "between lines 11 and 17");
+      }();
+   });
+   _elm.Outline.RichText.Span.Actions.values = {_op: _op
+                                               ,$do: $do
+                                               ,applyStyle: applyStyle};
+   return _elm.Outline.RichText.Span.Actions.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Span = Elm.Outline.RichText.Span || {};
+Elm.Outline.RichText.Span.Json = Elm.Outline.RichText.Span.Json || {};
+Elm.Outline.RichText.Span.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Span = _elm.Outline.RichText.Span || {};
+   _elm.Outline.RichText.Span.Json = _elm.Outline.RichText.Span.Json || {};
+   if (_elm.Outline.RichText.Span.Json.values)
+   return _elm.Outline.RichText.Span.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Span.Json",
+   $Basics = Elm.Basics.make(_elm),
+   $Core$String = Elm.Core.String.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var typeDecoder = $Json$Decode.map(function (s) {
+      return function () {
+         switch (s)
+         {case "Bold":
+            return $Outline$RichText$Span$Model.Bold;
+            case "Normal":
+            return $Outline$RichText$Span$Model.Normal;}
+         _U.badCase($moduleName,
+         "between lines 21 and 25");
+      }();
+   })($Json$Decode.string);
+   var decoder = A3($Json$Decode.object2,
+   F2(function (v0,v1) {
+      return {ctor: "_Tuple2"
+             ,_0: v0
+             ,_1: v1};
+   }),
+   A2($Json$Decode._op[":="],
+   "type",
+   typeDecoder),
+   A2($Json$Decode._op[":="],
+   "value",
+   $Core$String.decoder));
+   var typeString = function (t) {
+      return function () {
+         switch (t.ctor)
+         {case "Bold": return "Bold";
+            case "Normal": return "Normal";}
+         _U.badCase($moduleName,
+         "between lines 10 and 13");
+      }();
+   };
+   var toJson = function (_v2) {
+      return function () {
+         switch (_v2.ctor)
+         {case "_Tuple2":
+            return A2($Basics._op["++"],
+              "{\"type\":\"",
+              A2($Basics._op["++"],
+              typeString(_v2._0),
+              A2($Basics._op["++"],
+              "\",\"value\":",
+              A2($Basics._op["++"],
+              $Core$String.toJson(_v2._1),
+              "}"))));}
+         _U.badCase($moduleName,
+         "between lines 16 and 18");
+      }();
+   };
+   _elm.Outline.RichText.Span.Json.values = {_op: _op
+                                            ,toJson: toJson
+                                            ,decoder: decoder};
+   return _elm.Outline.RichText.Span.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Span = Elm.Outline.RichText.Span || {};
+Elm.Outline.RichText.Span.Model = Elm.Outline.RichText.Span.Model || {};
+Elm.Outline.RichText.Span.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Span = _elm.Outline.RichText.Span || {};
+   _elm.Outline.RichText.Span.Model = _elm.Outline.RichText.Span.Model || {};
+   if (_elm.Outline.RichText.Span.Model.values)
+   return _elm.Outline.RichText.Span.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Span.Model",
+   $Core$String = Elm.Core.String.make(_elm),
+   $Core$Tagged$Model = Elm.Core.Tagged.Model.make(_elm);
+   var rangeZipper = function (range) {
+      return $Core$Tagged$Model.toZipper($Core$String.rangeZipper(range));
+   };
+   var allZipper = $Core$Tagged$Model.toZipper($Core$String.allZipper);
+   var endZipper = $Core$Tagged$Model.toZipper($Core$String.endZipper);
+   var startZipper = $Core$Tagged$Model.toZipper($Core$String.startZipper);
+   var value = $Core$Tagged$Model.value;
+   var toString = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2": return _v0._1;}
+         _U.badCase($moduleName,
+         "on line 23, column 18 to 19");
+      }();
+   };
+   var toValue = $Core$Tagged$Model.toValue($Core$String.toValue);
+   var Bold = {ctor: "Bold"};
+   var Normal = {ctor: "Normal"};
+   var normal = $Core$Tagged$Model.value(Normal);
+   var empty = normal("");
+   _elm.Outline.RichText.Span.Model.values = {_op: _op
+                                             ,toValue: toValue
+                                             ,toString: toString
+                                             ,value: value
+                                             ,normal: normal
+                                             ,empty: empty
+                                             ,startZipper: startZipper
+                                             ,endZipper: endZipper
+                                             ,allZipper: allZipper
+                                             ,rangeZipper: rangeZipper
+                                             ,Normal: Normal
+                                             ,Bold: Bold};
+   return _elm.Outline.RichText.Span.Model.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.RichText = Elm.Outline.RichText || {};
+Elm.Outline.RichText.Span = Elm.Outline.RichText.Span || {};
+Elm.Outline.RichText.Span.Render = Elm.Outline.RichText.Span.Render || {};
+Elm.Outline.RichText.Span.Render.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.RichText = _elm.Outline.RichText || {};
+   _elm.Outline.RichText.Span = _elm.Outline.RichText.Span || {};
+   _elm.Outline.RichText.Span.Render = _elm.Outline.RichText.Span.Render || {};
+   if (_elm.Outline.RichText.Span.Render.values)
+   return _elm.Outline.RichText.Span.Render.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.RichText.Span.Render",
+   $App$Render$String = Elm.App.Render.String.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var toHtml = F2(function (fn,
+   _v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v0._0.ctor)
+                 {case "Bold":
+                    return A3($Html.node,
+                      "b",
+                      _L.fromArray([]),
+                      _L.fromArray([fn(_v0._1)]));
+                    case "Normal":
+                    return fn(_v0._1);}
+                 return $Html.text(A2($Basics._op["++"],
+                 "(?? ",
+                 A2($Basics._op["++"],
+                 $Basics.toString(_v0._1),
+                 " ??)")));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 12 and 16");
+      }();
+   });
+   var valueToHtml = toHtml($Html.text);
+   var zipperToHtml = toHtml($App$Render$String.toHtml);
+   _elm.Outline.RichText.Span.Render.values = {_op: _op
+                                              ,toHtml: toHtml
+                                              ,valueToHtml: valueToHtml
+                                              ,zipperToHtml: zipperToHtml};
+   return _elm.Outline.RichText.Span.Render.values;
+};
+Elm.Outline = Elm.Outline || {};
 Elm.Outline.Scratch = Elm.Outline.Scratch || {};
 Elm.Outline.Scratch.Actions = Elm.Outline.Scratch.Actions || {};
 Elm.Outline.Scratch.Actions.make = function (_elm) {
@@ -14860,12 +16779,21 @@ Elm.Outline.Scratch.Actions.make = function (_elm) {
    $moduleName = "Outline.Scratch.Actions",
    $Core$Action = Elm.Core.Action.make(_elm),
    $Core$String = Elm.Core.String.make(_elm),
+   $Outline$RichText$Actions = Elm.Outline.RichText.Actions.make(_elm),
+   $Outline$RichText$Block$Actions = Elm.Outline.RichText.Block.Actions.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Actions = Elm.Outline.RichText.Span.Actions.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
-   var $do = function (stringFn) {
-      return stringFn;
+   var doSpan = $Outline$RichText$Actions.doSpan;
+   var doText = function (fn) {
+      return doSpan($Outline$RichText$Span$Actions.$do(fn));
    };
+   var doBlock = $Outline$RichText$Actions.doBlock;
    _elm.Outline.Scratch.Actions.values = {_op: _op
-                                         ,$do: $do};
+                                         ,doBlock: doBlock
+                                         ,doSpan: doSpan
+                                         ,doText: doText};
    return _elm.Outline.Scratch.Actions.values;
 };
 Elm.Outline = Elm.Outline || {};
@@ -14885,12 +16813,13 @@ Elm.Outline.Scratch.Json.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "Outline.Scratch.Json",
    $Core$Array = Elm.Core.Array.make(_elm),
-   $Core$String = Elm.Core.String.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$RichText$Json = Elm.Outline.RichText.Json.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
-   var decoder = $Core$String.decoder;
+   var decoder = $Json$Decode.oneOf(_L.fromArray([$Outline$RichText$Json.decoder
+                                                 ,$Outline$RichText$Json.stringDecoder]));
    var listDecoder = $Json$Decode.list(decoder);
-   var toJson = $Core$String.toJson;
+   var toJson = $Outline$RichText$Json.toJson;
    _elm.Outline.Scratch.Json.values = {_op: _op
                                       ,toJson: toJson
                                       ,decoder: decoder
@@ -14913,13 +16842,359 @@ Elm.Outline.Scratch.Model.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "Outline.Scratch.Model",
-   $Core$String = Elm.Core.String.make(_elm);
-   var endZipper = $Core$String.endZipper;
-   var toValue = $Core$String.toValue;
+   $Basics = Elm.Basics.make(_elm),
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
+   var allZipper = $Outline$RichText$Model.allZipper;
+   var endZipper = $Outline$RichText$Model.endZipper;
+   var toValue = $Outline$RichText$Model.toValue;
+   var value = function (s) {
+      return $Core$Array.single($Outline$RichText$Block$Model.value($Outline$RichText$Block$Model.Heading)($Core$Array.single($Outline$RichText$Span$Model.normal(s))));
+   };
    _elm.Outline.Scratch.Model.values = {_op: _op
+                                       ,value: value
                                        ,toValue: toValue
-                                       ,endZipper: endZipper};
+                                       ,endZipper: endZipper
+                                       ,allZipper: allZipper};
    return _elm.Outline.Scratch.Model.values;
+};
+Elm.Rectified = Elm.Rectified || {};
+Elm.Rectified.make = function (_elm) {
+   "use strict";
+   _elm.Rectified = _elm.Rectified || {};
+   if (_elm.Rectified.values)
+   return _elm.Rectified.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Rectified",
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Graphics$Input = Elm.Graphics.Input.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var clickable = F3(function (message,
+   child,
+   _v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return $Graphics$Input.clickable(message)(child({ctor: "_Tuple2"
+                                                            ,_0: _v0._0
+                                                            ,_1: _v0._1}));}
+         _U.badCase($moduleName,
+         "on line 113, column 33 to 68");
+      }();
+   });
+   var color = F5(function (h,
+   s,
+   l,
+   child,
+   d) {
+      return $Graphics$Element.color(A3($Color.hsl,
+      $Basics.degrees(h),
+      s / 100,
+      l / 100))(child(d));
+   });
+   var grey = F3(function (l,
+   child,
+   _v4) {
+      return function () {
+         switch (_v4.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.color(A3($Color.hsl,
+              0,
+              0,
+              l / 100))(child({ctor: "_Tuple2"
+                              ,_0: _v4._0
+                              ,_1: _v4._1}));}
+         _U.badCase($moduleName,
+         "between lines 105 and 106");
+      }();
+   });
+   var empty = function (_v8) {
+      return function () {
+         switch (_v8.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.spacer,
+              _v8._0,
+              _v8._1);}
+         _U.badCase($moduleName,
+         "on line 102, column 15 to 25");
+      }();
+   };
+   var image = F2(function (url,
+   _v12) {
+      return function () {
+         switch (_v12.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.fittedImage,
+              _v12._0,
+              _v12._1,
+              url);}
+         _U.badCase($moduleName,
+         "on line 99, column 19 to 38");
+      }();
+   });
+   var html = F3(function (padding,
+   content,
+   _v16) {
+      return function () {
+         switch (_v16.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v16._0,
+              _v16._1,
+              $Graphics$Element.middle)(A3($Html.toElement,
+              _v16._0 - padding * 2,
+              _v16._1 - padding * 2,
+              content));}
+         _U.badCase($moduleName,
+         "between lines 95 and 96");
+      }();
+   });
+   var centeredText = F3(function (st,
+   string,
+   _v20) {
+      return function () {
+         switch (_v20.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v20._0,
+              _v20._1,
+              $Graphics$Element.middle)($Text.leftAligned($Text.style(st)($Text.fromString(string))));}
+         _U.badCase($moduleName,
+         "between lines 88 and 92");
+      }();
+   });
+   var text = F4(function (st,
+   padding,
+   string,
+   _v24) {
+      return function () {
+         switch (_v24.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v24._0,
+              _v24._1,
+              $Graphics$Element.middle)(A3($Graphics$Element.container,
+              _v24._0 - padding * 2,
+              _v24._1 - padding * 2,
+              $Graphics$Element.midLeft)($Text.leftAligned($Text.style(st)($Text.fromString(string)))));}
+         _U.badCase($moduleName,
+         "between lines 80 and 85");
+      }();
+   });
+   var debug = F2(function (string,
+   _v28) {
+      return function () {
+         switch (_v28.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v28._0,
+              _v28._1,
+              $Graphics$Element.middle)($Text.asText(string));}
+         _U.badCase($moduleName,
+         "on line 77, column 22 to 59");
+      }();
+   });
+   var list = F5(function (rowSize,
+   spacing,
+   fn,
+   vs,
+   _v32) {
+      return function () {
+         switch (_v32.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.scrollContainer,
+              _v32._0,
+              _v32._1)($Graphics$Element.flow($Graphics$Element.down)($List.intersperse(A2($Graphics$Element.spacer,
+              _v32._0,
+              spacing))(A2($List.map,
+              function (v) {
+                 return A2(fn,
+                 v,
+                 {ctor: "_Tuple2"
+                 ,_0: _v32._0
+                 ,_1: rowSize});
+              },
+              vs))));}
+         _U.badCase($moduleName,
+         "between lines 71 and 74");
+      }();
+   });
+   var row = F4(function (spacing,
+   fn,
+   vs,
+   _v36) {
+      return function () {
+         switch (_v36.ctor)
+         {case "_Tuple2":
+            return $Graphics$Element.flow($Graphics$Element.right)($List.intersperse(A2($Graphics$Element.spacer,
+              spacing,
+              _v36._1))(A2($List.map,
+              function (v) {
+                 return A2(fn,
+                 v,
+                 {ctor: "_Tuple2"
+                 ,_0: _v36._0 / $List.length(vs) | 0
+                 ,_1: _v36._1});
+              },
+              vs)));}
+         _U.badCase($moduleName,
+         "between lines 65 and 67");
+      }();
+   });
+   var rotateLeft = F2(function (child,
+   _v40) {
+      return function () {
+         switch (_v40.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Collage.collage,
+              _v40._0,
+              _v40._1,
+              _L.fromArray([$Graphics$Collage.rotate($Basics.degrees(90))($Graphics$Collage.toForm(child({ctor: "_Tuple2"
+                                                                                                         ,_0: _v40._1
+                                                                                                         ,_1: _v40._0})))]));}
+         _U.badCase($moduleName,
+         "on line 61, column 3 to 69");
+      }();
+   });
+   var inset = F3(function (padding,
+   child,
+   _v44) {
+      return function () {
+         switch (_v44.ctor)
+         {case "_Tuple2":
+            return A3($Graphics$Element.container,
+              _v44._0,
+              _v44._1,
+              $Graphics$Element.middle)(child({ctor: "_Tuple2"
+                                              ,_0: _v44._0 - padding * 2
+                                              ,_1: _v44._1 - padding * 2}));}
+         _U.badCase($moduleName,
+         "between lines 56 and 57");
+      }();
+   });
+   var right = F5(function (size,
+   spacing,
+   child1,
+   child2,
+   _v48) {
+      return function () {
+         switch (_v48.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.flow,
+              $Graphics$Element.right,
+              _L.fromArray([child2({ctor: "_Tuple2"
+                                   ,_0: _v48._0 - size - spacing
+                                   ,_1: _v48._1})
+                           ,A2($Graphics$Element.spacer,
+                           spacing,
+                           _v48._1)
+                           ,child1({ctor: "_Tuple2"
+                                   ,_0: size
+                                   ,_1: _v48._1})]));}
+         _U.badCase($moduleName,
+         "between lines 49 and 53");
+      }();
+   });
+   var left = F5(function (size,
+   spacing,
+   child1,
+   child2,
+   _v52) {
+      return function () {
+         switch (_v52.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.flow,
+              $Graphics$Element.right,
+              _L.fromArray([child1({ctor: "_Tuple2"
+                                   ,_0: size
+                                   ,_1: _v52._1})
+                           ,A2($Graphics$Element.spacer,
+                           spacing,
+                           _v52._1)
+                           ,child2({ctor: "_Tuple2"
+                                   ,_0: _v52._0 - size - spacing
+                                   ,_1: _v52._1})]));}
+         _U.badCase($moduleName,
+         "between lines 41 and 45");
+      }();
+   });
+   var bottom = F5(function (size,
+   spacing,
+   child1,
+   child2,
+   _v56) {
+      return function () {
+         switch (_v56.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              _L.fromArray([child2({ctor: "_Tuple2"
+                                   ,_0: _v56._0
+                                   ,_1: _v56._1 - size - spacing})
+                           ,A2($Graphics$Element.spacer,
+                           _v56._0,
+                           spacing)
+                           ,child1({ctor: "_Tuple2"
+                                   ,_0: _v56._0
+                                   ,_1: size})]));}
+         _U.badCase($moduleName,
+         "between lines 33 and 37");
+      }();
+   });
+   var top = F5(function (size,
+   spacing,
+   child1,
+   child2,
+   _v60) {
+      return function () {
+         switch (_v60.ctor)
+         {case "_Tuple2":
+            return A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              _L.fromArray([child1({ctor: "_Tuple2"
+                                   ,_0: _v60._0
+                                   ,_1: size})
+                           ,A2($Graphics$Element.spacer,
+                           _v60._0,
+                           spacing)
+                           ,child2({ctor: "_Tuple2"
+                                   ,_0: _v60._0
+                                   ,_1: _v60._1 - size - spacing})]));}
+         _U.badCase($moduleName,
+         "between lines 25 and 29");
+      }();
+   });
+   _elm.Rectified.values = {_op: _op
+                           ,top: top
+                           ,bottom: bottom
+                           ,left: left
+                           ,right: right
+                           ,inset: inset
+                           ,rotateLeft: rotateLeft
+                           ,row: row
+                           ,list: list
+                           ,debug: debug
+                           ,centeredText: centeredText
+                           ,text: text
+                           ,html: html
+                           ,image: image
+                           ,empty: empty
+                           ,grey: grey
+                           ,color: color
+                           ,clickable: clickable};
+   return _elm.Rectified.values;
 };
 Elm.Regex = Elm.Regex || {};
 Elm.Regex.make = function (_elm) {
@@ -15072,7 +17347,9 @@ Elm.SampleData.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "SampleData",
-   $Outline$Entry = Elm.Outline.Entry.make(_elm);
+   $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
+   $Outline$RichText$Span$Model = Elm.Outline.RichText.Span.Model.make(_elm);
    var outline = $Outline$Entry.Entry({_: {}
                                       ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
                                                                                     ,children: _L.fromArray([$Outline$Entry.Entry({_: {}
@@ -15200,9 +17477,29 @@ Elm.SampleData.make = function (_elm) {
                                                                                  ,text: "baz"})])
                                       ,text: "Tasks (LOADING...)"});
    var template = {_: {}
+                  ,notes: _L.fromArray([])
                   ,outline: outline
-                  ,scratch: _L.fromArray(["Scratch 3"
-                                         ,"Scratch 2"])};
+                  ,scratch: _L.fromArray([_L.fromArray([{ctor: "_Tuple2"
+                                                        ,_0: $Outline$RichText$Block$Model.Heading
+                                                        ,_1: _L.fromArray([{ctor: "_Tuple2"
+                                                                           ,_0: $Outline$RichText$Span$Model.Normal
+                                                                           ,_1: "Scratch 3"}])}
+                                                       ,{ctor: "_Tuple2"
+                                                        ,_0: $Outline$RichText$Block$Model.Paragraph
+                                                        ,_1: _L.fromArray([{ctor: "_Tuple2"
+                                                                           ,_0: $Outline$RichText$Span$Model.Normal
+                                                                           ,_1: "This is "}
+                                                                          ,{ctor: "_Tuple2"
+                                                                           ,_0: $Outline$RichText$Span$Model.Bold
+                                                                           ,_1: "important"}
+                                                                          ,{ctor: "_Tuple2"
+                                                                           ,_0: $Outline$RichText$Span$Model.Normal
+                                                                           ,_1: "."}])}])
+                                         ,_L.fromArray([{ctor: "_Tuple2"
+                                                        ,_0: $Outline$RichText$Block$Model.Paragraph
+                                                        ,_1: _L.fromArray([{ctor: "_Tuple2"
+                                                                           ,_0: $Outline$RichText$Span$Model.Normal
+                                                                           ,_1: "Scratch 2"}])}])])};
    _elm.SampleData.values = {_op: _op
                             ,outline: outline
                             ,template: template};
