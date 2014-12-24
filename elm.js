@@ -6991,7 +6991,7 @@ Elm.Main.make = function (_elm) {
       return function () {
          switch (_v9.ctor)
          {case "_Tuple3":
-            return dropbox.write(_v9._0)($Signal.dropRepeats($Signal.map(_v9._2)($Signal.map($Outline$Document$Model.toValue)(state))));}
+            return dropbox.write(_v9._0)($Signal.map(_v9._2)($Signal.dropRepeats($Signal.map($Outline$Document$Model.toValue)(state))));}
          _U.badCase($moduleName,
          "between lines 59 and 63");
       }();
