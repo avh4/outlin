@@ -17007,7 +17007,7 @@ Elm.Rectified.make = function (_elm) {
                                                             ,_0: _v0._0
                                                             ,_1: _v0._1}));}
          _U.badCase($moduleName,
-         "on line 113, column 33 to 68");
+         "on line 114, column 33 to 68");
       }();
    });
    var color = F5(function (h,
@@ -17033,7 +17033,7 @@ Elm.Rectified.make = function (_elm) {
                               ,_0: _v4._0
                               ,_1: _v4._1}));}
          _U.badCase($moduleName,
-         "between lines 105 and 106");
+         "between lines 106 and 107");
       }();
    });
    var empty = function (_v8) {
@@ -17044,7 +17044,7 @@ Elm.Rectified.make = function (_elm) {
               _v8._0,
               _v8._1);}
          _U.badCase($moduleName,
-         "on line 102, column 15 to 25");
+         "on line 103, column 15 to 25");
       }();
    };
    var image = F2(function (url,
@@ -17057,7 +17057,7 @@ Elm.Rectified.make = function (_elm) {
               _v12._1,
               url);}
          _U.badCase($moduleName,
-         "on line 99, column 19 to 38");
+         "on line 100, column 19 to 38");
       }();
    });
    var html = F3(function (padding,
@@ -17069,12 +17069,14 @@ Elm.Rectified.make = function (_elm) {
             return A3($Graphics$Element.container,
               _v16._0,
               _v16._1,
-              $Graphics$Element.middle)(A3($Html.toElement,
+              $Graphics$Element.middle)(A2($Graphics$Element.scrollContainer,
+              _v16._0 - padding * 2,
+              _v16._1 - padding * 2)(A3($Html.toElement,
               _v16._0 - padding * 2,
               _v16._1 - padding * 2,
-              content));}
+              content)));}
          _U.badCase($moduleName,
-         "between lines 95 and 96");
+         "between lines 95 and 97");
       }();
    });
    var centeredText = F3(function (st,
