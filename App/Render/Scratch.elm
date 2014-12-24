@@ -20,7 +20,7 @@ import App.Styles (..)
 type Foo = Val Int Scratch.Value | Zip Int Scratch.Zipper
 
 item channel n = case n of
-  Zip _ _ -> empty
+  Zip _ _ -> empty |> grey 80
   Val i v -> (v |> List.head |> Block.spanToHtml |> html margin) |> panel
       |> clickable (Signal.send channel i)
 
