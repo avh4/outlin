@@ -3,7 +3,7 @@ module Outline.Document.Model
   , emptyValue
   , toValue
   , scratchZipper, outlineZipper, notesZipper
-  , replaceOutline, replaceScratch
+  , replaceOutline, replaceScratch, replaceNotes
   ) where
 
 import Core.Action
@@ -12,6 +12,7 @@ import Core.Array
 import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.RichText.Model as RichText
+import Outline.Notes.Model as Notes
 
 
 -- TODO: rename outline -> tasks?
@@ -74,3 +75,9 @@ replaceScratch scratch' z = case z of
     Nothing -> z -- TODO: should create an empty scratch
   InOutline r -> InOutline { r | scratch <- scratch' }
   InNotesArchive r -> InNotesArchive { r | scratch <- scratch' }
+
+replaceNotes : Notes.Value -> Zipper -> Zipper
+replaceNotes notes' z = case z of
+  InScratch r -> InScratch { r | notes <- notes' }
+  InOutline r -> InOutline { r | notes <- notes' }
+  InNotesArchive r -> InNotesArchive { r | notes <- notes' }

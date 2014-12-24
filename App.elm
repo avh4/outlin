@@ -29,6 +29,7 @@ import Graphics.Collage (collage, toForm, rotate)
 import Text (plainText)
 import List
 import List (..)
+import Outline.Notes.Model as Notes
 
 ---- App
 
@@ -57,6 +58,7 @@ type Command
   | Paste String
   | LoadedOutline (Result String Entry.Value)
   | LoadedScratch (Result String (List Scratch.Value))
+  | LoadedNotes (Result String Notes.Value)
   | Tab String
   | Scratch Int
   | ProcessScratch
@@ -112,6 +114,7 @@ step c m = case c of
 
   LoadedOutline (Ok e) -> Document.replaceOutline e m
   LoadedScratch (Ok s) -> Document.replaceScratch s m
+  LoadedNotes (Ok n) -> Document.replaceNotes n m
 
   ProcessScratch -> Document.processScratch m
   NewScratch -> Document.newScratch m
