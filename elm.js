@@ -20,6 +20,7 @@ Elm.App.make = function (_elm) {
    $Outline$Document$Actions = Elm.Outline.Document.Actions.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Notes$Model = Elm.Outline.Notes.Model.make(_elm),
    $Outline$RichText$Block$Actions = Elm.Outline.RichText.Block.Actions.make(_elm),
    $Outline$RichText$Block$Model = Elm.Outline.RichText.Block.Model.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm),
@@ -32,6 +33,10 @@ Elm.App.make = function (_elm) {
    };
    var Tab = function (a) {
       return {ctor: "Tab",_0: a};
+   };
+   var LoadedNotes = function (a) {
+      return {ctor: "LoadedNotes"
+             ,_0: a};
    };
    var LoadedScratch = function (a) {
       return {ctor: "LoadedScratch"
@@ -59,7 +64,7 @@ Elm.App.make = function (_elm) {
             case "Split": return z;
             case "Update": return _v0._0;}
          _U.badCase($moduleName,
-         "between lines 39 and 46");
+         "between lines 40 and 47");
       }();
    });
    var updateEntry = function (action) {
@@ -214,6 +219,13 @@ Elm.App.make = function (_elm) {
                         m);}
                    break;}
               break;
+            case "LoadedNotes":
+            switch (c._0.ctor)
+              {case "Ok":
+                 return A2($Outline$Document$Model.replaceNotes,
+                   c._0._0,
+                   m);}
+              break;
             case "LoadedOutline":
             switch (c._0.ctor)
               {case "Ok":
@@ -272,6 +284,7 @@ Elm.App.make = function (_elm) {
                      ,Paste: Paste
                      ,LoadedOutline: LoadedOutline
                      ,LoadedScratch: LoadedScratch
+                     ,LoadedNotes: LoadedNotes
                      ,Tab: Tab
                      ,Scratch: Scratch
                      ,ProcessScratch: ProcessScratch
@@ -6864,8 +6877,10 @@ Elm.Main.make = function (_elm) {
    $Dropbox = Elm.Dropbox.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
    $Keys = Elm.Keys.make(_elm),
+   $List = Elm.List.make(_elm),
    $Outline$Document$Model = Elm.Outline.Document.Model.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Notes$Json = Elm.Outline.Notes.Json.make(_elm),
    $Outline$Scratch$Json = Elm.Outline.Scratch.Json.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
@@ -6877,16 +6892,60 @@ Elm.Main.make = function (_elm) {
       decoder,
       s);
    });
+   var dch = F5(function (filename,
+   decoder,
+   fn,
+   fromDoc,
+   toJson) {
+      return {ctor: "_Tuple3"
+             ,_0: filename
+             ,_1: function (x) {
+                return fn(A2(decode,
+                decoder,
+                x));
+             }
+             ,_2: function (x) {
+                return toJson(fromDoc(x));
+             }};
+   });
+   var dropboxChannels = _L.fromArray([A5(dch,
+                                      "outlin.json",
+                                      $Outline$Entry.decoder,
+                                      $App.LoadedOutline,
+                                      function (_) {
+                                         return _.outline;
+                                      },
+                                      $Outline$Entry.toJson)
+                                      ,A5(dch,
+                                      "scratch.json",
+                                      $Outline$Scratch$Json.listDecoder,
+                                      $App.LoadedScratch,
+                                      function (_) {
+                                         return _.scratch;
+                                      },
+                                      $Core$Array.toJson($Outline$Scratch$Json.toJson))
+                                      ,A5(dch,
+                                      "notes.json",
+                                      $Outline$Notes$Json.decoder,
+                                      $App.LoadedNotes,
+                                      function (_) {
+                                         return _.notes;
+                                      },
+                                      $Outline$Notes$Json.toJson)]);
    var newScratchChannel = $Signal.channel({ctor: "_Tuple0"});
    var processScratchChannel = $Signal.channel({ctor: "_Tuple0"});
    var scratchChannel = $Signal.channel(0);
    var tabsChannel = $Signal.channel("");
    var dropbox = $Dropbox.client("sy8pzlg66rwnv7n");
-   var fromDropbox = F3(function (filename,
-   decoder,
-   fn) {
-      return $Signal.map(fn)($Signal.map(decode(decoder))(dropbox.read(filename)));
-   });
+   var fromDropbox = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple3":
+            return $Signal.map(_v0._1)(dropbox.read(_v0._0));}
+         _U.badCase($moduleName,
+         "between lines 42 and 43");
+      }();
+   };
    var commands = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
                                                  $App.Key,
                                                  $Keys.lastPressed)
@@ -6900,27 +6959,22 @@ Elm.Main.make = function (_elm) {
                                                  $App.Scratch,
                                                  $Signal.subscribe(scratchChannel))
                                                  ,A2($Signal.map,
-                                                 function (_v0) {
+                                                 function (_v5) {
                                                     return function () {
                                                        return $App.ProcessScratch;
                                                     }();
                                                  },
                                                  $Signal.subscribe(processScratchChannel))
                                                  ,A2($Signal.map,
-                                                 function (_v2) {
+                                                 function (_v7) {
                                                     return function () {
                                                        return $App.NewScratch;
                                                     }();
                                                  },
                                                  $Signal.subscribe(newScratchChannel))
-                                                 ,A3(fromDropbox,
-                                                 "outlin.json",
-                                                 $Outline$Entry.decoder,
-                                                 $App.LoadedOutline)
-                                                 ,A3(fromDropbox,
-                                                 "scratch.json",
-                                                 $Outline$Scratch$Json.listDecoder,
-                                                 $App.LoadedScratch)]));
+                                                 ,$Signal.mergeMany(A2($List.map,
+                                                 fromDropbox,
+                                                 dropboxChannels))]));
    var state = A3($Signal.foldp,
    $App.step,
    initialDocument,
@@ -6933,26 +6987,18 @@ Elm.Main.make = function (_elm) {
    newScratchChannel),
    state,
    $Window.dimensions);
-   var outlineOutput = $Signal.dropRepeats(A2($Signal.map,
-   function (x) {
-      return $Outline$Entry.toJson(function (_) {
-         return _.outline;
-      }($Outline$Document$Model.toValue(x)));
-   },
-   state));
-   var scratchOutput = $Signal.dropRepeats(A2($Signal.map,
-   function (x) {
-      return $Core$Array.toJson($Outline$Scratch$Json.toJson)(function (_) {
-         return _.scratch;
-      }($Outline$Document$Model.toValue(x)));
-   },
-   state));
-   var outlineToDropbox = A2(dropbox.write,
-   "outlin.json",
-   outlineOutput);
-   var scratchToDropbox = A2(dropbox.write,
-   "scratch.json",
-   scratchOutput);
+   var toDropbox = function (_v9) {
+      return function () {
+         switch (_v9.ctor)
+         {case "_Tuple3":
+            return dropbox.write(_v9._0)($Signal.dropRepeats($Signal.map(_v9._2)($Signal.map($Outline$Document$Model.toValue)(state))));}
+         _U.badCase($moduleName,
+         "between lines 59 and 63");
+      }();
+   };
+   var dropboxOutputs = A2($List.map,
+   toDropbox,
+   dropboxChannels);
    _elm.Main.values = {_op: _op
                       ,dropbox: dropbox
                       ,tabsChannel: tabsChannel
@@ -6961,14 +7007,14 @@ Elm.Main.make = function (_elm) {
                       ,newScratchChannel: newScratchChannel
                       ,decode: decode
                       ,fromDropbox: fromDropbox
+                      ,dch: dch
+                      ,dropboxChannels: dropboxChannels
+                      ,toDropbox: toDropbox
                       ,commands: commands
                       ,initialDocument: initialDocument
                       ,state: state
                       ,main: main
-                      ,outlineOutput: outlineOutput
-                      ,scratchOutput: scratchOutput
-                      ,outlineToDropbox: outlineToDropbox
-                      ,scratchToDropbox: scratchToDropbox};
+                      ,dropboxOutputs: dropboxOutputs};
    return _elm.Main.values;
 };
 Elm.Maybe = Elm.Maybe || {};
@@ -14655,6 +14701,7 @@ Elm.Outline.Document.Model.make = function (_elm) {
    $Core$Array = Elm.Core.Array.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Outline$Entry = Elm.Outline.Entry.make(_elm),
+   $Outline$Notes$Model = Elm.Outline.Notes.Model.make(_elm),
    $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm),
    $Outline$Scratch$Model = Elm.Outline.Scratch.Model.make(_elm);
    var toValue = function (z) {
@@ -14671,7 +14718,7 @@ Elm.Outline.Document.Model.make = function (_elm) {
                                ,$Core$Array.toValue($Outline$Scratch$Model.toValue)(z._0.scratch)]],
               z._0);}
          _U.badCase($moduleName,
-         "between lines 48 and 51");
+         "between lines 49 and 52");
       }();
    };
    var emptyValue = {_: {}
@@ -14715,7 +14762,7 @@ Elm.Outline.Document.Model.make = function (_elm) {
                                          ,$Core$Array.firstZipper($Outline$Scratch$Model.allZipper)(_L.fromArray([$Outline$Scratch$Model.value("Scratch 1")]))]],
               r));}
          _U.badCase($moduleName,
-         "between lines 54 and 56");
+         "between lines 55 and 57");
       }();
    });
    var replaceOutline = F2(function (outline$,
@@ -14735,7 +14782,7 @@ Elm.Outline.Document.Model.make = function (_elm) {
                                          ,outline$]],
               z._0));}
          _U.badCase($moduleName,
-         "between lines 65 and 68");
+         "between lines 66 and 69");
       }();
    });
    var replaceScratch = F2(function (scratch$,
@@ -14762,10 +14809,30 @@ Elm.Outline.Document.Model.make = function (_elm) {
                       z._0));
                     case "Nothing": return z;}
                  _U.badCase($moduleName,
-                 "between lines 72 and 75");
+                 "between lines 73 and 76");
               }();}
          _U.badCase($moduleName,
-         "between lines 71 and 76");
+         "between lines 72 and 77");
+      }();
+   });
+   var replaceNotes = F2(function (notes$,
+   z) {
+      return function () {
+         switch (z.ctor)
+         {case "InNotesArchive":
+            return InNotesArchive(_U.replace([["notes"
+                                              ,notes$]],
+              z._0));
+            case "InOutline":
+            return InOutline(_U.replace([["notes"
+                                         ,notes$]],
+              z._0));
+            case "InScratch":
+            return InScratch(_U.replace([["notes"
+                                         ,notes$]],
+              z._0));}
+         _U.badCase($moduleName,
+         "between lines 80 and 83");
       }();
    });
    var Value = F3(function (a,
@@ -14784,6 +14851,7 @@ Elm.Outline.Document.Model.make = function (_elm) {
                                         ,notesZipper: notesZipper
                                         ,replaceOutline: replaceOutline
                                         ,replaceScratch: replaceScratch
+                                        ,replaceNotes: replaceNotes
                                         ,Value: Value
                                         ,InScratch: InScratch
                                         ,InOutline: InOutline
@@ -15727,6 +15795,54 @@ Elm.Outline.Entry.make = function (_elm) {
                                ,InInbox: InInbox
                                ,InChild: InChild};
    return _elm.Outline.Entry.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Notes = Elm.Outline.Notes || {};
+Elm.Outline.Notes.Json = Elm.Outline.Notes.Json || {};
+Elm.Outline.Notes.Json.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Notes = _elm.Outline.Notes || {};
+   _elm.Outline.Notes.Json = _elm.Outline.Notes.Json || {};
+   if (_elm.Outline.Notes.Json.values)
+   return _elm.Outline.Notes.Json.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Notes.Json",
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $Outline$Notes$Model = Elm.Outline.Notes.Model.make(_elm),
+   $Outline$RichText$Json = Elm.Outline.RichText.Json.make(_elm);
+   var decoder = $Core$Array.decoder($Outline$RichText$Json.decoder);
+   var toJson = $Core$Array.toJson($Outline$RichText$Json.toJson);
+   _elm.Outline.Notes.Json.values = {_op: _op
+                                    ,toJson: toJson
+                                    ,decoder: decoder};
+   return _elm.Outline.Notes.Json.values;
+};
+Elm.Outline = Elm.Outline || {};
+Elm.Outline.Notes = Elm.Outline.Notes || {};
+Elm.Outline.Notes.Model = Elm.Outline.Notes.Model || {};
+Elm.Outline.Notes.Model.make = function (_elm) {
+   "use strict";
+   _elm.Outline = _elm.Outline || {};
+   _elm.Outline.Notes = _elm.Outline.Notes || {};
+   _elm.Outline.Notes.Model = _elm.Outline.Notes.Model || {};
+   if (_elm.Outline.Notes.Model.values)
+   return _elm.Outline.Notes.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Outline.Notes.Model",
+   $Core$Array = Elm.Core.Array.make(_elm),
+   $Outline$RichText$Model = Elm.Outline.RichText.Model.make(_elm);
+   _elm.Outline.Notes.Model.values = {_op: _op};
+   return _elm.Outline.Notes.Model.values;
 };
 Elm.Outline = Elm.Outline || {};
 Elm.Outline.RichText = Elm.Outline.RichText || {};
