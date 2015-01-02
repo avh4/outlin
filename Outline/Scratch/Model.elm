@@ -17,8 +17,8 @@ type alias Zipper = RichText.Zipper
 
 value : String -> Value
 value s = s
-  |> span |> Core.Array.single
-  |> Block.value Block.Heading |> Core.Array.single
+  |> span |> (\v -> [v])
+  |> Block.value Block.Heading |> (\v -> [v])
 
 toValue = RichText.toValue
 

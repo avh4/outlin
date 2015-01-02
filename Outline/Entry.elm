@@ -63,13 +63,13 @@ descriptionZipper v = case v of
     "" -> Nothing
     _ -> Just <| InDescription { e | description <- Core.String.endZipper e.description }
 
-childZipper : (Core.Array.Value Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
+childZipper : (List Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
 childZipper fn v = case v of Entry e -> InChild { e | children <- fn e.children }
 
 childZipperAt : Int -> (Value -> Zipper) -> Value -> Zipper
 childZipperAt i fn v = case v of Entry e -> InChild { e | children <- Core.Array.zipperAt i fn e.children }
 
-inboxZipper : (Core.Array.Value Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
+inboxZipper : (List Value -> Core.Array.Zipper Value Zipper) -> Value -> Zipper
 inboxZipper fn v = case v of Entry e -> InInbox { e | inbox <- fn e.inbox }
 
 inboxZipperAt : Int -> (Value -> Zipper) -> Value -> Zipper
@@ -169,7 +169,7 @@ moveToInboxOfFirstChildOrNext : Value -> Result
 moveToInboxOfFirstChildOrNext en = case en of
   Entry e -> Maybe.map Update (firstChildInboxZipper en) |> Maybe.withDefault EnterNext
 
-appendToInboxOfChild : Int -> Value -> Core.Array.Value Value -> Core.Array.Value Value
+appendToInboxOfChild : Int -> Value -> List Value -> List Value
 appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- Core.Array.prepend v e.inbox }) children
 
 moveInto_ : Int -> Zipper -> Result

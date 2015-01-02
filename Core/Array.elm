@@ -1,7 +1,5 @@
 module Core.Array
-  ( Value
-  , value, single
-  , mergeActive, joinActive
+  ( mergeActive, joinActive
   , do, doPropagatingSplits
   , Zipper
   , toValue
@@ -16,19 +14,12 @@ import Json.Decode
 
 -- Types
 
-type alias Value v = List v
 type alias Zipper v z = (List v,z,List v)
-type alias Result v z = ActionResult (Value v) (Zipper v z)
+type alias Result v z = ActionResult (List v) (Zipper v z)
 
 -- Constructors
 
-value : List a -> Value a
-value = identity
-
-single : a -> Value a
-single a = [a]
-
-toValue : (z -> v) -> Zipper v z -> Value v
+toValue : (z -> v) -> Zipper v z -> List v
 toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
 
 apply : (z -> z') -> Zipper v z -> Zipper v z'
@@ -55,13 +46,13 @@ lefts (left,_,_) = List.reverse left
 rights : Zipper v z -> List v
 rights (_,_,right) = right
 
-mapAt : Int -> (v -> v) -> Value v -> Value v
+mapAt : Int -> (v -> v) -> List v -> List v
 mapAt n fn vs = List.indexedMap (\i v -> if i == n then fn v else v) vs
 
-append : v -> Value v -> Value v
+append : v -> List v -> List v
 append v vs = vs ++ [v]
 
-prepend : v -> Value v -> Value v
+prepend : v -> List v -> List v
 prepend v vs = v :: vs
 
 active : Zipper v z -> z
@@ -71,14 +62,14 @@ zipper : List v -> z -> List v -> Zipper v z
 zipper left cur right = (left,cur,right)
 
 -- TODO: should return Maybe; replace zipperAtM
-zipperAt : Int -> (v -> z) -> Value v -> Zipper v z
+zipperAt : Int -> (v -> z) -> List v -> Zipper v z
 zipperAt i fn vs =
   ( vs |> take i |> reverse
   , vs |> drop i |> head |> fn
   , vs |> drop (i+1)
   )
 
-zipperAtM : Int -> (v -> z) -> Value v -> Maybe (Zipper v z)
+zipperAtM : Int -> (v -> z) -> List v -> Maybe (Zipper v z)
 zipperAtM i fn vs = case List.isEmpty (vs |> drop i) of
   True -> Nothing
   False -> Just
@@ -88,15 +79,15 @@ zipperAtM i fn vs = case List.isEmpty (vs |> drop i) of
     )
 
 -- TODO: use firstZipperM instead? or rename to firstZipper! ?
-firstZipper : (v -> z) -> Value v -> Zipper v z
+firstZipper : (v -> z) -> List v -> Zipper v z
 firstZipper fn (cur :: tail) = ([],fn cur,tail)
 
-firstZipperM : (v -> z) -> Value v -> Maybe (Zipper v z)
+firstZipperM : (v -> z) -> List v -> Maybe (Zipper v z)
 firstZipperM fn vs = case vs of
   (head :: tail) -> Just ([],fn head,tail)
   [] -> Nothing
 
-firstZipperThat : (v -> Maybe z) -> Value v -> Maybe (Zipper v z)
+firstZipperThat : (v -> Maybe z) -> List v -> Maybe (Zipper v z)
 firstZipperThat fn vs = case vs of
   (head::tail) -> case fn head of
     Just zipper -> Just ([],zipper,tail)
@@ -107,15 +98,15 @@ firstZipperThat fn vs = case vs of
 
 
 -- TODO: Needs to return a Maybe
-lastZipper : (v -> z) -> Value v -> Zipper v z
+lastZipper : (v -> z) -> List v -> Zipper v z
 lastZipper fn list = let (cur :: tail) = reverse list in (tail,fn cur,[])
 
-lastZipperM : (v -> z) -> Value v -> Maybe (Zipper v z)
+lastZipperM : (v -> z) -> List v -> Maybe (Zipper v z)
 lastZipperM fn list = case reverse list of
   (cur :: tail) -> Just (tail, fn cur, [])
   _ -> Nothing
 
-lastZipperThat : (v -> Maybe z) -> Value v -> Maybe (Zipper v z)
+lastZipperThat : (v -> Maybe z) -> List v -> Maybe (Zipper v z)
 lastZipperThat fn vs = case firstZipperThat fn (reverse vs) of
   Nothing -> Nothing
   Just (left,cur,right) -> Just (right,cur,left)

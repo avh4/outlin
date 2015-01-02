@@ -16,25 +16,25 @@ import Outline.Notes.Model as Notes
 
 
 type alias Value =
-  { scratch:Core.Array.Value Scratch.Value
+  { scratch:List Scratch.Value
   , tasks:Entry.Value
-  , notes:Core.Array.Value RichText.Value
+  , notes:List RichText.Value
   }
 type Zipper
   = InScratch
       { scratch:(Core.Array.Zipper Scratch.Value Scratch.Zipper)
       , tasks:Entry.Value
-      , notes:(Core.Array.Value RichText.Value)
+      , notes:(List RichText.Value)
       }
   | InTasks
-      { scratch:(Core.Array.Value Scratch.Value)
+      { scratch:(List Scratch.Value)
       , tasks:Entry.Zipper
-      , notes:(Core.Array.Value RichText.Value)
+      , notes:(List RichText.Value)
       }
   | InNotesArchive
-      { scratch:Core.Array.Value Scratch.Value
+      { scratch:List Scratch.Value
       , tasks:Entry.Value
-      , notes:Core.Array.Value RichText.Value
+      , notes:List RichText.Value
       }
 
 emptyValue : Value
@@ -67,7 +67,7 @@ replaceTasks tasks' z = case z of
   InTasks r -> InTasks { r | tasks <- tasks' |> Entry.textZipper }
   InNotesArchive r -> InNotesArchive { r | tasks <- tasks' }
 
-replaceScratch : Core.Array.Value Scratch.Value -> Zipper -> Zipper
+replaceScratch : List Scratch.Value -> Zipper -> Zipper
 replaceScratch scratch' z = case z of
   InScratch r -> case Core.Array.firstZipperM Scratch.endZipper scratch' of
     Just scratch'' -> InScratch { r | scratch <- scratch'' }

@@ -17,5 +17,5 @@ import String
 import List
 import Html
 
-render : Core.Array.Value RichText.Value -> Element
+render : List RichText.Value -> Element
 render v = list 80 2 debug v

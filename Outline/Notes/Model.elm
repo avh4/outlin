@@ -5,4 +5,4 @@ module Outline.Notes.Model
 import Core.Array
 import Outline.RichText.Model as RichText
 
-type alias Value = Core.Array.Value RichText.Value
+type alias Value = List RichText.Value

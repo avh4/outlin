@@ -21,7 +21,7 @@ type Type
   | Quote
   | Task
 
-type alias Value = Tagged.Value Type (Core.Array.Value RichText.Span)
+type alias Value = Tagged.Value Type (List RichText.Span)
 type alias Zipper = Tagged.Zipper Type (Core.Array.Zipper RichText.Span RichText.SpanZipper)
 
 empty : Value
@@ -53,10 +53,10 @@ withDefault default maybe =
     Just value -> value
     Nothing -> default
 
-firstZipperOr : (v -> z) -> z -> Core.Array.Value v -> Core.Array.Zipper v z
+firstZipperOr : (v -> z) -> z -> List v -> Core.Array.Zipper v z
 firstZipperOr fn default = Core.Array.firstZipperM fn `j` withDefault (Core.Array.zipper [] default [])
 
-lastZipperOr : (v -> z) -> z -> Core.Array.Value v -> Core.Array.Zipper v z
+lastZipperOr : (v -> z) -> z -> List v -> Core.Array.Zipper v z
 lastZipperOr fn default = Core.Array.lastZipperM fn `j` withDefault (Core.Array.zipper [] default [])
 
 startZipper : Value -> Zipper

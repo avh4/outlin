@@ -20,5 +20,5 @@ decoder = Json.Decode.oneOf
   , RichText.stringDecoder
   ]
 
-listDecoder : Json.Decode.Decoder (Core.Array.Value Value)
+listDecoder : Json.Decode.Decoder (List Value)
 listDecoder = Json.Decode.list decoder
