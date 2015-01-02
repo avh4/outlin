@@ -8,7 +8,8 @@ import Json.Encode as Json
 import Json.Decode
 import Json.Decode ((:=))
 import Outline.RichText.Block.Model (..)
-import RichText.Json (..)
+import RichText.Json.Encode as Encode
+import RichText.Json.Decode as Decode
 import List
 
 typeString t = case t of
@@ -20,7 +21,7 @@ typeString t = case t of
 toJson' : Value -> Json.Value
 toJson' (t,v) = Json.Encode.object
   [ ("type", Json.Encode.string <| typeString t)
-  , ("value", List.map encodeSpan v |> Json.Encode.list)
+  , ("value", List.map Encode.span v |> Json.Encode.list)
   ]
 
 toJson : Value -> String
@@ -38,4 +39,4 @@ typeDecoder = Json.Decode.string |> Json.Decode.map (\s -> case s of
 decoder : Json.Decode.Decoder Value
 decoder = Json.Decode.object2 (,)
   ("type" := typeDecoder)
-  ("value" := Json.Decode.list spanDecoder)
+  ("value" := Json.Decode.list Decode.span)
