@@ -19,6 +19,7 @@ import Signal
 import Debug
 import Core.Array
 import Outline.Scratch.Json as Scratch
+import Json.Encode
 import Json.Decode
 import Outline.Notes.Json as Notes
 import List
@@ -39,17 +40,17 @@ fromDropbox (filename, fn, _) =
   dropbox.read filename
   |> Signal.map fn
 
-dch : String -> Json.Decode.Decoder a -> (Result String a -> Command) -> (Document.Value -> b) -> (b -> String) -> DropboxChannel
+dch : String -> Json.Decode.Decoder a -> (Result String a -> Command) -> (Document.Value -> b) -> (b -> Json.Encode.Value) -> DropboxChannel
 dch filename decoder fn fromDoc toJson =
   ( filename
   , (\x -> decode decoder x |> fn)
-  , (\x -> x |> fromDoc |> toJson)
+  , (\x -> x |> fromDoc |> toJson |> Json.Encode.encode 0)
   )
 
 dropboxChannels : List DropboxChannel
 dropboxChannels =
   [ dch "outlin.json" Entry.decoder LoadedTasks .tasks Entry.toJson
-  , dch "scratch.json" Scratch.listDecoder LoadedScratch .scratch (Core.Array.toJson Scratch.toJson)
+  , dch "scratch.json" Scratch.listDecoder LoadedScratch .scratch (\v -> List.map Scratch.toJson v |> Json.Encode.list)
   , dch "notes.json" Notes.decoder LoadedNotes .notes Notes.toJson
   ]
 

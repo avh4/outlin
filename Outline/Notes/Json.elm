@@ -3,15 +3,14 @@ module Outline.Notes.Json
   , decoder
   ) where
 
-import Core.Action
-import Core.Array
-import Core.String
 import Outline.Notes.Model (..)
+import Json.Encode
 import Json.Decode
 import Outline.RichText.Json as RichText
+import List
 
-toJson : Value -> String
-toJson = Core.Array.toJson RichText.toJson
+toJson : Value -> Json.Encode.Value
+toJson v = List.map RichText.toJson v |> Json.Encode.list
 
 decoder : Json.Decode.Decoder Value
-decoder = Core.Array.decoder RichText.decoder
+decoder = Json.Decode.list RichText.decoder

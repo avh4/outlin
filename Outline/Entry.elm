@@ -310,17 +310,14 @@ do stringAction z = case z of
 
 ---- JSON
 
-toJson' : Value -> Json.Value
-toJson' entry = case entry of
+toJson : Value -> Json.Value
+toJson entry = case entry of
   Entry e -> Json.Encode.object
     [ ("text", Json.Encode.string e.text)
     , ("description", Json.Encode.string e.description)
-    , ("inbox", List.map toJson' e.inbox |> Json.Encode.list)
-    , ("children", List.map toJson' e.children |> Json.Encode.list)
+    , ("inbox", List.map toJson e.inbox |> Json.Encode.list)
+    , ("children", List.map toJson e.children |> Json.Encode.list)
     ]
-
-toJson : Value -> String
-toJson v = Json.Encode.encode 0 (toJson' v)
 
 decoder : Json.Decode.Decoder (BaseValue String)
 decoder =

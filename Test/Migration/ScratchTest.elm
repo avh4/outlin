@@ -2,10 +2,12 @@ module Test.Migration.ScratchTest (suite) where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)
+import Json.Encode
 import Json.Decode
 import Outline.Scratch.Json as Scratch
 import Core.Array
 import Result
+import List
 
 v1 =
   ( """["Scratch 3\\n\\nBlah","Scratch 2"]"""
@@ -20,7 +22,7 @@ v2 =
 migrate : String -> Result String String
 migrate input = input
   |> Json.Decode.decodeString Scratch.listDecoder
-  |> Result.map (Core.Array.toJson Scratch.toJson)
+  |> Result.map (\v -> Json.Encode.encode 0 (List.map Scratch.toJson v |> Json.Encode.list))
 
 testMigration : String -> (String, String) -> Test
 testMigration name (inputJson, migratedJson)

@@ -4,9 +4,12 @@ import Outline.Document.Model (..)
 import Core.Array
 import Outline.Entry as Entry
 import Outline.Scratch.Json as Scratch
+import Json.Encode
+import List
 
-toJson : Value -> String
-toJson v =
-  "{\"scratch\":" ++ (Core.Array.toJson Scratch.toJson v.scratch)
-  ++ ",\"outline\":" ++ (Entry.toJson v.tasks)
-  ++ "}"
+-- TODO: no one uses this...
+toJson : Value -> Json.Encode.Value
+toJson v = Json.Encode.object
+  [ ("scratch", List.map Scratch.toJson v.scratch |> Json.Encode.list)
+  , ("outline", Entry.toJson v.tasks)
+  ]

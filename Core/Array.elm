@@ -6,7 +6,7 @@ module Core.Array
   , Zipper
   , toValue
   , apply
-  , toJson, firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext, decoder) where
+  , firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action (..)
 import List
@@ -201,14 +201,3 @@ goNext : (z -> v) -> (v -> z) -> Zipper v z -> Maybe (Zipper v z)
 goNext toVal fn (left,cur,right) = case right of
   [] -> Nothing
   (head :: tail) -> Just (toVal cur :: left, fn head, tail)
-
----- JSON
-
-walk : (Value b -> c) -> (a -> b) -> Value a -> c
-walk wrapFn child list = wrapFn <| List.map child list
-
-toJson : (a -> String) -> Value a -> String
-toJson fn = walk (\vs -> "[" ++ (String.join "," vs) ++ "]") fn
-
-decoder : (Json.Decode.Decoder a) -> Json.Decode.Decoder (Value a)
-decoder d = Json.Decode.list d

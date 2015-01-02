@@ -7,10 +7,11 @@ import Core.Action
 import Core.Array
 import Core.String
 import Outline.Scratch.Model (..)
+import Json.Encode
 import Json.Decode
 import Outline.RichText.Json as RichText
 
-toJson : Value -> String
+toJson : Value -> Json.Encode.Value
 toJson = RichText.toJson
 
 decoder : Json.Decode.Decoder Value

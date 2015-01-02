@@ -18,15 +18,11 @@ typeString t = case t of
   Quote -> "Quote"
   Task -> "Task"
 
-toJson' : Value -> Json.Value
-toJson' (t,v) = Json.Encode.object
+toJson : Value -> Json.Value
+toJson (t,v) = Json.Encode.object
   [ ("type", Json.Encode.string <| typeString t)
   , ("value", List.map Encode.span v |> Json.Encode.list)
   ]
-
-toJson : Value -> String
-toJson v = toJson' v
-  |> Json.Encode.encode 0
 
 typeDecoder : Json.Decode.Decoder Type
 typeDecoder = Json.Decode.string |> Json.Decode.map (\s -> case s of
