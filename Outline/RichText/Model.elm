@@ -8,7 +8,6 @@ module Outline.RichText.Model
 
 import Core.String
 import Core.Array
-import Outline.RichText.Span.Json as Span
 import Outline.RichText.Block.Model as Block
 import String
 import List
