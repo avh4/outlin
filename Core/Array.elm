@@ -11,9 +11,13 @@ import List (..)
 import String
 import Json.Decode
 
+-- Types
+
 type alias Value v = List v
 type alias Zipper v z = (List v,z,List v)
 type alias Result v z = ActionResult (Value v) (Zipper v z)
+
+-- Constructors
 
 value : List a -> Value a
 value = identity
@@ -24,9 +28,6 @@ single a = [a]
 replaceAt : a -> Int -> List a -> List a
 replaceAt a index list =
   List.indexedMap (\i item -> if i == index then a else item) list
-
-at : Int -> List a -> a
-at i list = list |> List.drop i |> List.head
 
 toValue : (z -> v) -> Zipper v z -> Value v
 toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
