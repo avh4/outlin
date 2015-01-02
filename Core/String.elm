@@ -1,5 +1,5 @@
 module Core.String
-  ( Value, Zipper, Result
+  ( Zipper, Result
   , toValue, destructure
   , startZipper, endZipper, allZipper, rangeZipper
   , goLeft, goRight, moveToStartOfLine, moveToEndOfLine
@@ -16,26 +16,25 @@ import Html (Html, node, text)
 import Html.Attributes (class)
 import Json.Decode
 
-type alias Value = String
 type alias Zipper = (String,String,String)
-type alias Result = ActionResult Value Zipper
+type alias Result = ActionResult String Zipper
 
-toValue : Zipper -> Value
+toValue : Zipper -> String
 toValue (left,sel,right) = left ++ sel ++ right
 
 destructure : Zipper -> (String,String,String)
 destructure z = z
 
-startZipper : Value -> Zipper
+startZipper : String -> Zipper
 startZipper v = ("","",v)
 
-endZipper : Value -> Zipper
+endZipper : String -> Zipper
 endZipper v = (v,"","")
 
-allZipper : Value -> Zipper
+allZipper : String -> Zipper
 allZipper v = ("",v,"")
 
-rangeZipper : (Int,Int) -> Value -> Zipper
+rangeZipper : (Int,Int) -> String -> Zipper
 rangeZipper (start,length) s =
   ( String.left start s
   , String.dropLeft start s |> String.left length
@@ -45,7 +44,7 @@ rangeZipper (start,length) s =
 zipper : String -> String -> Zipper
 zipper left right = (left,"",right)
 
-zipperAt : Int -> Value -> Zipper
+zipperAt : Int -> String -> Zipper
 zipperAt i s = (String.left i s, "", String.dropLeft i s)
 
 insert : String -> Zipper -> Result
