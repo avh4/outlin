@@ -1,13 +1,13 @@
 module Outline.RichText.Span.Actions (Result, do, applyStyle) where
 
-import Outline.RichText.Span.Model (..)
 import Core.Action (..)
 import Core.String
 import List (map)
+import RichText (..)
 
-type alias Result = ActionResult Value Zipper
+type alias Result = ActionResult Span SpanZipper
 
-do : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
+do : (Core.String.Zipper -> Core.String.Result) -> SpanZipper -> Result
 do fn (t,s) = case fn s of
   Update z -> Update (t,z)
   Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (t,z) (map (\s -> (t,s)) rights)
@@ -16,7 +16,8 @@ do fn (t,s) = case fn s of
   EnterPrev -> EnterPrev
   NoChange -> NoChange
 
-applyStyle : Type -> Zipper -> Result
+-- TODO: should just return a zipper
+applyStyle : SpanType -> SpanZipper -> Result
 applyStyle t' (t,sz) = case Core.String.destructure sz of
   (_, "", _) -> NoChange
   ("", _, "") -> Update (t',sz)

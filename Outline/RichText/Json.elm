@@ -11,7 +11,6 @@ import Json.Decode ((:=))
 import Outline.RichText.Model (..)
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Json as Block
-import Outline.RichText.Span.Model as Span
 
 toJson : Value -> String
 toJson = Core.Array.toJson Block.toJson

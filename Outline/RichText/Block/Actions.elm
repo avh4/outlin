@@ -8,9 +8,9 @@ import Outline.RichText.Block.Model (..)
 import Core.Array
 import Core.String
 import Core.Action as Span
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
 import List (map)
+import RichText
 
 type Result
   = Update Zipper
@@ -20,8 +20,8 @@ type Result
   | EnterPrev | EnterNext
   | NoChange
 
-doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
-doSpan spanFn (t,z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper Span.endZipper spanFn z of
+doSpan : (RichText.SpanZipper -> Span.Result) -> Zipper -> Result
+doSpan spanFn (t,z) = case Core.Array.doPropagatingSplits RichText.toValue (RichText.zipper Core.String.startZipper) (RichText.zipper Core.String.endZipper) spanFn z of
   Span.Update z -> Update (t,z)
   Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (Paragraph,z) (map (\s -> (Paragraph,s)) rights)
   Span.Delete -> Delete
@@ -36,7 +36,7 @@ toggleStyle : Type -> Zipper -> Result
 toggleStyle t' (t,sz) = Update (toggle t t',sz) -- TODO
 
 split : Zipper -> Result
-split (t, z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper Span.endZipper (Span.do Core.String.split) z of
+split (t, z) = case Core.Array.doPropagatingSplits RichText.toValue (RichText.zipper Core.String.startZipper) (RichText.zipper Core.String.endZipper) (Span.do Core.String.split) z of
   Span.Update z -> Update (t,z)
   Span.Split lefts z rights -> Split (map (\s -> (t,s)) lefts) (Paragraph,z) (map (\s -> (Paragraph,s)) rights)
   Span.Delete -> Delete
@@ -45,7 +45,7 @@ split (t, z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper
   Span.NoChange -> NoChange
 
 backspace : Zipper -> Result
-backspace (t,z) = case Core.Array.doPropagatingSplits Span.toValue Span.startZipper Span.endZipper (Span.do Core.String.backspace) z of
+backspace (t,z) = case Core.Array.doPropagatingSplits RichText.toValue (RichText.zipper Core.String.startZipper) (RichText.zipper Core.String.endZipper) (Span.do Core.String.backspace) z of
   Span.Update z' -> Update (t,z')
-  Span.NoChange -> Join (t, z |> Core.Array.toValue Span.toValue)
+  Span.NoChange -> Join (t, z |> Core.Array.toValue RichText.toValue)
   _ -> NoChange

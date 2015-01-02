@@ -12,12 +12,12 @@ import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
 import Outline.RichText.Model as RichText
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import List
 import List ((::))
+import RichText
 
 type alias Result = ActionResult Value Zipper
 
@@ -55,7 +55,7 @@ doBlock blockFn = do
   (Scratch.doBlock blockFn)
   (\_ -> NoChange)
 
-doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
+doSpan : (RichText.SpanZipper -> Span.Result) -> Zipper -> Result
 doSpan spanFn = do
   (Scratch.doSpan spanFn)
   (\_ -> NoChange)

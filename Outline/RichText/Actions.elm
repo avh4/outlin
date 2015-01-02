@@ -5,10 +5,10 @@ module Outline.RichText.Actions
 import Outline.RichText.Model (..)
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
 import Core.Action (..)
 import Core.Array
+import RichText (..)
 
 type alias Result = ActionResult Value Zipper
 
@@ -27,5 +27,5 @@ doBlock fn z = case fn (Core.Array.active z) of
   Block.NoChange -> NoChange
 
 -- TODO: on a split, or update, merge adjacent spans with the same type
-doSpan : (Span.Zipper -> Span.Result) -> Zipper -> Result
+doSpan : (SpanZipper -> Span.Result) -> Zipper -> Result
 doSpan fn = doBlock (Block.doSpan fn)

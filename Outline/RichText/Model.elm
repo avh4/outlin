@@ -8,30 +8,30 @@ module Outline.RichText.Model
 
 import Core.String
 import Core.Array
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Json as Span
 import Outline.RichText.Block.Model as Block
 import String
 import List
 import List ((::))
 import Maybe (Maybe(..), withDefault)
+import RichText
 
 type alias Value = Core.Array.Value Block.Value
 type alias Zipper = Core.Array.Zipper Block.Value Block.Zipper
 
 value : String -> Value
 value s = s |> String.split "\n"
-  |> List.map (\s -> s |> Span.normal |> Block.paragraph)
+  |> List.map (\s -> s |> RichText.span |> Block.paragraph)
 
 heading : String -> Value
 heading s = s |> String.split "\n"
-  |> List.map (\s -> Block.value Block.Heading [s |> Span.normal])
+  |> List.map (\s -> Block.value Block.Heading [s |> RichText.span])
 
 toValue : Zipper -> Value
 toValue = Core.Array.toValue Block.toValue
 
 emptyZipper : Zipper
-emptyZipper = Core.Array.zipper [] (Block.endZipper <| Block.paragraph <| Span.normal "") []
+emptyZipper = Core.Array.zipper [] (Block.endZipper <| Block.paragraph <| RichText.span "") []
 
 endZipper : Value -> Zipper
 endZipper v = Core.Array.lastZipperM Block.endZipper v

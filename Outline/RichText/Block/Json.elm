@@ -6,7 +6,6 @@ import Core.String
 import Json.Decode
 import Json.Decode ((:=))
 import Outline.RichText.Block.Model (..)
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Json as Span
 
 typeString t = case t of

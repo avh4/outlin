@@ -2,7 +2,6 @@ module Outline.RichText.Render
   ( toHtml
   ) where
 
-import Outline.RichText.Span.Model (Type(..))
 import Outline.RichText.Block.Render as Block
 import Outline.RichText.Model (..)
 import Html (..)

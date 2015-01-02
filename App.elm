@@ -19,7 +19,6 @@ import Outline.Document.Model as Document
 import Outline.Document.Actions as Document
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
-import Outline.RichText.Span.Model as Span
 import Outline.RichText.Span.Actions as Span
 import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
