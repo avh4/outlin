@@ -19,7 +19,7 @@ doArrayMaybe fn z = case fn z of
 
 doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
 doBlock fn z = case fn (Core.Array.active z) of
-  Block.Update z' -> Update <| Core.Array.replaceActive z' z
+  Block.Update z' -> Update <| Core.Array.apply (\_ -> z') z
   Block.Split left z' right -> Update <| Core.Array.mergeActive left z' right z
   Block.Join v' -> doArrayMaybe (Core.Array.joinActive Block.mergeZipper v') z
   Block.EnterPrev -> doArrayMaybe (Core.Array.goPrev Block.toValue Block.endZipper) z
