@@ -20,7 +20,7 @@ import List (foldl)
 initialDocument = Document.emptyValue |> Document.scratchZipper 0
 
 assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
-assertEqualOutline doc entry = assertEqual doc (Document.InOutline {scratch=[Scratch.value "Scratch 1"], outline=entry, notes=[]})
+assertEqualOutline doc entry = assertEqual doc (Document.InTasks {scratch=[Scratch.value "Scratch 1"], tasks=entry, notes=[]})
 
 test1 = test "first-use scenario" <|
   foldl App.step initialDocument
@@ -44,7 +44,7 @@ test1 = test "first-use scenario" <|
 test2 = test "sorting in an empty template" <|
   foldl App.step initialDocument
     [ Tab "Tasks"
-    , LoadedOutline (Ok
+    , LoadedTasks (Ok
       ( entry "Tasks" "" []
         [ entry "By time" "" []
           [ entry "daily" "" [] []
@@ -127,7 +127,7 @@ test3 =
   result ->
     Suite "Processing scratch files"
     [ test "adds tasks" <|
-      (result |> Document.toValue |> .outline)
+      (result |> Document.toValue |> .tasks)
       `assertEqual`
       entry "" ""
       [ entry "review finances" "" [] []

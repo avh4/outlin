@@ -48,7 +48,7 @@ dch filename decoder fn fromDoc toJson =
 
 dropboxChannels : List DropboxChannel
 dropboxChannels =
-  [ dch "outlin.json" Entry.decoder LoadedOutline .outline Entry.toJson
+  [ dch "outlin.json" Entry.decoder LoadedTasks .tasks Entry.toJson
   , dch "scratch.json" Scratch.listDecoder LoadedScratch .scratch (Core.Array.toJson Scratch.toJson)
   , dch "notes.json" Notes.decoder LoadedNotes .notes Notes.toJson
   ]

@@ -30,12 +30,12 @@ tabNames = ["Scratch", "Tasks", "Notes"]
 selectTab name = List.map (\t -> (name == t, t)) tabNames
 tabName z = case z of
   InScratch _ -> "Scratch"
-  InOutline _ -> "Tasks"
+  InTasks _ -> "Tasks"
   InNotesArchive _ -> "Notes"
 
 body channel z = case z of
   InScratch r -> Scratch.render channel r.scratch
-  InOutline r -> Outline.render r.outline
+  InTasks r -> Outline.render r.tasks
   InNotesArchive r -> Notes.render r.notes
 
 render : Signal.Channel Command -> Zipper -> Element

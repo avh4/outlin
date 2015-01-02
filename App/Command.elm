@@ -11,7 +11,7 @@ type Command
   = Init_
   | Key Keys.KeyCombo
   | Paste String
-  | LoadedOutline (Result String Entry.Value)
+  | LoadedTasks (Result String Entry.Value)
   | LoadedScratch (Result String (List Scratch.Value))
   | LoadedNotes (Result String Notes.Value)
   | Tab String

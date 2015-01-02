@@ -28,16 +28,16 @@ do scratchFn entryFn zipper = case zipper of
     Split _ _ _ -> NoChange -- Core.Array.do can't even propogate a split, right?
     Delete -> NoChange -- TODO: replace scratches with new empty scratch
     EnterPrev -> NoChange
-    EnterNext -> Update <| (zipper |> toValue |> outlineZipper)
+    EnterNext -> Update <| (zipper |> toValue |> tasksZipper)
     NoChange -> NoChange
-  InOutline r -> case entryFn r.outline of
-    Update eZipper' -> Update <| InOutline { r | outline <- eZipper' }
+  InTasks r -> case entryFn r.tasks of
+    Update eZipper' -> Update <| InTasks { r | tasks <- eZipper' }
     Split _ _ _ -> NoChange -- Not allowed to split the root node
     Delete -> NoChange -- Not allowed to delete the root node
     EnterPrev -> case Core.Array.firstZipperM Scratch.endZipper r.scratch of
       Just sZipper -> Update <| InScratch { r
         | scratch <- sZipper
-        , outline <- Entry.toValue r.outline
+        , tasks <- Entry.toValue r.tasks
         }
       Nothing -> NoChange -- TODO: make a new empty scratch
     EnterNext -> NoChange
@@ -73,16 +73,16 @@ backspace = do
   (Scratch.doBlock Block.backspace)
   (Entry.do Core.String.backspace)
 
-replaceOutline : Entry.Value -> Zipper -> Zipper
-replaceOutline outline' z = case z of
-  InScratch r -> InScratch { r | outline <- outline' }
-  InOutline r -> InOutline { r | outline <- outline' |> Entry.textZipper }
-  InNotesArchive r -> InNotesArchive { r | outline <- outline' }
+replaceTasks : Entry.Value -> Zipper -> Zipper
+replaceTasks tasks' z = case z of
+  InScratch r -> InScratch { r | tasks <- tasks' }
+  InTasks r -> InTasks { r | tasks <- tasks' |> Entry.textZipper }
+  InNotesArchive r -> InNotesArchive { r | tasks <- tasks' }
 
 addNote : RichText.Value -> Zipper -> Zipper
 addNote note z = case z of
   InScratch r -> InScratch { r | notes <- note :: r.notes }
-  InOutline r -> InOutline { r | notes <- note :: r.notes }
+  InTasks r -> InTasks { r | notes <- note :: r.notes }
   InNotesArchive r -> InNotesArchive { r | notes <- note :: r.notes }
 
 processScratch : Zipper -> Zipper
@@ -95,11 +95,11 @@ processScratch m = case m of
     in
       case m |> doScratch (\_ -> Delete) of
         Update m' -> m'
-          |> replaceOutline (Entry.addToInbox newTasks r.outline)
+          |> replaceTasks (Entry.addToInbox newTasks r.tasks)
           |> addNote scratchValue
-        _ -> InOutline { r
+        _ -> InTasks { r
           | scratch <- []
-          , outline <- (Entry.addToInbox newTasks r.outline |> Entry.textZipper)
+          , tasks <- (Entry.addToInbox newTasks r.tasks |> Entry.textZipper)
           }
           |> addNote scratchValue
   _ -> m

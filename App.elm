@@ -96,12 +96,12 @@ stepFn c = case c of
   Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task)
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0)
-  Tab "Tasks" -> updateValue Document.outlineZipper
+  Tab "Tasks" -> updateValue Document.tasksZipper
   Tab "Notes" -> updateValue Document.notesZipper
 
   Scratch i -> updateValue (Document.scratchZipper i)
 
-  LoadedOutline (Ok e) -> Document.replaceOutline e
+  LoadedTasks (Ok e) -> Document.replaceTasks e
   LoadedScratch (Ok s) -> Document.replaceScratch s
   LoadedNotes (Ok n) -> Document.replaceNotes n
 

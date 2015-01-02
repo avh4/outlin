@@ -8,5 +8,5 @@ import Outline.Scratch.Json as Scratch
 toJson : Value -> String
 toJson v =
   "{\"scratch\":" ++ (Core.Array.toJson Scratch.toJson v.scratch)
-  ++ ",\"outline\":" ++ (Entry.toJson v.outline)
+  ++ ",\"outline\":" ++ (Entry.toJson v.tasks)
   ++ "}"

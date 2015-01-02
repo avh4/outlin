@@ -2,8 +2,8 @@ module Outline.Document.Model
   ( Value, Zipper(..)
   , emptyValue
   , toValue
-  , scratchZipper, outlineZipper, notesZipper
-  , replaceOutline, replaceScratch, replaceNotes
+  , scratchZipper, tasksZipper, notesZipper
+  , replaceTasks, replaceScratch, replaceNotes
   ) where
 
 import Core.Action
@@ -15,40 +15,39 @@ import Outline.RichText.Model as RichText
 import Outline.Notes.Model as Notes
 
 
--- TODO: rename outline -> tasks?
 type alias Value =
   { scratch:Core.Array.Value Scratch.Value
-  , outline:Entry.Value
+  , tasks:Entry.Value
   , notes:Core.Array.Value RichText.Value
   }
 type Zipper
   = InScratch
       { scratch:(Core.Array.Zipper Scratch.Value Scratch.Zipper)
-      , outline:Entry.Value
+      , tasks:Entry.Value
       , notes:(Core.Array.Value RichText.Value)
       }
-  | InOutline
+  | InTasks
       { scratch:(Core.Array.Value Scratch.Value)
-      , outline:Entry.Zipper
+      , tasks:Entry.Zipper
       , notes:(Core.Array.Value RichText.Value)
       }
   | InNotesArchive
       { scratch:Core.Array.Value Scratch.Value
-      , outline:Entry.Value
+      , tasks:Entry.Value
       , notes:Core.Array.Value RichText.Value
       }
 
 emptyValue : Value
 emptyValue =
   { scratch=[]
-  , outline=Entry.emptyEntry
+  , tasks=Entry.emptyEntry
   , notes=[]
   }
 
 toValue : Zipper -> Value
 toValue z = case z of
   InScratch r -> { r | scratch <- r.scratch |> Core.Array.toValue Scratch.toValue }
-  InOutline r -> { r | outline <- r.outline |> Entry.toValue }
+  InTasks r -> { r | tasks <- r.tasks |> Entry.toValue }
   InNotesArchive r -> r
 
 scratchZipper : Int -> Value -> Zipper
@@ -56,28 +55,28 @@ scratchZipper i r = case Core.Array.zipperAtM i Scratch.endZipper r.scratch of
   Just zipper -> InScratch { r | scratch <- zipper }
   Nothing -> InScratch { r | scratch <- ([Scratch.value "Scratch 1"] |> Core.Array.firstZipper Scratch.allZipper) }
 
-outlineZipper : Value -> Zipper
-outlineZipper r = InOutline { r | outline <- r.outline |> Entry.textZipper }
+tasksZipper : Value -> Zipper
+tasksZipper r = InTasks { r | tasks <- r.tasks |> Entry.textZipper }
 
 notesZipper : Value -> Zipper
 notesZipper r = InNotesArchive r
 
-replaceOutline : Entry.Value -> Zipper -> Zipper
-replaceOutline outline' z = case z of
-  InScratch r -> InScratch { r | outline <- outline' }
-  InOutline r -> InOutline { r | outline <- outline' |> Entry.textZipper }
-  InNotesArchive r -> InNotesArchive { r | outline <- outline' }
+replaceTasks : Entry.Value -> Zipper -> Zipper
+replaceTasks tasks' z = case z of
+  InScratch r -> InScratch { r | tasks <- tasks' }
+  InTasks r -> InTasks { r | tasks <- tasks' |> Entry.textZipper }
+  InNotesArchive r -> InNotesArchive { r | tasks <- tasks' }
 
 replaceScratch : Core.Array.Value Scratch.Value -> Zipper -> Zipper
 replaceScratch scratch' z = case z of
   InScratch r -> case Core.Array.firstZipperM Scratch.endZipper scratch' of
     Just scratch'' -> InScratch { r | scratch <- scratch'' }
     Nothing -> z -- TODO: should create an empty scratch
-  InOutline r -> InOutline { r | scratch <- scratch' }
+  InTasks r -> InTasks { r | scratch <- scratch' }
   InNotesArchive r -> InNotesArchive { r | scratch <- scratch' }
 
 replaceNotes : Notes.Value -> Zipper -> Zipper
 replaceNotes notes' z = case z of
   InScratch r -> InScratch { r | notes <- notes' }
-  InOutline r -> InOutline { r | notes <- notes' }
+  InTasks r -> InTasks { r | notes <- notes' }
   InNotesArchive r -> InNotesArchive { r | notes <- notes' }
