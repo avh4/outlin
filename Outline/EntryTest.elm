@@ -94,7 +94,7 @@ navTest = Suite "navigation"
 
 editTest = Suite "basic editing"
   [ test "can insert text" <|
-    Entry.do (Core.String.insert "xx") ((textEntry "ab") |> Entry.textZipperAt 1)
+    Entry.do (Core.String.insert "xx" >> Action.Update) ((textEntry "ab") |> Entry.textZipperAt 1)
       `assertEqual` Action.Update ((textEntry "axxb") |> Entry.textZipperAt 3)
   , test "can backspace text" <|
     backspace ((textEntry "Elm") |> Entry.textZipperAt 1)

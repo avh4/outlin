@@ -46,8 +46,12 @@ updateZipper action z = case action z of
   Action.EnterPrev -> z
   Action.NoChange -> z
 
+justUpdate : (z -> z) -> (z -> Action.ActionResult v z)
+justUpdate fn z = Action.Update <| fn z
+
 updateEntry action = updateZipper (Document.doEntry action)
 updateText action = updateZipper (Document.doText action)
+updateTextZipper action = updateZipper (Document.doText (justUpdate action))
 updateBlock action = updateZipper (Document.doBlock action)
 updateSpan action = updateZipper (Document.doSpan action)
 
@@ -61,7 +65,7 @@ stepFn c = case c of
   Key (Single Up) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild)
   Key (Single Enter) -> updateZipper Document.enter
   Key (CommandCharacter "a") -> updateEntry Entry.addInboxItem
-  Key (CommandCharacter "d") -> updateText Core.String.delete
+  Key (CommandCharacter "d") -> updateText (\_ -> Action.Delete)
   Key (CommandCharacter "m") -> updateEntry Entry.missort
   Key (CommandCharacter "p") -> updateEntry Entry.promote
   Key (CommandCharacter "1") -> updateEntry (Entry.moveInto 0)
@@ -77,19 +81,19 @@ stepFn c = case c of
   Key (Alt Left) -> updateEntry EntryNav.goToParent
   Key (Command Up) -> updateEntry Entry.moveChildUp
   Key (Command Down) -> updateEntry Entry.moveChildDown
-  Key (Command Right) -> updateText Core.String.moveToEndOfLine
-  Key (Command Left) -> updateText Core.String.moveToStartOfLine
+  Key (Command Right) -> updateTextZipper Core.String.moveToEndOfLine
+  Key (Command Left) -> updateTextZipper Core.String.moveToStartOfLine
 
   -- Text
   Key (Single Backspace) -> updateZipper Document.backspace
-  Key (Character s) -> updateText (Core.String.insert s)
-  Paste s -> updateText (Core.String.insert s)
+  Key (Character s) -> updateTextZipper (Core.String.insert s)
+  Paste s -> updateTextZipper (Core.String.insert s)
 
   -- Selection
-  Key (Shift Left) -> updateText Core.String.selectLeft
-  Key (Shift Right) -> updateText Core.String.selectRight
-  Key (CommandShift Left) -> updateText Core.String.selectToStartOfLine
-  Key (CommandShift Right) -> updateText Core.String.selectToEndOfLine
+  Key (Shift Left) -> updateTextZipper Core.String.selectLeft
+  Key (Shift Right) -> updateTextZipper Core.String.selectRight
+  Key (CommandShift Left) -> updateTextZipper Core.String.selectToStartOfLine
+  Key (CommandShift Right) -> updateTextZipper Core.String.selectToEndOfLine
 
   -- Formatting
   Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task)

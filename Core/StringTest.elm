@@ -20,31 +20,31 @@ actionsTest = Suite "(actions)"
     [ test "with no newlines, selects to beginning" <|
       selectToStartOfLine ("a", "b", "c")
       `assertEqual`
-      Update ("", "ab", "c")
+      ("", "ab", "c")
     , test "selects to start of line" <|
       selectToStartOfLine ("x\na", "b", "c")
       `assertEqual`
-      Update ("x\n", "ab", "c")
+      ("x\n", "ab", "c")
     ]
   , Suite "moveToEndOfLine"
     [ test "in last line" <|
       moveToEndOfLine ("a", "b", "c")
       `assertEqual`
-      Update ("abc", "", "")
+      ("abc", "", "")
     , test "in early line" <|
       moveToEndOfLine ("a", "b", "c\nx")
       `assertEqual`
-      Update ("abc", "", "\nx")
+      ("abc", "", "\nx")
     ]
   , Suite "moveToStartOfLine"
     [ test "in first line" <|
       moveToStartOfLine ("a", "b", "c")
       `assertEqual`
-      Update ("", "", "abc")
+      ("", "", "abc")
     , test "in late line" <|
       moveToStartOfLine ("x\na", "b", "c")
       `assertEqual`
-      Update ("x\n", "", "abc")
+      ("x\n", "", "abc")
     ]
   ]
 

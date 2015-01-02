@@ -3,8 +3,8 @@ module Core.String
   , toValue, destructure
   , startZipper, endZipper, allZipper, rangeZipper
   , goLeft, goRight, moveToStartOfLine, moveToEndOfLine
-  , insert, backspace, delete, split
-  , selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight
+  , insert, backspace, split
+  , selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight
   , zipper, zipperAt
   ) where
 
@@ -47,8 +47,8 @@ zipper left right = (left,"",right)
 zipperAt : Int -> String -> Zipper
 zipperAt i s = (String.left i s, "", String.dropLeft i s)
 
-insert : String -> Zipper -> Result
-insert s (left,sel,right) = Update (left ++ s, "", right)
+insert : String -> Zipper -> Zipper
+insert s (left,sel,right) = (left ++ s, "", right)
 
 backspace : Zipper -> Result
 backspace z = case z of
@@ -56,44 +56,34 @@ backspace z = case z of
   (left, "", right) -> Update (String.dropRight 1 left, "", right)
   (left, _, right) -> Update (left, "", right)
 
+goLeft : Zipper -> Result
 goLeft z = case z of
   ("", "", _) -> EnterPrev
   (left, "", right) -> Update (String.dropRight 1 left, "", String.right 1 left ++ right)
   (left, sel, right) -> Update (left, "", sel ++ right)
 
+goRight : Zipper -> Result
 goRight z = case z of
   (_, "", "") -> EnterNext
   (left, "", right) -> Update (left ++ String.left 1 right, "", String.dropLeft 1 right)
   (left, sel, right) -> Update (left ++ sel, "", right)
 
-moveToStartOfLine : Zipper -> Result
+moveToStartOfLine : Zipper -> Zipper
 moveToStartOfLine (left, sel, right) = case takeLast "\n" left of
-  (rest, a) -> Update (rest, "", a ++ sel ++ right)
+  (rest, a) -> (rest, "", a ++ sel ++ right)
 
-moveToEndOfLine : Zipper -> Result
+moveToEndOfLine : Zipper -> Zipper
 moveToEndOfLine (left, sel, right) = case takeFirst "\n" right of
-  (a, rest) -> Update (left ++ sel ++ a, "", rest)
-
-delete z = Delete
+  (a, rest) -> (left ++ sel ++ a, "", rest)
 
 split : Zipper -> Result
 split (left,_,right) = Split [left] (startZipper right) []
 
-selectLeft : Zipper -> Result
-selectLeft z = case z of
-  ("", _, _) -> NoChange
-  (left,sel,right) -> Update (String.dropRight 1 left, String.right 1 left ++ sel, right)
+selectLeft : Zipper -> Zipper
+selectLeft (left,sel,right) = (String.dropRight 1 left, String.right 1 left ++ sel, right)
 
-selectRight : Zipper -> Result
-selectRight z = case z of
-  (_, _, "") -> NoChange
-  (left,sel,right) -> Update (left, sel ++ String.left 1 right, String.dropLeft 1 right)
-
-selectToStart : Zipper -> Result
-selectToStart (left,sel,right) = Update ("", left ++ sel, right)
-
-selectToEnd : Zipper -> Result
-selectToEnd (left,sel,right) = Update (left, sel ++ right, "")
+selectRight : Zipper -> Zipper
+selectRight (left,sel,right) = (left, sel ++ String.left 1 right, String.dropLeft 1 right)
 
 takeFirst : String -> String -> (String, String)
 takeFirst needle s = if
@@ -112,9 +102,9 @@ takeLast needle s = if
       (last::rest) -> (String.join needle (List.reverse rest) ++ needle, last)
   | True -> ("", s)
 
-selectToStartOfLine : Zipper -> Result
+selectToStartOfLine : Zipper -> Zipper
 selectToStartOfLine (left,sel,right) = case takeLast "\n" left of
-  (rest, last) -> Update (rest, last ++ sel, right)
+  (rest, last) -> (rest, last ++ sel, right)
 
-selectToEndOfLine : Zipper -> Result
-selectToEndOfLine (left,sel,right) = Update (left, sel ++ right, "") -- TODO
+selectToEndOfLine : Zipper -> Zipper
+selectToEndOfLine (left,sel,right) = (left, sel ++ right, "") -- TODO
