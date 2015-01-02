@@ -12,6 +12,7 @@ import String
 import Json.Decode
 import Json.Decode (..)
 import Json.Encode
+import Json.Encode as Json
 import Core.Action (..)
 import Debug
 import Maybe
@@ -309,13 +310,17 @@ do stringAction z = case z of
 
 ---- JSON
 
+toJson' : Value -> Json.Value
+toJson' entry = case entry of
+  Entry e -> Json.Encode.object
+    [ ("text", Json.Encode.string e.text)
+    , ("description", Json.Encode.string e.description)
+    , ("inbox", List.map toJson' e.inbox |> Json.Encode.list)
+    , ("children", List.map toJson' e.children |> Json.Encode.list)
+    ]
+
 toJson : Value -> String
-toJson entry = case entry of Entry e ->
-  "{\"text\":" ++ Core.String.toJson e.text
-  ++ ",\"description\":" ++ Core.String.toJson e.description
-  ++ ",\"inbox\":" ++ Core.Array.toJson toJson e.inbox
-  ++ ",\"children\":" ++ Core.Array.toJson toJson e.children
-  ++ "}"
+toJson v = Json.Encode.encode 0 (toJson' v)
 
 decoder : Json.Decode.Decoder (BaseValue String)
 decoder =

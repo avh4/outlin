@@ -5,7 +5,7 @@ module Core.String
   , goLeft, goRight, moveToStartOfLine, moveToEndOfLine
   , insert, backspace, delete, split
   , selectToStart, selectToEnd, selectToStartOfLine, selectToEndOfLine, selectLeft, selectRight
-  , toJson, zipper, zipperAt, decoder
+  , zipper, zipperAt
   ) where
 
 import Core.Action (..)
@@ -119,16 +119,3 @@ selectToStartOfLine (left,sel,right) = case takeLast "\n" left of
 
 selectToEndOfLine : Zipper -> Result
 selectToEndOfLine (left,sel,right) = Update (left, sel ++ right, "") -- TODO
-
----- JSON
-
-quoteQuote = replace All (regex "\"") (\_ -> "&quot;")
-quoteNewline = replace All (regex "\n") (\_ -> "\\n")
-
-quote s = s |> quoteQuote |> quoteNewline
-
-toJson : String -> String
-toJson s = "\"" ++ quote s ++ "\""
-
-decoder : Json.Decode.Decoder Value
-decoder = Json.Decode.string
