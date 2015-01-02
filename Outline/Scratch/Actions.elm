@@ -12,6 +12,7 @@ import Core.Action (..)
 import Core.Array
 import Core.String
 import RichText (..)
+import RichText.SpanZipper (..)
 
 type alias Result = ActionResult Value Zipper
 

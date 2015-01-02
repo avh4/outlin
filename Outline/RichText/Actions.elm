@@ -9,6 +9,7 @@ import Outline.RichText.Span.Actions as Span
 import Core.Action (..)
 import Core.Array
 import RichText (..)
+import RichText.SpanZipper (..)
 
 type alias Result = ActionResult Value Zipper
 

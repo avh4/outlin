@@ -11,6 +11,7 @@ import Core.Action as Span
 import Outline.RichText.Span.Actions as Span
 import List (map)
 import RichText
+import RichText.SpanZipper as RichText
 
 type Result
   = Update Zipper

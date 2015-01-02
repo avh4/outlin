@@ -6,6 +6,7 @@ import ElmTest.Test (..)
 import Core.Action (..)
 import Outline.RichText.Span.Actions (..)
 import RichText (..)
+import RichText.SpanZipper (..)
 import Core.String
 
 startZipper = zipper Core.String.startZipper

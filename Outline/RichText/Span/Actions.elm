@@ -4,6 +4,7 @@ import Core.Action (..)
 import Core.String
 import List (map)
 import RichText (..)
+import RichText.SpanZipper (..)
 
 type alias Result = ActionResult Span SpanZipper
 

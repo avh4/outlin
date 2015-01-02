@@ -13,6 +13,7 @@ import Core.String
 import String
 import List
 import RichText
+import RichText.SpanZipper as RichText
 
 type Type
   = Heading

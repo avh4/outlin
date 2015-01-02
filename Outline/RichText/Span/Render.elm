@@ -7,6 +7,7 @@ import Html (Html)
 import Basics
 import App.Render.String
 import RichText (..)
+import RichText.SpanZipper (..)
 
 toHtml : (a -> Html) -> (SpanType, a) -> Html
 toHtml fn (t,s) = case t of

@@ -18,6 +18,7 @@ import Outline.RichText.Block.Actions as Block
 import List
 import List ((::))
 import RichText
+import RichText.SpanZipper as RichText
 
 type alias Result = ActionResult Value Zipper
 
