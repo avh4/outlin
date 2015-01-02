@@ -4,7 +4,7 @@ module Core.Array
   , Zipper
   , toValue
   , apply
-  , firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, append, prepend, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
+  , firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action (..)
 import List
@@ -48,12 +48,6 @@ rights (_,_,right) = right
 
 mapAt : Int -> (v -> v) -> List v -> List v
 mapAt n fn vs = List.indexedMap (\i v -> if i == n then fn v else v) vs
-
-append : v -> List v -> List v
-append v vs = vs ++ [v]
-
-prepend : v -> List v -> List v
-prepend v vs = v :: vs
 
 active : Zipper v z -> z
 active (_,z,_) = z

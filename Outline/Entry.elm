@@ -170,7 +170,7 @@ moveToInboxOfFirstChildOrNext en = case en of
   Entry e -> Maybe.map Update (firstChildInboxZipper en) |> Maybe.withDefault EnterNext
 
 appendToInboxOfChild : Int -> Value -> List Value -> List Value
-appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- Core.Array.prepend v e.inbox }) children
+appendToInboxOfChild n v children = Core.Array.mapAt n (\(Entry e) -> Entry { e | inbox <- v :: e.inbox }) children
 
 moveInto_ : Int -> Zipper -> Result
 moveInto_ n z = case z of
@@ -187,7 +187,7 @@ missort_ : Zipper -> Result
 missort_ z = case z of
   InChild e -> case Core.Array.active e.children of
     InInbox e' -> let item = Core.Array.active e'.inbox |> toValue
-                      withNewInbox = { e | inbox <- Core.Array.prepend item e.inbox }
+                      withNewInbox = { e | inbox <- item :: e.inbox }
       in case Core.Array.remove textZipper e'.inbox of
         Just remaining -> Update <| InChild { withNewInbox | children <- Core.Array.update (InInbox { e' | inbox <- remaining }) e.children }
         Nothing -> Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InInbox e'' -> Entry { e'' | inbox <- [] }) e.children })
@@ -195,7 +195,7 @@ missort_ z = case z of
       InChild _ -> NoChange
       InInbox _ -> NoChange
       _ -> let item = Core.Array.active e'.children |> toValue
-               withNewInbox = { e | inbox <- Core.Array.prepend item e.inbox }
+               withNewInbox = { e | inbox <- item :: e.inbox }
         in case Core.Array.remove textZipper e'.children of
           Just remaining -> Update <| InChild { withNewInbox | children <- Core.Array.update (InChild { e' | children <- remaining }) e.children }
           Nothing -> Update <| inboxZipper (Core.Array.firstZipper textZipper) (Entry { withNewInbox | children <- Core.Array.toValue (\z -> case z of InChild e'' -> Entry { e'' | children <- [] }) e.children })
