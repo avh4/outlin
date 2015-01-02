@@ -25,10 +25,6 @@ value = identity
 single : a -> Value a
 single a = [a]
 
-replaceAt : a -> Int -> List a -> List a
-replaceAt a index list =
-  List.indexedMap (\i item -> if i == index then a else item) list
-
 toValue : (z -> v) -> Zipper v z -> Value v
 toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
 
