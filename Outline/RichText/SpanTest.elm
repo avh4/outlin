@@ -1,4 +1,4 @@
-module Test.Outline.SpanTest (suite) where
+module Outline.RichText.SpanTest (suite) where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)

@@ -5,10 +5,10 @@ import IO.Runner (Request, Response, run)
 
 import ElmTest.Runner.Console (runDisplay)
 
-import AllTests
+import Test.AllTests
 
 testRunner : IO ()
-testRunner = runDisplay AllTests.all
+testRunner = runDisplay Test.AllTests.all
 
 port requests : Signal Request
 port requests = run responses testRunner

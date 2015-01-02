@@ -1,4 +1,4 @@
-module Test.Core.ArrayTest where
+module Core.ArrayTest where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)

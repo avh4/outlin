@@ -1,4 +1,4 @@
-module Test.MainTest where
+module Test.IntegrationTest where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)

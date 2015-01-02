@@ -1,4 +1,4 @@
-module Test.Core.StringTest (suite) where
+module Core.StringTest (suite) where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)

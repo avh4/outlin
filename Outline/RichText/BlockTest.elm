@@ -1,4 +1,4 @@
-module Test.Outline.BlockTest (suite) where
+module Outline.RichText.BlockTest (suite) where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)

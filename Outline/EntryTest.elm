@@ -1,4 +1,4 @@
-module Test.Outline.EntryTest where
+module Outline.EntryTest where
 
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)
