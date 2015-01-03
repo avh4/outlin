@@ -10,8 +10,6 @@ import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
 import Outline.Entry as Entry
 import Outline.Document.Model as Document
 import Outline.Scratch.Model as Scratch
-import Outline.RichText.Block.Model as Block
-import Outline.RichText.Block.Model (Type(..))
 import Core.String
 import Core.Array
 import List (foldl)
@@ -141,9 +139,9 @@ test3 =
       (result |> Document.toValue |> .notes)
       `assertEqual`
       [
-        [ Block.value Heading [RichText.span "Weekly review"]
-        , Block.value Task [RichText.span "review finances"]
-        , Block.value Task [RichText.span "book flight to Toronto"]
+        [ RichText.heading "Weekly review"
+        , (RichText.Task, [RichText.span "review finances"])
+        , (RichText.Task, [RichText.span "book flight to Toronto"])
         ]
       ]
     -- , test "archives tasks"

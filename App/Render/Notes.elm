@@ -6,7 +6,6 @@ import App.Render.String as String
 import Outline.RichText.Model as RichText
 import Outline.RichText.Render as RichText
 import App.Render.RichText as RichText
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Render as Block
 import Rectified (..)
 import Graphics.Input (clickable)

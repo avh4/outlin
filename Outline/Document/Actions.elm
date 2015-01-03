@@ -13,12 +13,12 @@ import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
 import Outline.RichText.Model as RichText
 import Outline.RichText.Span.Actions as Span
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import List
 import List ((::))
 import RichText
 import RichText.SpanZipper as RichText
+import RichText.BlockZipper as RichText
 
 type alias Result = ActionResult Value Zipper
 
@@ -51,7 +51,7 @@ doScratch scratchFn = do scratchFn (\_ -> NoChange)
 doEntry : (Entry.Zipper -> Entry.Result) -> Zipper -> Result
 doEntry entryFn = do (\_ -> NoChange) entryFn
 
-doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
+doBlock : (RichText.BlockZipper -> Block.Result) -> Zipper -> Result
 doBlock blockFn = do
   (Scratch.doBlock blockFn)
   (\_ -> NoChange)
@@ -92,7 +92,7 @@ processScratch m = case m of
     let
       currentScratch = Core.Array.active r.scratch
       scratchValue = currentScratch |> Scratch.toValue
-      newTasks = scratchValue |> RichText.getTasks |> List.map Block.toString
+      newTasks = scratchValue |> RichText.getTasks |> List.map RichText.toPlainText
     in
       case m |> doScratch (\_ -> Delete) of
         Update m' -> m'
@@ -107,7 +107,7 @@ processScratch m = case m of
 
 addScratch : Value -> Value
 addScratch r = case ("Scratch " ++ toString (1 + List.length r.scratch)) of
-  title -> { r | scratch <- (RichText.heading title) :: r.scratch }
+  title -> { r | scratch <- [RichText.heading title] :: r.scratch }
 
 newScratch : Zipper -> Zipper
 newScratch z = case z |> toValue of

@@ -20,7 +20,6 @@ import Outline.Document.Actions as Document
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
 import Outline.RichText.Span.Actions as Span
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import App.EntryNav as EntryNav
 import Graphics.Element (flow, right, down, Element, width, heightOf, widthOf, spacer, color, container, topLeft, midLeft)
@@ -30,6 +29,7 @@ import List
 import List (..)
 import Outline.Notes.Model as Notes
 import App.Command (..)
+import RichText
 
 ---- App
 
@@ -96,7 +96,7 @@ stepFn c = case c of
   Key (CommandShift Right) -> updateTextZipper Core.String.selectToEndOfLine
 
   -- Formatting
-  Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle Block.Task)
+  Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle RichText.Task)
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0)
   Tab "Tasks" -> updateValue Document.tasksZipper

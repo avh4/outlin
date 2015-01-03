@@ -1,8 +1,7 @@
 module SampleData where
 
 import Outline.Entry as Entry
-import Outline.RichText.Block.Model (Type(..))
-import RichText (span, bold)
+import RichText (..)
 
 outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
   [ Entry.Entry { text="sdfs", description="", inbox=[], children=[] }
@@ -37,10 +36,10 @@ outline = Entry.Entry { text="Tasks (LOADING...)", description="", inbox=
 
 template =
   { scratch=
-    [ [ (Heading, [span "Scratch 3"] )
+    [ [ heading "Scratch 3"
       , (Paragraph, [span "This is ", bold "important", span "."] )
       ]
-    , [(Paragraph, [span "Scratch 2"] )]
+    , [ paragraph "Scratch 2"]
     ]
   , outline=outline
   , notes=[]

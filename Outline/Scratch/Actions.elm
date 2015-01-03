@@ -6,17 +6,17 @@ module Outline.Scratch.Actions
 import Outline.Scratch.Model (..)
 import Outline.RichText.Actions as RichText
 import Outline.RichText.Span.Actions as Span
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import Core.Action (..)
 import Core.Array
 import Core.String
 import RichText (..)
 import RichText.SpanZipper (..)
+import RichText.BlockZipper (..)
 
 type alias Result = ActionResult Value Zipper
 
-doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
+doBlock : (BlockZipper -> Block.Result) -> Zipper -> Result
 doBlock = RichText.doBlock
 
 doSpan : (SpanZipper -> Span.Result) -> Zipper -> Result

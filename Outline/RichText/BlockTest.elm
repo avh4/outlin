@@ -3,16 +3,16 @@ module Outline.RichText.BlockTest (suite) where
 import ElmTest.Assertion (..)
 import ElmTest.Test (..)
 
-import Outline.RichText.Block.Model (..)
 import Outline.RichText.Block.Actions (..)
-import RichText
+import RichText (..)
+import RichText.BlockZipper (..)
 
-span = RichText.span
+value t s = (t,s)
 
 actionsTest = Suite "Actions"
   [ Suite "toggleStyle"
     [ test "with no selection, applies to current block" <|
-      toggleStyle Task (paragraph (span "ab") |> allZipper)
+      toggleStyle Task (paragraph "ab" |> allZipper)
       `assertEqual`
       Update (value Task [(span "ab")] |> allZipper)
     , test "if style is already set, switches to paragraph" <|
@@ -22,23 +22,23 @@ actionsTest = Suite "Actions"
     ]
   , Suite "split"
     [ test "creates new paragraph" <|
-      split (paragraph (span "ab") |> startZipper)
+      split (paragraph "ab" |> startZipper)
       `assertEqual`
-      Split [paragraph (span "")] (paragraph (span "ab") |> startZipper) []
+      Split [paragraph ""] (paragraph "ab" |> startZipper) []
     , test "in task block, creates new paragraph" <|
       split (value Task [(span "ab")] |> startZipper)
       `assertEqual`
-      Split [value Task [(span "")]] (paragraph (span "ab") |> startZipper) []
+      Split [value Task [(span "")]] (paragraph "ab" |> startZipper) []
     ]
   , Suite "backspace"
     [ test "tries to backspace text" <|
-      backspace (paragraph (span "ab") |> endZipper)
+      backspace (paragraph "ab" |> endZipper)
       `assertEqual`
-      Update (paragraph (span "a") |> endZipper)
+      Update (paragraph "a" |> endZipper)
     , test "joins if at start of block" <|
-      backspace (paragraph (span "ab") |> startZipper)
+      backspace (paragraph "ab" |> startZipper)
       `assertEqual`
-      Join (paragraph (span "ab"))
+      Join (paragraph "ab")
     ]
   ]
 

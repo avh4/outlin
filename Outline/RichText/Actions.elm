@@ -3,13 +3,13 @@ module Outline.RichText.Actions
   ) where
 
 import Outline.RichText.Model (..)
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Actions as Block
 import Outline.RichText.Span.Actions as Span
 import Core.Action (..)
 import Core.Array
 import RichText (..)
 import RichText.SpanZipper (..)
+import RichText.BlockZipper as Block
 
 type alias Result = ActionResult Value Zipper
 
@@ -18,7 +18,7 @@ doArrayMaybe fn z = case fn z of
   Just z' -> Update z'
   Nothing -> NoChange
 
-doBlock : (Block.Zipper -> Block.Result) -> Zipper -> Result
+doBlock : (Block.BlockZipper -> Block.Result) -> Zipper -> Result
 doBlock fn z = case fn (Core.Array.active z) of
   Block.Update z' -> Update <| Core.Array.apply (\_ -> z') z
   Block.Split left z' right -> Update <| Core.Array.mergeActive left z' right z

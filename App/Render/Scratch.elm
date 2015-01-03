@@ -6,13 +6,13 @@ import App.Render.String as String
 import Outline.RichText.Model as RichText
 import Outline.RichText.Render as RichText
 import App.Render.RichText as RichText
-import Outline.RichText.Block.Model as Block
 import Outline.RichText.Block.Render as Block
 import Rectified (..)
 import Signal
 import String
 import List
 import Html
+import RichText (Block)
 
 import App.Styles (..)
 import App.Command (..)
@@ -34,7 +34,7 @@ navbar channel z = z
   |> list 60 2 (item channel)
   |> top 40 2 (newScratchButton channel)
 
-task : Block.Value -> Element
+task : Block -> Element
 task b = b
   |> Block.spanToHtml
   |> html 0

@@ -4,7 +4,7 @@ module Core.Array
   , Zipper
   , toValue
   , apply
-  , firstZipper, lastZipper, lastZipperM, remove, map, indexedMap, active, zipper, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
+  , firstZipper, firstZipperOr, lastZipper, lastZipperOr, lastZipperM, remove, map, indexedMap, active, zipper, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action (..)
 import List
@@ -76,6 +76,11 @@ zipperAtM i fn vs = case List.isEmpty (vs |> drop i) of
 firstZipper : (v -> z) -> List v -> Zipper v z
 firstZipper fn (cur :: tail) = ([],fn cur,tail)
 
+firstZipperOr : v -> (v -> z) -> List v -> Zipper v z
+firstZipperOr default fn vs = case firstZipperM fn vs of
+  Just z -> z
+  Nothing -> ([], fn default, [])
+
 firstZipperM : (v -> z) -> List v -> Maybe (Zipper v z)
 firstZipperM fn vs = case vs of
   (head :: tail) -> Just ([],fn head,tail)
@@ -94,6 +99,11 @@ firstZipperThat fn vs = case vs of
 -- TODO: Needs to return a Maybe
 lastZipper : (v -> z) -> List v -> Zipper v z
 lastZipper fn list = let (cur :: tail) = reverse list in (tail,fn cur,[])
+
+lastZipperOr : v -> (v -> z) -> List v -> Zipper v z
+lastZipperOr default fn vs = case lastZipperM fn vs of
+  Just z -> z
+  Nothing -> ([], fn default, [])
 
 lastZipperM : (v -> z) -> List v -> Maybe (Zipper v z)
 lastZipperM fn list = case reverse list of

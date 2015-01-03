@@ -15,10 +15,7 @@ toJson : Value -> Json.Encode.Value
 toJson = RichText.toJson
 
 decoder : Json.Decode.Decoder Value
-decoder = Json.Decode.oneOf
-  [ RichText.decoder
-  , RichText.stringDecoder
-  ]
+decoder = RichText.decoder
 
 listDecoder : Json.Decode.Decoder (List Value)
 listDecoder = Json.Decode.list decoder

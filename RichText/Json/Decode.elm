@@ -1,5 +1,6 @@
 module RichText.Json.Decode
   ( span, spanType
+  , block, blockType
   ) where
 
 import Json.Decode (..)
@@ -19,3 +20,19 @@ span : Decoder Span
 span = object2 (,)
   ("type" := spanType)
   ("value" := string)
+
+blockTypeFromString : String -> Result String BlockType
+blockTypeFromString s = case s of
+  "Heading" -> Ok Heading
+  "Paragraph" -> Ok Paragraph
+  "Quote" -> Ok Quote
+  "Task" -> Ok Task
+  _ -> Err ("Invalid block type: " ++ s)
+
+blockType : Decoder BlockType
+blockType = customDecoder string blockTypeFromString
+
+block : Decoder Block
+block = object2 (,)
+  ("type" := blockType)
+  ("value" := list span)
