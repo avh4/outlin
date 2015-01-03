@@ -14,11 +14,11 @@ actionsTest = Suite "Actions"
     [ test "with no selection, applies to current block" <|
       toggleStyle Task (paragraph "ab" |> allZipper)
       `assertEqual`
-      Update (value Task [(span "ab")] |> allZipper)
+      (value Task [(span "ab")] |> allZipper)
     , test "if style is already set, switches to paragraph" <|
       toggleStyle Task (value Task [(span "ab")] |> allZipper)
       `assertEqual`
-      Update (value Paragraph [(span "ab")] |> allZipper)
+      (value Paragraph [(span "ab")] |> allZipper)
     ]
   , Suite "split"
     [ test "creates new paragraph" <|

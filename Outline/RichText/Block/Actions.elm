@@ -33,8 +33,8 @@ doSpan spanFn (t,z) = case Core.Array.doPropagatingSplits RichText.toValue (Rich
 toggle : BlockType -> BlockType -> BlockType
 toggle current t = if current == t then Paragraph else t
 
-toggleStyle : BlockType -> BlockZipper -> Result
-toggleStyle t' (t,sz) = Update (toggle t t',sz) -- TODO
+toggleStyle : BlockType -> BlockZipper -> BlockZipper
+toggleStyle t' (t,sz) = (toggle t t',sz)
 
 split : BlockZipper -> Result
 split (t, z) = case Core.Array.doPropagatingSplits RichText.toValue (RichText.zipper Core.String.startZipper) (RichText.zipper Core.String.endZipper) (Span.do Core.String.split) z of

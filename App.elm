@@ -96,7 +96,7 @@ stepFn c = case c of
   Key (CommandShift Right) -> updateTextZipper Core.String.selectToEndOfLine
 
   -- Formatting
-  Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle RichText.Task)
+  Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle RichText.Task >> Block.Update)
 
   Tab "Scratch" -> updateValue (Document.scratchZipper 0)
   Tab "Tasks" -> updateValue Document.tasksZipper
