@@ -17,12 +17,10 @@ do fn (t,s) = case fn s of
   EnterPrev -> EnterPrev
   NoChange -> NoChange
 
--- TODO: should just return a zipper
-applyStyle : SpanType -> SpanZipper -> Result
+applyStyle : SpanType -> SpanZipper -> (Maybe Span, SpanZipper, Maybe Span)
 applyStyle t' (t,sz) = case Core.String.destructure sz of
-  (_, "", _) -> NoChange
-  ("", _, "") -> Update (t',sz)
-  (left, sel, right) -> Split
-    (if left == "" then [] else [(t, left)])
-    (t', Core.String.allZipper sel)
-    (if right == "" then [] else [(t, right)])
+  (left, sel, right) ->
+    ( if left == "" then Nothing else Just (t, left)
+    , (t', Core.String.allZipper sel)
+    , if right == "" then Nothing else Just (t, right)
+    )

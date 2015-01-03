@@ -18,23 +18,23 @@ actionsTest = Suite "Actions"
     [ test "with all text selected, changes style" <|
       applyStyle Bold (span "ab" |> allZipper)
       `assertEqual`
-      Update (bold "ab" |> allZipper)
+      (Nothing, bold "ab" |> allZipper, Nothing)
     , test "with start selected, splits new span" <|
       applyStyle Bold (span "abcd" |> rangeZipper (0,2))
       `assertEqual`
-      Split [] (bold "ab" |> allZipper) [span "cd"]
+      (Nothing, bold "ab" |> allZipper, Just <| span "cd")
     , test "with end selected, splits new span" <|
       applyStyle Bold (span "abcd" |> rangeZipper (2,2))
       `assertEqual`
-      Split [span "ab"] (bold "cd" |> allZipper) []
+      (Just <| span "ab", bold "cd" |> allZipper, Nothing)
     , test "with middle selected, splits new span" <|
       applyStyle Bold (span "abcd" |> rangeZipper (1,2))
       `assertEqual`
-      Split [span "a"] (bold "bc" |> allZipper) [span "d"]
+      (Just <| span "a", bold "bc" |> allZipper, Just <| span "d")
     , test "with no selection, no change" <|
       applyStyle Bold (span "abcd" |> startZipper)
       `assertEqual`
-      NoChange
+      (Nothing, bold "" |> startZipper, Just <| span "abcd")
     ]
   ]
 
