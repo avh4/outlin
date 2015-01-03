@@ -14,25 +14,25 @@ allZipper = zipper Core.String.allZipper
 rangeZipper r = zipper (Core.String.rangeZipper r)
 
 actionsTest = Suite "Actions"
-  [ Suite "applyStyle"
+  [ Suite "styleSpanSelection"
     [ test "with all text selected, changes style" <|
-      applyStyle Bold (span "ab" |> allZipper)
+      styleSpanSelection Bold (span "ab" |> allZipper)
       `assertEqual`
       (Nothing, bold "ab" |> allZipper, Nothing)
     , test "with start selected, splits new span" <|
-      applyStyle Bold (span "abcd" |> rangeZipper (0,2))
+      styleSpanSelection Bold (span "abcd" |> rangeZipper (0,2))
       `assertEqual`
       (Nothing, bold "ab" |> allZipper, Just <| span "cd")
     , test "with end selected, splits new span" <|
-      applyStyle Bold (span "abcd" |> rangeZipper (2,2))
+      styleSpanSelection Bold (span "abcd" |> rangeZipper (2,2))
       `assertEqual`
       (Just <| span "ab", bold "cd" |> allZipper, Nothing)
     , test "with middle selected, splits new span" <|
-      applyStyle Bold (span "abcd" |> rangeZipper (1,2))
+      styleSpanSelection Bold (span "abcd" |> rangeZipper (1,2))
       `assertEqual`
       (Just <| span "a", bold "bc" |> allZipper, Just <| span "d")
     , test "with no selection, no change" <|
-      applyStyle Bold (span "abcd" |> startZipper)
+      styleSpanSelection Bold (span "abcd" |> startZipper)
       `assertEqual`
       (Nothing, bold "" |> startZipper, Just <| span "abcd")
     ]

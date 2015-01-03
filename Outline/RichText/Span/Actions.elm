@@ -1,4 +1,4 @@
-module Outline.RichText.Span.Actions (Result, do, applyStyle) where
+module Outline.RichText.Span.Actions (Result, do, styleSpanSelection) where
 
 import Core.Action (..)
 import Core.String
@@ -17,8 +17,8 @@ do fn (t,s) = case fn s of
   EnterPrev -> EnterPrev
   NoChange -> NoChange
 
-applyStyle : SpanType -> SpanZipper -> (Maybe Span, SpanZipper, Maybe Span)
-applyStyle t' (t,sz) = case Core.String.destructure sz of
+styleSpanSelection : SpanType -> SpanZipper -> (Maybe Span, SpanZipper, Maybe Span)
+styleSpanSelection t' (t,sz) = case Core.String.destructure sz of
   (left, sel, right) ->
     ( if left == "" then Nothing else Just (t, left)
     , (t', Core.String.allZipper sel)
