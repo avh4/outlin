@@ -30,40 +30,29 @@ import List (..)
 import Outline.Notes.Model as Notes
 import App.Command (..)
 import RichText
+import Outline.Document.State as State
+import Outline.Document.State (State)
 
 ---- App
-
-updateValue : (Document.Value -> Document.Zipper) -> Document.Zipper -> Document.Zipper
-updateValue toZipper z = z |> Document.toValue |> toZipper
-
-updateZipper : (Document.Zipper -> Document.Result) -> Document.Zipper -> Document.Zipper
-updateZipper action z = case action z of
-  Action.Update z' -> z'
-  -- explicity list the following action results, which are all no-ops on document
-  Action.Split _ _ _ -> z
-  Action.Delete -> z
-  Action.EnterNext -> z
-  Action.EnterPrev -> z
-  Action.NoChange -> z
 
 justUpdate : (z -> z) -> (z -> Action.ActionResult v z)
 justUpdate fn z = Action.Update <| fn z
 
-updateEntry action = updateZipper (Document.doEntry action)
-updateText action = updateZipper (Document.doText action)
-updateTextZipper action = updateZipper (Document.doText (justUpdate action))
-updateBlock action = updateZipper (Document.doBlock action)
-updateSpan action = updateZipper (Document.doSpan action)
+updateEntry action = State.doEntry action
+updateText action = State.doText action
+updateTextZipper action = State.doText (justUpdate action)
+updateBlock action = State.doBlock action
+updateSpan action = State.doBlock (Block.doSpan action)
 
 ---- INPUT
 
-stepFn : Command -> (Document.Zipper -> Document.Zipper)
-stepFn c = case c of
+step : Command -> State -> State
+step c = case c of
   Key (Single Left) -> updateText Core.String.goLeft
   Key (Single Right) -> updateText Core.String.goRight
   Key (Single Down) -> updateEntry (Entry.doEntry EntryNav.goDownWithinChild)
   Key (Single Up) -> updateEntry (Entry.doEntry EntryNav.goUpWithinChild)
-  Key (Single Enter) -> updateZipper Document.enter
+  Key (Single Enter) -> updateText Core.String.split
   Key (CommandCharacter "a") -> updateEntry Entry.addInboxItem
   Key (CommandCharacter "d") -> updateText (\_ -> Action.Delete)
   Key (CommandCharacter "m") -> updateEntry Entry.missort
@@ -85,7 +74,7 @@ stepFn c = case c of
   Key (Command Left) -> updateTextZipper Core.String.moveToStartOfLine
 
   -- Text
-  Key (Single Backspace) -> updateZipper Document.backspace
+  Key (Single Backspace) -> State.backspace
   Key (Character s) -> updateTextZipper (Core.String.insert s)
   Paste s -> updateTextZipper (Core.String.insert s)
 
@@ -98,20 +87,17 @@ stepFn c = case c of
   -- Formatting
   Key (CommandCharacter "b") -> updateBlock (Block.toggleStyle RichText.Task >> Block.Update)
 
-  Tab "Scratch" -> updateValue (Document.scratchZipper 0)
-  Tab "Tasks" -> updateValue Document.tasksZipper
-  Tab "Notes" -> updateValue Document.notesZipper
+  Tab "Scratch" -> State.toScratch
+  Tab "Tasks" -> State.toTasks
+  Tab "Notes" -> State.toNotes
 
-  Scratch i -> updateValue (Document.scratchZipper i)
+  Scratch i -> State.selectScratch i
 
-  LoadedTasks (Ok e) -> Document.replaceTasks e
-  LoadedScratch (Ok s) -> Document.replaceScratch s
-  LoadedNotes (Ok n) -> Document.replaceNotes n
+  LoadedTasks (Ok e) -> State.withDocument <| Document.replaceTasks e
+  LoadedScratch (Ok s) -> State.withDocument <| Document.replaceScratch s
+  LoadedNotes (Ok n) -> State.withDocument <| Document.replaceNotes n
 
-  ProcessScratch -> Document.processScratch
-  NewScratch -> Document.newScratch
+  ProcessScratch -> State.withDocument <| Document.processScratch
+  NewScratch -> State.withDocument <| Document.newScratch
 
   x -> fst (identity, Debug.log "Unhandled command" x)
-
-step : Command -> Document.Zipper -> Document.Zipper
-step c m = stepFn c m

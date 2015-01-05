@@ -1,7 +1,6 @@
 module Outline.Document.Actions
-  ( Result
-  , do, doEntry, doBlock, doSpan, doText
-  , enter, backspace, processScratch, newScratch
+  ( processScratch, newScratch, selectScratch
+  , doTasksAction, doScratchAction
   ) where
 
 import Outline.Document.Model (..)
@@ -12,6 +11,7 @@ import Outline.Entry as Entry
 import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Actions as Scratch
 import Outline.RichText.Model as RichText
+import Outline.RichText.Model
 import Outline.RichText.Span.Actions as Span
 import Outline.RichText.Block.Actions as Block
 import List
@@ -20,97 +20,48 @@ import RichText
 import RichText.SpanZipper as RichText
 import RichText.BlockZipper as RichText
 
-type alias Result = ActionResult Value Zipper
+doScratchAction : (Scratch.Zipper -> Scratch.Result) -> Document -> Document
+doScratchAction scratchFn doc = case Core.Array.do Scratch.toValue Scratch.endZipper Scratch.endZipper scratchFn doc.scratch of
+  Update scratch' -> { doc | scratch <- scratch' }
+  Delete -> { doc | scratch <- [[RichText.heading "Scratch 1"]] |> Core.Array.firstZipper Scratch.allZipper }
+  _ -> doc
 
-do : (Scratch.Zipper -> Scratch.Result) -> (Entry.Zipper -> Entry.Result) -> Zipper -> Result
-do scratchFn entryFn zipper = case zipper of
-  InScratch r -> case Core.Array.do Scratch.toValue Scratch.endZipper Scratch.endZipper scratchFn r.scratch of
-    Update sZipper' -> Update <| InScratch { r | scratch <- sZipper' }
-    Split _ _ _ -> NoChange -- Core.Array.do can't even propogate a split, right?
-    Delete -> NoChange -- TODO: replace scratches with new empty scratch
-    EnterPrev -> NoChange
-    EnterNext -> Update <| (zipper |> toValue |> tasksZipper)
-    NoChange -> NoChange
-  InTasks r -> case entryFn r.tasks of
-    Update eZipper' -> Update <| InTasks { r | tasks <- eZipper' }
-    Split _ _ _ -> NoChange -- Not allowed to split the root node
-    Delete -> NoChange -- Not allowed to delete the root node
-    EnterPrev -> case Core.Array.firstZipperM Scratch.endZipper r.scratch of
-      Just sZipper -> Update <| InScratch { r
-        | scratch <- sZipper
-        , tasks <- Entry.toValue r.tasks
-        }
-      Nothing -> NoChange -- TODO: make a new empty scratch
-    EnterNext -> NoChange
-    NoChange -> NoChange
-  InNotesArchive r -> NoChange
+doTasksAction : (Entry.Zipper -> Entry.Result) -> Document -> Document
+doTasksAction entryFn doc = case entryFn doc.tasks of
+  Update tasks' -> { doc | tasks <- tasks' }
+  _ -> doc
 
-doScratch : (Scratch.Zipper -> Scratch.Result) -> Zipper -> Result
-doScratch scratchFn = do scratchFn (\_ -> NoChange)
+doTasks : (Entry.Zipper -> Entry.Zipper) -> Document -> Document
+doTasks fn doc = { doc | tasks <- fn doc.tasks }
 
-doEntry : (Entry.Zipper -> Entry.Result) -> Zipper -> Result
-doEntry entryFn = do (\_ -> NoChange) entryFn
+doTasksValue : (Entry.Value -> Entry.Value) -> Document -> Document
+doTasksValue fn = doTasks (Entry.toValue >> fn >> Entry.textZipper)
 
-doBlock : (RichText.BlockZipper -> Block.Result) -> Zipper -> Result
-doBlock blockFn = do
-  (Scratch.doBlock blockFn)
-  (\_ -> NoChange)
+doNotes : (List RichText.Value -> List RichText.Value) -> Document -> Document
+doNotes fn doc = { doc | notes <- fn doc.notes }
 
-doSpan : (RichText.SpanZipper -> Span.Result) -> Zipper -> Result
-doSpan spanFn = do
-  (Scratch.doSpan spanFn)
-  (\_ -> NoChange)
+selectScratch : Int -> Document -> Document
+selectScratch i doc = case Core.Array.zipperAtM i Scratch.endZipper (doc.scratch |> Core.Array.toValue Scratch.toValue) of
+  Just scratch' -> { doc | scratch <- scratch' }
+  Nothing -> doc
 
-doText : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
-doText stringFn = do
-  (Scratch.doText stringFn)
-  (Entry.do stringFn)
+processScratch : Document -> Document
+processScratch doc =
+  let
+    currentScratch = Core.Array.active doc.scratch
+    scratchValue = currentScratch |> Scratch.toValue
+    newTasks = scratchValue |> RichText.getTasks |> List.map RichText.toPlainText
+  in
+    doc
+      |> doScratchAction (\_ -> Delete)
+      |> doTasks (Entry.addToInbox newTasks)
+      |> doNotes (\ns -> scratchValue :: ns)
 
-enter : Zipper -> Result
-enter = doText Core.String.split
-
-backspace : Zipper -> Result
-backspace = do
-  (Scratch.doBlock Block.backspace)
-  (Entry.do Core.String.backspace)
-
-replaceTasks : Entry.Value -> Zipper -> Zipper
-replaceTasks tasks' z = case z of
-  InScratch r -> InScratch { r | tasks <- tasks' }
-  InTasks r -> InTasks { r | tasks <- tasks' |> Entry.textZipper }
-  InNotesArchive r -> InNotesArchive { r | tasks <- tasks' }
-
-addNote : RichText.Value -> Zipper -> Zipper
-addNote note z = case z of
-  InScratch r -> InScratch { r | notes <- note :: r.notes }
-  InTasks r -> InTasks { r | notes <- note :: r.notes }
-  InNotesArchive r -> InNotesArchive { r | notes <- note :: r.notes }
-
-processScratch : Zipper -> Zipper
-processScratch m = case m of
-  InScratch r ->
-    let
-      currentScratch = Core.Array.active r.scratch
-      scratchValue = currentScratch |> Scratch.toValue
-      newTasks = scratchValue |> RichText.getTasks |> List.map RichText.toPlainText
-    in
-      case m |> doScratch (\_ -> Delete) of
-        Update m' -> m'
-          |> replaceTasks (Entry.addToInbox newTasks r.tasks)
-          |> addNote scratchValue
-        _ -> InTasks { r
-          | scratch <- []
-          , tasks <- (Entry.addToInbox newTasks r.tasks |> Entry.textZipper)
-          }
-          |> addNote scratchValue
-  _ -> m
-
-addScratch : Value -> Value
-addScratch r = case ("Scratch " ++ toString (1 + List.length r.scratch)) of
-  title -> { r | scratch <- [RichText.heading title] :: r.scratch }
-
-newScratch : Zipper -> Zipper
-newScratch z = case z |> toValue of
-  v -> v
-    |> addScratch
-    |> scratchZipper 0
+newScratch : Document -> Document
+newScratch doc =
+  let
+    scratch = Core.Array.toValue Outline.RichText.Model.toValue doc.scratch
+    title = ("Scratch " ++ toString (1 + List.length scratch))
+    scratch' = [RichText.heading title] :: scratch
+  in
+    { doc | scratch <- scratch' |> Core.Array.firstZipper Scratch.allZipper }

@@ -1,6 +1,7 @@
 module App.Render.Main (render) where
 
 import Outline.Document.Model (..)
+import Outline.Document.State (..)
 import Core.Action
 import Core.Action (..)
 import Core.Array
@@ -31,14 +32,14 @@ selectTab name = List.map (\t -> (name == t, t)) tabNames
 tabName z = case z of
   InScratch _ -> "Scratch"
   InTasks _ -> "Tasks"
-  InNotesArchive _ -> "Notes"
+  InNotes _ -> "Notes"
 
 body channel z = case z of
   InScratch r -> Scratch.render channel r.scratch
   InTasks r -> Outline.render r.tasks
-  InNotesArchive r -> Notes.render r.notes
+  InNotes r -> Notes.render r.notes
 
-render : Signal.Channel Command -> Zipper -> Element
+render : Signal.Channel Command -> State -> Element
 render channel z =
   top 60 0
     (tabbar channel (selectTab <| tabName z))

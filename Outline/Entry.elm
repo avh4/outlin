@@ -43,9 +43,10 @@ toValue z = case z of
   InInbox e -> Entry { e | inbox <- Core.Array.toValue toValue e.inbox }
   InChild e -> Entry { e | children <- Core.Array.toValue toValue e.children }
 
-addToInbox : List String -> Value -> Value
-addToInbox list v = case v of
+addToInbox : List String -> Zipper -> Zipper
+addToInbox list v = case toValue v of
   Entry e -> Entry { e | inbox <- (List.map textEntry list) ++ e.inbox }
+  |> textZipper
 
 textValue : Zipper -> String
 textValue z = case toValue z of

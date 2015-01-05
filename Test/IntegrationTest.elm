@@ -14,11 +14,12 @@ import Core.String
 import Core.Array
 import List (foldl)
 import RichText
+import Outline.Document.State as State
 
-initialDocument = Document.emptyValue |> Document.scratchZipper 0
+initialDocument = State.InScratch Document.emptyValue
 
-assertEqualOutline : Document.Zipper -> Entry.Zipper -> Assertion
-assertEqualOutline doc entry = assertEqual doc (Document.InTasks {scratch=[Scratch.value "Scratch 1"], tasks=entry, notes=[]})
+assertEqualTasks : State.State -> Entry.Zipper -> Assertion
+assertEqualTasks state entry = assertEqual (state |> State.toDocument |> .tasks) entry
 
 test1 = test "first-use scenario" <|
   foldl App.step initialDocument
@@ -31,7 +32,7 @@ test1 = test "first-use scenario" <|
     , Key (CommandCharacter "p") -- promote
     , Key (CommandCharacter "p")
     ]
-  `assertEqualOutline`
+  `assertEqualTasks`
   Entry.childZipper (Core.Array.firstZipper Entry.textZipper)
     ( entry "Tasks" "" []
       [ entry "By time" "" [] []
@@ -76,7 +77,7 @@ test2 = test "sorting in an empty template" <|
     , Key (CommandCharacter "1") -- Girl Develop It -> time
     , Key (CommandCharacter "1") -- voting guide -> time
     ]
-  `assertEqualOutline`
+  `assertEqualTasks`
   Entry.childZipper (Core.Array.firstZipper (Entry.inboxZipper (Core.Array.firstZipper Entry.textZipper)))
     ( entry "Tasks" "" []
       [ entry "By time" ""
@@ -125,18 +126,18 @@ test3 =
   result ->
     Suite "Processing scratch files"
     [ test "adds tasks" <|
-      (result |> Document.toValue |> .tasks)
+      (result |> State.toDocument |> .tasks |> Entry.toValue)
       `assertEqual`
       entry "" ""
       [ entry "review finances" "" [] []
       , entry "book flight to Toronto" "" [] []
       ] []
     , test "removes processed scratch" <|
-      (result |> Document.toValue |> .scratch)
+      (result |> State.toDocument |> .scratch |> Core.Array.toValue Scratch.toValue)
       `assertEqual`
-      []
+      [[RichText.heading "Scratch 1"]]
     , test "archives processed scratch to notes" <|
-      (result |> Document.toValue |> .notes)
+      (result |> State.toDocument |> .notes)
       `assertEqual`
       [
         [ RichText.heading "Weekly review"

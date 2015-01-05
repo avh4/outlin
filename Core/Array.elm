@@ -4,6 +4,7 @@ module Core.Array
   , Zipper
   , toValue
   , apply
+  , length
   , firstZipper, firstZipperOr, lastZipper, lastZipperOr, lastZipperM, remove, map, indexedMap, active, zipper, mapAt, firstZipperThat, lastZipperThat, zipperAt, zipperAtM, moveUp, moveDown, update, countLeft, countRight, lefts, rights, firstZipperM, goPrev, goNext) where
 
 import Core.Action (..)
@@ -24,6 +25,9 @@ toValue fn (left,cur,right) = List.reverse left ++ [fn cur] ++ right
 
 apply : (z -> z') -> Zipper v z -> Zipper v z'
 apply fn (left,active,right) = (left, fn active, right)
+
+length : Zipper v z -> Int
+length (left, cur, right) = List.length left + 1 + List.length right
 
 mergeActive : List v -> z -> List v -> Zipper v z -> Zipper v z
 mergeActive left' active' right' (left,active,right) =

@@ -15,9 +15,11 @@ import App.Command (..)
 import App.Render.Main as App
 import Outline.Document.Model as Document
 import Outline.Document.Json as Document
+import Outline.Document.State as State
 import Signal
 import Debug
 import Core.Array
+import Outline.Scratch.Model as Scratch
 import Outline.Scratch.Json as Scratch
 import Json.Encode
 import Json.Decode
@@ -33,29 +35,29 @@ channel = Signal.channel Init_
 decode : Json.Decode.Decoder x -> String -> Result String x
 decode decoder s = Json.Decode.decodeString decoder s
 
-type alias DropboxChannel = (String, (String -> Command), (Document.Value -> String))
+type alias DropboxChannel = (String, (String -> Command), (Document.Document -> String))
 
 fromDropbox : DropboxChannel -> Signal Command
 fromDropbox (filename, fn, _) =
   dropbox.read filename
   |> Signal.map fn
 
-dch : String -> Json.Decode.Decoder a -> (Result String a -> Command) -> (Document.Value -> b) -> (b -> Json.Encode.Value) -> DropboxChannel
-dch filename decoder fn fromDoc toJson =
+dch : String -> Json.Decode.Decoder a -> (Result String a -> Command) -> (Document.Document -> Json.Encode.Value) -> DropboxChannel
+dch filename decoder fn toJson =
   ( filename
   , (\x -> decode decoder x |> fn)
-  , (\x -> x |> fromDoc |> toJson |> Json.Encode.encode 0)
+  , (\x -> x |> toJson |> Json.Encode.encode 0)
   )
 
 dropboxChannels : List DropboxChannel
 dropboxChannels =
-  [ dch "outlin.json" Entry.decoder LoadedTasks .tasks Entry.toJson
-  , dch "scratch.json" Scratch.listDecoder LoadedScratch .scratch (\v -> List.map Scratch.toJson v |> Json.Encode.list)
-  , dch "notes.json" Notes.decoder LoadedNotes .notes Notes.toJson
+  [ dch "outlin.json" Entry.decoder LoadedTasks (.tasks >> Entry.toValue >> Entry.toJson)
+  , dch "scratch.json" Scratch.listDecoder LoadedScratch (.scratch >> Core.Array.toValue Scratch.toValue >> (\v -> List.map Scratch.toJson v |> Json.Encode.list))
+  , dch "notes.json" Notes.decoder LoadedNotes (.notes >> Notes.toJson)
   ]
 
 toDropbox (filename, _, fn) = state
-  |> Signal.map Document.toValue
+  |> Signal.map State.toDocument
   |> Signal.dropRepeats
   |> Signal.map fn
   |> dropbox.write filename
@@ -69,7 +71,7 @@ commands = Signal.mergeMany
   ]
 
 -- initialDocument = (Document.scratchZipper 0 SampleData.template)
-initialDocument = Document.emptyValue |> Document.scratchZipper 0
+initialDocument = State.InScratch Document.emptyValue
 
 state = Signal.foldp App.step initialDocument commands
 
