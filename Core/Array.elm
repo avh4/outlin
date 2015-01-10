@@ -1,7 +1,7 @@
 module Core.Array
   ( mergeActive, joinActive
   , do, doPropagatingSplits
-  , Zipper
+  , Zipper, Result
   , toValue
   , apply
   , length

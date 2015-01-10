@@ -235,11 +235,9 @@ doEntry action z = case z of
     x -> x
   _ -> action z
 
--- TODO: rewrite to utilize doEntry for the recursion
--- TODO: give a better name
-do : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
-do stringAction z = case z of
-  InText e -> case stringAction e.text of
+handleTextResult : Core.String.Result -> Zipper -> Result
+handleTextResult r z = case z of
+  InText e -> case r of
     Update newZ -> Update <| InText { e | text <- newZ }
     Delete -> Delete
     NoChange -> NoChange
@@ -249,11 +247,15 @@ do stringAction z = case z of
       [ firstInboxZipper (toValue z) |> Maybe.map Update
       , firstChildZipper (toValue z) |> Maybe.map Update
       ] EnterNext
-  InDescription e -> case stringAction e.description of
+  InDescription e -> case r of
     Update newZ -> Update <| InDescription { e | description <- newZ }
     Delete -> Delete
     NoChange -> NoChange
-  InInbox e -> case Core.Array.do toValue textZipper textZipper (do stringAction) e.inbox of
+  -- _ -> Debug.crash
+
+handleArrayResult : Core.Array.Result Value Zipper -> Zipper -> Result
+handleArrayResult r z = case z of
+  InInbox e -> case r of
     Update newZ -> Update <| InInbox { e | inbox <- newZ }
     Delete -> Update <| InText { e | inbox <- [], text <- Core.String.endZipper e.text }
     NoChange -> NoChange
@@ -261,7 +263,7 @@ do stringAction z = case z of
       [ firstChildZipper (toValue z) |> Maybe.map Update
       ] EnterNext
     EnterPrev -> (textZipper (toValue z) |> Update)
-  InChild e -> case Core.Array.do toValue textZipper findLastCursor (do stringAction) e.children of
+  InChild e -> case r of
     Update newZ -> Update <| InChild { e | children <- newZ }
     Delete -> Update <| InText { e | children <- [], text <- Core.String.endZipper e.text }
     EnterNext -> EnterNext
@@ -269,6 +271,16 @@ do stringAction z = case z of
       [ lastInboxZipper (toValue z) |> Maybe.map Update
       ] (Update <| textZipper (toValue z))
     NoChange -> NoChange
+  -- _ -> Debug.crash
+
+-- TODO: rewrite to utilize doEntry for the recursion
+-- TODO: give a better name
+do : (Core.String.Zipper -> Core.String.Result) -> Zipper -> Result
+do stringAction z = case z of
+  InText e -> handleTextResult (stringAction e.text) z
+  InDescription e -> handleTextResult (stringAction e.description) z
+  InInbox e -> handleArrayResult (Core.Array.do toValue textZipper textZipper (do stringAction) e.inbox) z
+  InChild e -> handleArrayResult (Core.Array.do toValue textZipper findLastCursor (do stringAction) e.children) z
 
 ---- RENDER
 
