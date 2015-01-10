@@ -1,4 +1,4 @@
-module Core.Action (always, ActionResult(..)) where
+module Core.Action (ActionResult(..)) where
 
 type ActionResult value zipper =
   Update zipper |
@@ -6,7 +6,3 @@ type ActionResult value zipper =
   Delete |
   EnterPrev | EnterNext |
   NoChange
-
--- TODO: get rid of this--only used in tests
-always : ActionResult v z -> z -> ActionResult v z
-always r _ = r

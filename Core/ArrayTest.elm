@@ -18,19 +18,19 @@ splitTest = Suite "split"
       `equals` Action.Update (["a"],sz "" "b",[])
   , split (["a"],sz "x" "y",["b"])
       `equals` Action.Update (["x","a"],sz "" "y",["b"])
-  , do (Action.always Action.Delete) ([],sz "" "a",["b"])
+  , do (always Action.Delete) ([],sz "" "a",["b"])
       `equals` Action.Update ([],sz "" "b",[])
   , test "can delete the last item" <|
-    do (Action.always Action.Delete) ([],sz "" "a",[])
+    do (always Action.Delete) ([],sz "" "a",[])
       `assertEqual` Action.Delete
   , test "can delete the terminal item" <|
-    do (Action.always Action.Delete) (["a"], sz "" "b", [])
+    do (always Action.Delete) (["a"], sz "" "b", [])
       `assertEqual` Action.Update ([],sz "a" "", [])
   ]
 
 doTest = Suite "do" <|
-  let goNext = \z -> do (Action.always Action.EnterNext) z
-      goPrev = \z -> do (Action.always Action.EnterPrev) z
+  let goNext = \z -> do (always Action.EnterNext) z
+      goPrev = \z -> do (always Action.EnterPrev) z
   in
   [ test "EnterNext goes to next item" <|
     goNext ([],sz "" "a",["b"])
