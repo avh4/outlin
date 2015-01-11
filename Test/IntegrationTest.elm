@@ -6,7 +6,7 @@ import ElmTest.Test (..)
 import App
 import App.Command (..)
 import Keys (..)
-import Outline.Entry (entry,BaseValue(..),BaseZipper(..))
+import Outline.Entry (entry,Outline(..),Zipper(..))
 import Outline.Entry as Entry
 import Outline.Document.Model as Document
 import Outline.Scratch.Model as Scratch

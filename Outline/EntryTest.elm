@@ -5,7 +5,7 @@ import ElmTest.Test (..)
 
 import Core.Action as Action
 import Outline.Entry as Entry
-import Outline.Entry (entry,BaseZipper(..))
+import Outline.Entry (entry,Zipper(..))
 import Core.Array
 import Core.String
 import List (map)

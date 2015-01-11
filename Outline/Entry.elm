@@ -1,5 +1,5 @@
 module Outline.Entry
-  ( BaseValue(..), BaseZipper(..), Value, Zipper, Result
+  ( Value, Outline(..), Zipper(..), Result
   , addToInbox
   , addInboxItem, promote, moveInto, missort, moveChildUp, moveChildDown, decoder, toJson, emptyEntry, entry, childZipper, textZipper, inboxZipper, toValue, textZipperAt, childZipperAt, inboxZipperAt, textValue, do, doEntry, descriptionZipper, firstInboxZipper
   ) where
@@ -20,20 +20,24 @@ import List
 import List (..)
 import Maybe (..)
 
-type BaseValue v = Entry {text: v, description: v, inbox: List (BaseValue v), children: List (BaseValue v)}
+type Outline = Entry
+  { text: String
+  , description: String
+  , inbox: List Outline
+  , children: List Outline
+  }
 
-type BaseZipper v z
-  = InText {text: z, description: v, inbox: List (BaseValue v), children: List (BaseValue v)}
-  | InDescription {text: v, description: z, inbox: List (BaseValue v), children: List (BaseValue v)}
-  | InInbox {text: v, description: v, inbox: Core.Array.Zipper (BaseValue v) (BaseZipper v z), children: List (BaseValue v)}
-  | InChild {text: v, description: v, inbox: List (BaseValue v), children: Core.Array.Zipper (BaseValue v) (BaseZipper v z)}
+type Zipper
+  = InText {text: Core.String.Zipper, description: String, inbox: List Outline, children: List Outline}
+  | InDescription {text: String, description: Core.String.Zipper, inbox: List Outline, children: List Outline}
+  | InInbox {text: String, description: String, inbox: Core.Array.Zipper Outline Zipper, children: List Outline}
+  | InChild {text: String, description: String, inbox: List Outline, children: Core.Array.Zipper Outline Zipper}
 
 emptyEntry = Entry {text="", description="", inbox=[], children=[]}
 textEntry t = Entry {text=t, description="", inbox=[], children=[]}
 entry t d i c = Entry {text=t, description=d, inbox=i, children=c}
 
-type alias Value = BaseValue String
-type alias Zipper = BaseZipper String Core.String.Zipper
+type alias Value = Outline
 type alias Result = ActionResult Value Zipper
 
 toValue : Zipper -> Value
@@ -83,7 +87,7 @@ findLastCursor en = case en of
     | List.length e.inbox > 0 -> InInbox { e | inbox <- Core.Array.lastZipper findLastCursor e.inbox }
     | otherwise -> InText { e | text <- Core.String.endZipper e.text }
 
-addInboxItem__ : BaseValue a -> BaseValue a -> BaseValue a
+addInboxItem__ : Value -> Value -> Value
 addInboxItem__ s en = case en of Entry e -> Entry { e | inbox <- s :: e.inbox }
 
 addInboxItem_ : Value -> Zipper -> Result
@@ -332,7 +336,7 @@ toJson entry = case entry of
     , ("children", List.map toJson e.children |> Json.Encode.list)
     ]
 
-decoder : Json.Decode.Decoder (BaseValue String)
+decoder : Json.Decode.Decoder Value
 decoder =
   Json.Decode.map (\e -> Entry e) <|
   object4 (\t d i c -> {text=t, description=d, inbox=i, children=c})
